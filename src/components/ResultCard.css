@@ -1,0 +1,40 @@
+.result-card {
+  background: white;
+  border-radius: 12px;
+  padding: 10px 16px 20px;
+  margin-bottom: 10px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+  font-family: 'Roboto Condensed', sans-serif;
+  color: #0073bb;
+}
+
+.result-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.result-title a {
+  color: #0073bb;
+  text-decoration: underline;
+}
+
+.result-description {
+  font-size: 14px;
+  margin: 0 0 12px;
+  color: #444;
+}
+
+.result-tags {
+  display: flex;
+  gap: 12px;
+}
+
+.tag {
+  background-color: #a3cef150;
+  color: #1d3557;
+  font-size: 14px;
+  font-weight: 300;
+  padding: 6px 14px;
+  border-radius: 20px;
+}

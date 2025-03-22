@@ -1,0 +1,45 @@
+.results-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 180px); /* Adjust offset based on your layout (header/nav height) */
+  padding: 0 0px;
+}
+
+.results-summary {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 16px;
+  color: #1d3557;
+  margin-top: 0px;     /* 👈 Add this line */
+  margin-bottom: 12px; /* 👈 Decrease from previous larger value if needed */
+}
+
+
+.results-scroll-area {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+  padding-bottom: 40px; /* 👈 leaves a gap at the bottom of the scroll */
+}
+
+/* Scrollbar Styling */
+.results-scroll-area::-webkit-scrollbar {
+  width: 8px;
+}
+
+.results-scroll-area::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 8px;
+}
+
+.results-scroll-area::-webkit-scrollbar-thumb {
+  background-color: #457b9d;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.results-scroll-area {
+  scrollbar-width: thin;
+  scrollbar-color: #6096ba #e7ecef;
+  padding-bottom: 50px; /* 👈 This adds space under the scrollbar */
+}
