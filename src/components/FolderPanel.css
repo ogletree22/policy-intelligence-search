@@ -1,0 +1,54 @@
+.folder-panel {
+  padding: 0px 10px 0px 0px;
+  background-color: #e7ecef;
+  height: 100%;
+  font-family: 'Roboto Condensed', sans-serif;
+  color: #1d3557;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.folder-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 10px 0 12px;
+}
+
+.folder-description {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+/* 👇 New additions */
+.active-folder-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.folder-icon {
+  font-size: 26px;
+  color: #1d3557;
+}
+
+.folder-name {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.folder-results-list {
+    margin-top: 16px;
+  }
+  
+  .folder-panel .result-card {
+    margin-bottom: 16px;
+  }
+  
+  .folder-icon {
+    height: 25px;
+    width: 30px;
+    margin-right: 0px;
+    object-fit: contain;
+  }
+  

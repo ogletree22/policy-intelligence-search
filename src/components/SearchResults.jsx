@@ -12,8 +12,8 @@ const SearchResults = ({ results }) => {
           : 'No results found.'}
       </p>
       <div className="results-scroll-area">
-        {results.map((result, index) => (
-          <ResultCard key={result.pi_url || `${result.title}-${index}`} result={result} />
+        {results.map((result) => (
+          <ResultCard key={result.pi_url} result={result} />
         ))}
       </div>
     </div>

@@ -1,31 +1,50 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './SearchBar.css';
 import { FaTimes, FaChevronDown } from 'react-icons/fa';
 import searchIcon from '../assets/search-icon.png';
 
-const SearchBar = ({ query, onChange, onClear, onSearch }) => {
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Prevent page refresh
-    onSearch(query);    // Trigger search manually
+const SearchBar = ({ onSearch }) => {
+  const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+
+  // Debounce search: waits before sending query to parent
+  useEffect(() => {
+    if (debouncedQuery === '') return;
+
+    const timeout = setTimeout(() => {
+      onSearch(debouncedQuery);
+    }, 500); // Adjust delay as needed
+
+    return () => clearTimeout(timeout);
+  }, [debouncedQuery, onSearch]);
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      setDebouncedQuery(query);
+    }
+  };
+
+  const handleClear = () => {
+    setQuery('');
+    setDebouncedQuery('');
+    onSearch('');
   };
 
   return (
     <div className="search-panel-header">
       <h2 className="search-title">Document search</h2>
       <div className="search-controls">
-        <form className="search-input-wrapper" onSubmit={handleSubmit}>
+        <div className="search-input-wrapper">
           <img src={searchIcon} alt="Search" className="search-icon-img" />
           <input
             type="text"
-            value={query}
-            onChange={onChange}
             placeholder="e.g. nox regulations colorado"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyPress}
           />
-          <FaTimes
-            className={`clear-icon ${!query ? 'disabled' : ''}`}
-            onClick={query ? onClear : null}
-          />
-        </form>
+          {query && <FaTimes className="clear-icon" onClick={handleClear} />}
+        </div>
 
         <div className="sort-wrapper">
           <label htmlFor="sort">Sort:</label>

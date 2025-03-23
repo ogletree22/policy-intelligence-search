@@ -1,8 +1,8 @@
 .results-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 180px); /* Adjust offset based on your layout (header/nav height) */
-  padding: 0 0px;
+  height: calc(100vh - 150px); /* Adjust offset based on your layout (header/nav height) */
+  padding: 10px 0px 0px 0px
 }
 
 .results-summary {
@@ -43,3 +43,4 @@
   scrollbar-color: #6096ba #e7ecef;
   padding-bottom: 50px; /* 👈 This adds space under the scrollbar */
 }
+

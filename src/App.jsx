@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useState } from 'react';
 import TopNav from './components/TopNav';
 import SidebarFilters from './components/SidebarFilters';
@@ -30,22 +31,23 @@ function App() {
   return (
     <div className="app-wrapper">
       <div className="top-border" />
-      <div className="layout-row">
+      <TopNav />
+
+      <div className="main-layout">
         <aside className="sidebar">
           <SidebarFilters onFilterChange={setFilters} />
         </aside>
-        <div className="main-right">
-          <TopNav />
-          <div className="main-content">
-            <div className="center-content">
-              <SearchBar onSearch={handleSearch} />
-              <SearchResults results={results} />
-            </div>
-            <aside className="folder-panel">
-              <FolderPanel />
-            </aside>
+
+        <main className="main-section">
+          <div className="center-content">
+            <SearchBar onSearch={handleSearch} />
+            <SearchResults results={results} />
           </div>
-        </div>
+        </main>
+
+        <aside className="folder-panel">
+          <FolderPanel />
+        </aside>
       </div>
     </div>
   );

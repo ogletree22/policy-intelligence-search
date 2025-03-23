@@ -9,7 +9,7 @@
     font-weight: 700;
     font-size: 24px;
     color: #1d3557;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   
   .search-controls {
@@ -89,7 +89,7 @@
     border: none;
     background-color: #ffffff;
     color: #1d3557;
-    font-weight: 250;
+    font-weight: 400;
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -116,5 +116,6 @@
     cursor: default;
     pointer-events: none; /* prevents click */
   }
+  
   
   
