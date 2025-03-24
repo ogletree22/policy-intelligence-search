@@ -12,33 +12,69 @@ html, body {
   width: 100vw;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .top-border {
   height: 4px;
   background-color: #1d3557;
   width: 100%;
+  flex-shrink: 0;
 }
 
+.search-container {
+  padding: 20px 20px 17px 20px;
+  background-color: #e7ecef;
+  flex-shrink: 0;
+}
 
 .main-layout {
   display: flex;
   flex-grow: 1;
-  height: calc(100vh - 60px); /* account for topnav */
-  overflow: hidden; /* prevents inner scrollbars */
+  height: calc(100vh - 84px);
+  overflow-y: hidden;
+  overflow-x: auto;
+  min-width: 1200px;
+  background-color: #e7ecef;
 }
-
 
 .main-section {
   flex: 1;
   background-color: #e7ecef;
-  padding: 24px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  margin-left: 220px; /* match sidebar width */
+  margin-left: 225px;
   padding: 20px;
   box-sizing: border-box;
+  min-width: 600px;
+}
+
+.main-layout::-webkit-scrollbar {
+  height: 8px;
+}
+
+.main-layout::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 8px;
+}
+
+.main-layout::-webkit-scrollbar-thumb {
+  background-color: #457b9d;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.main-layout::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+.center-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
 }
 
 
