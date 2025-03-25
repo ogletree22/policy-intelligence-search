@@ -13,14 +13,27 @@
 
 .folder-header {
   flex-shrink: 0; /* Prevents header from shrinking */
+  padding: 12px 10px 5px 10px;
+}
+
+.folder-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .folder-title {
   font-size: 24px;
   font-weight: 700;
-  margin: 12px 5px 8px;
+  margin: 0;
   color: #1d3557;
   font-family: 'Roboto Condensed', sans-serif;
+}
+
+.folder-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .folder-description {
@@ -46,9 +59,7 @@
 }
 
 .folder-name {
-  font-size: 24px;
-  font-weight: 700;
-  padding-top: 10px 10px 10px 10px;
+  font-size: 18px;
   color: #1d3557;
   font-family: 'Roboto Condensed', sans-serif;
 }

@@ -36,10 +36,12 @@ const FolderPanel = () => {
   return (
     <div className="folder-panel">
       <div className="folder-header">
-        <h3 className="folder-title">Folder</h3>
-        <div className="active-folder-header">
-          <img src={folderIcon} alt="Folder" className="folder-panel-icon" />
-          <span className="folder-name">Download folder</span>
+        <div className="folder-title-section">
+          <h3 className="folder-title">Folder</h3>
+          <div className="folder-subtitle">
+            <img src={folderIcon} alt="Folder" className="folder-panel-icon" />
+            <span className="folder-name">Download folder</span>
+          </div>
         </div>
       </div>
       <div className="folder-contents">
