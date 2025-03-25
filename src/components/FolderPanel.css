@@ -39,7 +39,7 @@
   margin-top: -15px;  /* Changed back to -15px from 0px */
 }
 
-.folder-icon {
+.folder-panel-icon {
   height: 36px;
   width: 36px;
   object-fit: contain;

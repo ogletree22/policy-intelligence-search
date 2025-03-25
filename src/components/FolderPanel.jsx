@@ -38,7 +38,7 @@ const FolderPanel = () => {
       <div className="folder-header">
         <h3 className="folder-title">Folder</h3>
         <div className="active-folder-header">
-          <img src={folderIcon} alt="Folder" className="folder-icon" />
+          <img src={folderIcon} alt="Folder" className="folder-panel-icon" />
           <span className="folder-name">Download folder</span>
         </div>
       </div>
