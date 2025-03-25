@@ -50,6 +50,12 @@ html, body {
   min-width: 600px;
 }
 
+.main-section.full-width {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+}
+
 .main-layout::-webkit-scrollbar {
   height: 8px;
 }

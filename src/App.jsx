@@ -1,16 +1,19 @@
 // App.jsx
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import TopNav from './components/TopNav';
 import SidebarFilters from './components/SidebarFilters';
 import SearchBar from './components/SearchBar';
 import SearchResults from './components/SearchResults';
 import FolderPanel from './components/FolderPanel';
+import FoldersPage from './components/FoldersPage';
 import MOCK_DOCUMENTS from './mockData';
 import './App.css';
 
-function App() {
+function MainContent() {
   const [results, setResults] = useState(MOCK_DOCUMENTS);
   const [filters, setFilters] = useState({});
+  const location = useLocation();
 
   const handleSearch = (query) => {
     const q = query.toLowerCase();
@@ -39,17 +42,36 @@ function App() {
         </aside>
 
         <main className="main-section">
-          <div className="center-content">
-            <SearchBar onSearch={handleSearch} />
-            <SearchResults results={results} />
-          </div>
+          {location.pathname === '/' && (
+            <div className="center-content">
+              <SearchBar onSearch={handleSearch} />
+              <SearchResults results={results} />
+            </div>
+          )}
+          
+          {location.pathname === '/folders' && (
+            <FoldersPage />
+          )}
         </main>
 
-        <aside className="folder-panel">
-          <FolderPanel />
-        </aside>
+        {location.pathname === '/' && (
+          <aside className="folder-panel">
+            <FolderPanel />
+          </aside>
+        )}
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router basename="/policy-intelligence-search">
+      <Routes>
+        <Route path="/" element={<MainContent />} />
+        <Route path="/folders" element={<MainContent />} />
+      </Routes>
+    </Router>
   );
 }
 

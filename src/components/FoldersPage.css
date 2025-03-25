@@ -1,0 +1,73 @@
+.folders-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.folders-container h1 {
+  color: #333;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.folders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem;
+  padding-bottom: 2rem;
+}
+
+.folder-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.folder-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.folder-icon {
+  font-size: 3rem;
+  color: #4a90e2;
+  margin-bottom: 1rem;
+}
+
+.folder-card h3 {
+  color: #333;
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.folder-card p {
+  color: #666;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.folders-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.folders-container::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 8px;
+}
+
+.folders-container::-webkit-scrollbar-thumb {
+  background-color: #457b9d;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.folders-container::-webkit-scrollbar-thumb:hover {
+  background: #999;
+} 

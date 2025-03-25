@@ -1,32 +1,37 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import './TopNav.css';
 import logo from '../assets/logo.png';
 import searchIcon from '../assets/search-icon.png';
 import folderIcon from '../assets/folder.png';
-import coPilotIcon from '../assets/ai-technology.png'; // Assuming that’s AI Technology icon
+import coPilotIcon from '../assets/ai-technology.png'; // Assuming that's AI Technology icon
 
 const TopNav = () => {
+  const location = useLocation();
+
   return (
     <header className="topnav">
       <div className="topnav-left">
-        <img src={logo} alt="Policy Intelligence Logo" className="topnav-logo" />
+        <Link to="/">
+          <img src={logo} alt="Policy Intelligence Logo" className="topnav-logo" />
+        </Link>
       </div>
       <div className="topnav-right">
         <nav className="topnav-links">
-          <a href="#" className="active">
+          <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
             <img src={searchIcon} alt="Search" className="nav-icon" />
             Search
-          </a>
+          </Link>
           <span className="nav-divider" />
-          <a href="#">
+          <Link to="/folders" className={location.pathname === '/folders' ? 'active' : ''}>
             <img src={folderIcon} alt="Folders" className="nav-icon" />
             Folders
-          </a>
+          </Link>
           <span className="nav-divider" />
-          <a href="#">
+          <Link to="/copilot" className={location.pathname === '/copilot' ? 'active' : ''}>
             <img src={coPilotIcon} alt="PI Co-Pilot" className="nav-icon" />
             PI Co-Pilot
-          </a>
+          </Link>
         </nav>
       </div>
     </header>
