@@ -1,45 +1,138 @@
+/* Base container */
 .folder-panel {
-  padding: 0 10px 10px 0;  /* Removed top padding */
-  background-color: #e7ecef;  /* Match main panel background */
   height: 100%;
+  min-width: 600px;
+  padding: 0 10px 10px 0;
+  background-color: #e7ecef;
   font-family: 'Roboto Condensed', sans-serif;
   color: #1d3557;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  min-width: 600px;  /* Match main results container min-width */
-  overflow-x: hidden;  /* Prevent individual horizontal scrolling */
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
+/* Header section */
 .folder-header {
-  flex-shrink: 0; /* Prevents header from shrinking */
-  padding: 12px 10px 5px 10px;
+  flex-shrink: 0;
+  padding: 12px 10px 5px;
 }
 
 .folder-title-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .folder-title {
+  margin: 0;
   font-size: 24px;
   font-weight: 700;
-  margin: 0;
   color: #1d3557;
-  font-family: 'Roboto Condensed', sans-serif;
 }
 
 .folder-subtitle {
   display: flex;
   align-items: center;
+  margin-top: 35px;
   gap: 12px;
 }
 
+.folder-name {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1d3557;
+  font-family: 'Roboto Condensed', sans-serif;
+}
+
 .folder-description {
+  font-size: 16px;
+  color: #444;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Main content area */
+.folder-contents {
+  flex: 1;
+  min-height: 0;
+  margin-top: -25px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.doc-count {
+  margin: 0 0 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  color: #444;
+  flex-shrink: 0;
+  font-family: 'Roboto Condensed', sans-serif;
+}
+
+.folder-results-list {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Icons */
+.folder-panel-icon,
+.folder-icon {
+  height: 36px;
+  width: 36px;
+  object-fit: contain;
+}
+
+/* Empty state */
+.empty-folder-message {
+  margin: 0;
+  padding: 24px 0;
   font-size: 14px;
   color: #444;
   font-family: 'Roboto', sans-serif;
+  text-align: center;
+  background-color: #f8f9fa;
+  border: 2px dashed #ddd;
+  border-radius: 12px;
+}
+
+/* Scrollbar styling */
+.folder-panel::-webkit-scrollbar,
+.folder-results-list::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.folder-panel::-webkit-scrollbar-track,
+.folder-results-list::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 8px;
+}
+
+.folder-panel::-webkit-scrollbar-thumb,
+.folder-results-list::-webkit-scrollbar-thumb {
+  background-color: #457b9d;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.folder-panel::-webkit-scrollbar-thumb:hover,
+.folder-results-list::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Utility classes */
+.folder-panel .result-card {
+  margin-bottom: 0;
 }
 
 /* 👇 New additions */
@@ -59,7 +152,8 @@
 }
 
 .folder-name {
-  font-size: 18px;
+  font-size: 22px;
+  font-weight: 600;
   color: #1d3557;
   font-family: 'Roboto Condensed', sans-serif;
 }
@@ -113,22 +207,6 @@
 
 .folder-results-list::-webkit-scrollbar-thumb:hover {
   background: #999;
-}
-
-.empty-folder-message {
-  text-align: center;
-  color: #444;
-  font-size: 14px;
-  padding: 24px 0;
-  margin: 0;
-  background-color: #f8f9fa;
-  border-radius: 12px;
-  border: 2px dashed #ddd;
-  font-family: 'Roboto', sans-serif;
-}
-
-.folder-panel .result-card {
-  margin-bottom: 0px;
 }
 
 .folder-icon {
