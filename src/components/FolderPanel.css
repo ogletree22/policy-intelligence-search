@@ -18,7 +18,7 @@
 .folder-title {
   font-size: 24px;
   font-weight: 700;
-  margin: 0 0 20px;
+  margin: 12px 5px 8px;
   color: #1d3557;
   font-family: 'Roboto Condensed', sans-serif;
 }
@@ -46,8 +46,9 @@
 }
 
 .folder-name {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
+  padding-top: 10px 10px 10px 10px;
   color: #1d3557;
   font-family: 'Roboto Condensed', sans-serif;
 }

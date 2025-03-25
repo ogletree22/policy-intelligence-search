@@ -1,9 +1,8 @@
 .folders-container {
   padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
   height: 100%;
   overflow-y: auto;
+  background-color: #e7ecef;
 }
 
 .folders-container h1 {
@@ -12,44 +11,89 @@
   text-align: center;
 }
 
-.folders-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 2rem;
-  padding-bottom: 2rem;
+.folders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.folder-card {
+.folder-list-item {
   background: white;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 1.5rem;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease-in-out;
-  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.folder-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.folder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.folder-title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .folder-icon {
-  font-size: 3rem;
-  color: #4a90e2;
-  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  color: #457b9d;
 }
 
-.folder-card h3 {
-  color: #333;
-  margin: 0.5rem 0;
-  font-size: 1.1rem;
-}
-
-.folder-card p {
-  color: #666;
+.folder-list-item h3 {
+  color: #1d3557;
   margin: 0;
+  font-size: 1.2rem;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 600;
+}
+
+.document-count {
+  color: #666;
   font-size: 0.9rem;
+  font-family: 'Roboto', sans-serif;
+}
+
+.folder-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-icon {
+  color: #457b9d;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.action-icon:hover {
+  background-color: #f0f2f5;
+}
+
+.folder-documents {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.document-link {
+  color: #1d3557;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-family: 'Roboto', sans-serif;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.document-link:hover {
+  background-color: #f0f2f5;
+  color: #457b9d;
 }
 
 .folders-container::-webkit-scrollbar {
@@ -69,5 +113,5 @@
 }
 
 .folders-container::-webkit-scrollbar-thumb:hover {
-  background: #999;
+  background-color: #1d3557;
 } 
