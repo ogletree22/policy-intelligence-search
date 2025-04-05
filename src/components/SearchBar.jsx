@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './SearchBar.css';
 import { FaTimes } from 'react-icons/fa';
-import searchIcon from '../assets/search-icon.png';
+import searchIcon from '../assets/Search-Icon.png';
 
 const SearchBar = ({ onSearch, showHeader = true, initialValue = '' }) => {
   const [query, setQuery] = useState(initialValue);
