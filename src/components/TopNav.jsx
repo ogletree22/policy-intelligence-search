@@ -2,9 +2,9 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './TopNav.css';
 import logo from '../assets/logo.png';
-import searchIcon from '../assets/search-icon.png';
-import folderIcon from '../assets/folder.png';
-import coPilotIcon from '../assets/ai-technology.png'; // Assuming that's AI Technology icon
+import searchIcon from '../assets/Search-Icon.png';
+import folderIcon from '../assets/Folder.png';
+import coPilotIcon from '../assets/AI-technology.png'; // Assuming that's AI Technology icon
 
 const TopNav = () => {
   const location = useLocation();
