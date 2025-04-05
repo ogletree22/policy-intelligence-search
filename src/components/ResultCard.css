@@ -1,0 +1,50 @@
+.result-card {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.result-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.result-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.result-title a {
+  color: #0073bb;
+  text-decoration: none;
+}
+
+.result-title a:hover {
+  text-decoration: none;
+}
+
+.result-description {
+  color: #555;
+  font-size: 14px;
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.result-tags {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tag {
+  background-color: #a3cef150;
+  color: #274c77;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}

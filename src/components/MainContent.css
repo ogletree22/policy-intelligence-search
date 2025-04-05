@@ -1,0 +1,28 @@
+.main-content {
+  margin-left: 220px; /* Match sidebar width */
+  padding: 20px;
+  height: calc(100vh - 40px); /* Leave space at bottom */
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: relative;
+  top: 4px;
+  display: flex;
+  gap: 20px;
+}
+
+.main-content > *:first-child {
+  flex: 1 0 auto; /* Allow search results to grow and fill available space */
+  min-width: 0;
+}
+
+.main-content > *:last-child {
+  flex: 0 0 350px; /* Fixed width for folder panel */
+  width: 350px;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+} 

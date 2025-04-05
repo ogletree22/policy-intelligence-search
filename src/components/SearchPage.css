@@ -1,0 +1,13 @@
+.search-result-title {
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 16px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.search-result-title:hover {
+  color: #274C77;
+  text-decoration: none;
+} 

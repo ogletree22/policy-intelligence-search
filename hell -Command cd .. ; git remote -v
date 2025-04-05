@@ -1,0 +1,29 @@
+[33mcommit bbce43725c53195730c90a5b870d21c3fe97b107[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Author: loren speer <lorenmspeer@gmail.com>
+Date:   Sat Apr 5 10:29:42 2025 -0600
+
+    Kendra search improvements: fixed Washington counts, added documenhington counts, added document URL support, enhanced jurisdiction handling, fixed deduplication
+
+[33mcommit aff8505f105a30e7546208e7dec227c646a42d5a[m
+Author: ogletree22 <michael.ogletree@policyintelligence.ai>
+Date:   Tue Mar 25 09:51:51 2025 -0400
+
+    Update folder panel layout and styling
+
+[33mcommit 083c2aabc7cdc0ef25bc4e525b54a4649820a9cc[m
+Author: ogletree22 <michael.ogletree@policyintelligence.ai>
+Date:   Tue Mar 25 09:05:37 2025 -0400
+
+    Fix folder panel header layout
+
+[33mcommit 71770aba779fd9c702400bbf4f4065a56e2b3055[m
+Author: ogletree22 <michael.ogletree@policyintelligence.ai>
+Date:   Tue Mar 25 08:59:14 2025 -0400
+
+    Update favicon path in index.html
+
+[33mcommit 66c24f6b21f866d08b1c5784c68041b932e94d5a[m
+Author: ogletree22 <michael.ogletree@policyintelligence.ai>
+Date:   Tue Mar 25 08:48:30 2025 -0400
+
+    Update page title and favicon

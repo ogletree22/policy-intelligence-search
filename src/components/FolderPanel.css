@@ -1,0 +1,456 @@
+/* Base container */
+.folder-panel {
+  background: #e7ecef;
+  border-radius: 8px;
+  padding: 0px;
+  padding-right: 10px;
+  padding-top: 17px;
+  margin-right: 0;
+  margin-top: 0px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  max-width: 700px;
+  min-width: 400px;
+  box-sizing: border-box;
+}
+
+/* Header section */
+.folder-header {
+  flex-shrink: 0;
+  margin-bottom: 24px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px !important;
+  padding: 0px 0px 2px 0px;
+}
+
+.folder-title,
+.folder-title:link,
+.folder-title:visited,
+.folder-title:hover,
+.folder-title:active {
+  font-size: 26px !important;
+  font-weight: 600;
+  color: #274C77;
+  margin: 0;
+  text-decoration: none;
+  display: block;
+  pointer-events: none;
+}
+
+.folder-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.folder-name {
+  font-size: 20px !important;
+  font-weight: 600;
+  color: #274C77;
+  margin: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.folder-name:hover {
+  color: #274C77;
+  text-decoration: none;
+}
+
+.folder-description {
+  font-size: 16px;
+  color: #444;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Main content area */
+.folder-contents {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 12px !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.doc-count {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  padding: 24px 0;
+  border-bottom: 5px transparent;
+  flex-shrink: 0;
+  font-family: 'Roboto Condensed', sans-serif;
+  background-color: #e7ecef !important;
+}
+
+.folder-results-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 0px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Icons */
+.folder-panel-icon {
+  width: 34px;
+  object-fit: contain;
+}
+
+/* Empty state */
+.empty-folder-message {
+  color: #666;
+  text-align: center;
+  margin-top: 10px;
+  font-style: italic;
+  padding: 40px;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  width: calc(100% - 84px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Scrollbar styling */
+.folder-results-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.folder-results-list::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 8px;
+}
+
+.folder-results-list::-webkit-scrollbar-thumb {
+  background-color: #457b9d;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.folder-results-list::-webkit-scrollbar-thumb:hover {
+  background: #2c5282;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Utility classes */
+.folder-panel .result-card {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: none;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+  border: 1px solid #e0e0e0;
+}
+
+.folder-panel .result-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.folder-panel .result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 0;
+}
+
+.folder-panel .result-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.folder-panel .result-title a {
+  color: #0073bb;
+  text-decoration: none;
+}
+
+.folder-panel .result-title a:hover {
+  text-decoration: underline;
+}
+
+.folder-panel .result-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.folder-panel .button-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.folder-panel .result-description {
+  color: #555;
+  font-size: 14px;
+  margin: 5px 0;
+  line-height: 1.4;
+  max-height: none;
+  overflow: visible;
+  position: relative;
+  cursor: default;
+  transition: none;
+}
+
+.folder-panel .result-description:not(.expanded)::after {
+  content: none;
+}
+
+.folder-panel .result-description.expanded {
+  max-height: none;
+}
+
+.folder-panel .result-description:hover {
+  color: #555;
+}
+
+.folder-panel .description-container {
+  position: relative;
+}
+
+.folder-panel .result-tags {
+  display: flex;
+  gap: 8px;
+}
+
+.folder-panel .tag {
+  background-color: #a3cef150;
+  color: #274c77;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 👇 New additions */
+.active-folder-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0;
+  padding: 12px 10px 5px 10px;
+  margin-top: -15px;  /* Changed back to -15px from 0px */
+}
+
+.folder-icon {
+  height: 36px;
+  width: 36px;
+  margin-right: 0px;
+  object-fit: contain;
+}
+
+/* Add horizontal scrollbar styling to match vertical */
+.folder-panel::-webkit-scrollbar {
+  height: 8px;  /* Height for horizontal scrollbar */
+  width: 8px;  /* Width for vertical scrollbar */
+}
+
+.folder-panel::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 8px;
+}
+
+.folder-panel::-webkit-scrollbar-thumb {
+  background-color: #457b9d;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.folder-panel::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+.download-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #457b9d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Condensed', sans-serif;
+}
+
+.download-all-btn:hover:not(:disabled) {
+  background-color: #2c5282;
+  transform: translateY(-1px);
+}
+
+.download-all-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.download-all-btn:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.download-all-btn.opening {
+  opacity: 0.8;
+}
+
+.links-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.links-modal {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.links-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.links-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #274c77;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.close-button:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.links-instruction {
+  color: #666;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: 16px;
+}
+
+.document-link {
+  color: #457b9d;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  transition: all 0.2s ease;
+  display: block;
+}
+
+.document-link:hover {
+  background-color: #e9ecef;
+  color: #274c77;
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .folder-panel {
+    padding: 16px;
+    height: auto;
+    min-height: 600px;
+  }
+
+  .folder-contents {
+    padding: 15px;
+  }
+
+  .folder-header {
+    margin-bottom: 12px;
+  }
+
+  .folder-title {
+    font-size: 18px;
+  }
+
+  .folder-name {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .folder-panel {
+    padding: 12px;
+    min-height: 400px;
+  }
+
+  .folder-contents {
+    padding: 10px;
+  }
+
+  .folder-title {
+    font-size: 16px;
+  }
+
+  .empty-folder-message {
+    padding: 20px;
+    width: calc(100% - 44px);
+  }
+}
+  
