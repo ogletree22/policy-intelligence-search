@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import './FolderPanel.css';
 import FolderResultCard from './FolderResultCard';
-import folderIcon from '../assets/folder.png';
+import folderIcon from '../assets/Folder.png';
 import { useFolderContext } from '../context/FolderContext';
 
 const FolderPanel = ({ subtitle = "Download folder" }) => {

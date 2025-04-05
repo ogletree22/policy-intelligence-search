@@ -5,7 +5,7 @@ import ChatArea from './ChatArea';
 import CitationsPanel from './CitationsPanel';
 
 // Import the AI avatar image
-import aiAvatar from '../assets/ai-technology.png';
+import aiAvatar from '../assets/AI-technology.png';
 
 const PiCoPilot = () => {
   // Example history items
