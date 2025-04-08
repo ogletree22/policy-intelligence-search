@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { FaUserCircle } from 'react-icons/fa';
+import { FaUserCircle, FaFolder, FaTrash } from 'react-icons/fa';
+import { useWorkingFolder } from '../context/WorkingFolderContext';
 import './SidebarFilters.css';
 
 const JURISDICTIONS = [
@@ -24,75 +25,68 @@ const DOCUMENT_TYPES = [
   'Legislation'
 ];
 
-const SidebarFilters = ({ onFilterChange, isDisabled, instanceId = 'default', documentCounts = {} }) => {
-  // Add state to track pending changes before applying
-  const [pendingFilters, setPendingFilters] = useState({
+const SidebarFilters = ({ 
+  onFilterChange, 
+  isDisabled, 
+  instanceId = 'default', 
+  documentCounts = {}
+}) => {
+  // Add state to track all filters
+  const [filters, setFilters] = useState({
     jurisdictions: {},
     documentTypes: {}
   });
-  
-  // Add state to track the currently selected document type
-  const [selectedDocType, setSelectedDocType] = useState(null);
 
+  // Get working folder functionality from context
+  const { workingFolderDocs, removeFromWorkingFolder } = useWorkingFolder();
+  
   const handleFilterChange = useCallback((category, value) => {
     console.log('Filter change in SidebarFilters:', category, value);
     
-    if (category === 'documentTypes') {
-      // For document types, clear previous selections and only set the new one
-      // Check if we're clicking the already selected item (to deselect it)
-      const isDeselecting = pendingFilters.documentTypes[value];
-      
-      setPendingFilters(prev => ({
-        ...prev,
-        documentTypes: isDeselecting ? {} : { [value]: true }
-      }));
-      
-      // Update selected doc type
-      setSelectedDocType(isDeselecting ? null : value);
-    } else {
-      // For jurisdictions, just toggle the current selection
-      setPendingFilters(prev => ({
-        ...prev,
-        [category]: {
-          ...prev[category],
-          [value]: !prev[category][value]
-        }
-      }));
-    }
-  }, [pendingFilters]);
-  
-  const applyFilters = useCallback(() => {
-    // Create a flat object of active filters
-    const activeFilters = {};
+    // Toggle the selected filter
+    const newFilters = {
+      ...filters,
+      [category]: {
+        ...filters[category],
+        [value]: !filters[category][value]
+      }
+    };
     
-    // Add selected jurisdictions
-    Object.entries(pendingFilters.jurisdictions).forEach(([key, isSelected]) => {
-      if (isSelected) activeFilters[key] = true;
-    });
+    setFilters(newFilters);
     
-    // Add selected document type
-    if (selectedDocType) {
-      activeFilters[selectedDocType] = true;
-    }
-    
-    console.log('Applying filters:', activeFilters);
+    // Immediately apply all active filters
+    const activeFilters = {
+      ...Object.entries(newFilters.jurisdictions)
+        .filter(([_, isSelected]) => isSelected)
+        .reduce((acc, [key]) => ({ ...acc, [key]: true }), {}),
+      ...Object.entries(newFilters.documentTypes)
+        .filter(([_, isSelected]) => isSelected)
+        .reduce((acc, [key]) => ({ ...acc, [key]: true }), {})
+    };
     onFilterChange(activeFilters);
-  }, [pendingFilters, selectedDocType, onFilterChange]);
+  }, [filters, onFilterChange]);
 
   const clearJurisdictionFilters = useCallback(() => {
-    setPendingFilters(prev => ({
-      ...prev,
+    const newFilters = {
+      ...filters,
       jurisdictions: {}
-    }));
-  }, []);
+    };
+    setFilters(newFilters);
+    
+    // Apply remaining document type filters
+    const activeFilters = Object.entries(newFilters.documentTypes)
+      .filter(([_, isSelected]) => isSelected)
+      .reduce((acc, [key]) => ({ ...acc, [key]: true }), {});
+    onFilterChange(activeFilters);
+  }, [filters, onFilterChange]);
 
   const clearAllFilters = useCallback(() => {
-    setPendingFilters({
+    setFilters({
       jurisdictions: {},
       documentTypes: {}
     });
-    setSelectedDocType(null);
-  }, []);
+    onFilterChange({});
+  }, [onFilterChange]);
 
   // Extract document counts from props
   const { documentTypes: docTypeCounts = {}, jurisdictions: jurisdictionCounts = {} } = documentCounts;
@@ -117,7 +111,7 @@ const SidebarFilters = ({ onFilterChange, isDisabled, instanceId = 'default', do
                 <input
                   type="checkbox"
                   id={`${instanceId}-jurisdiction-${index}`}
-                  checked={pendingFilters.jurisdictions[jurisdiction] || false}
+                  checked={filters.jurisdictions[jurisdiction] || false}
                   onChange={() => handleFilterChange('jurisdictions', jurisdiction)}
                 />
                 <span className="filter-label-text">
@@ -127,7 +121,7 @@ const SidebarFilters = ({ onFilterChange, isDisabled, instanceId = 'default', do
               </label>
             );
           })}
-          {Object.values(pendingFilters.jurisdictions).some(Boolean) && (
+          {Object.values(filters.jurisdictions).some(Boolean) && (
             <button 
               className="clear-filter-button"
               onClick={clearJurisdictionFilters}
@@ -147,13 +141,12 @@ const SidebarFilters = ({ onFilterChange, isDisabled, instanceId = 'default', do
               <label 
                 key={`${instanceId}-doctype-${index}`} 
                 htmlFor={`${instanceId}-doctype-${index}`} 
-                className="radio-label filter-label"
+                className="filter-label"
               >
                 <input
-                  type="radio"
-                  name={`${instanceId}-doctype`}
+                  type="checkbox"
                   id={`${instanceId}-doctype-${index}`}
-                  checked={pendingFilters.documentTypes[type] || false}
+                  checked={filters.documentTypes[type] || false}
                   onChange={() => handleFilterChange('documentTypes', type)}
                 />
                 <span className="filter-label-text">
@@ -163,42 +156,46 @@ const SidebarFilters = ({ onFilterChange, isDisabled, instanceId = 'default', do
               </label>
             );
           })}
-          {selectedDocType && (
-            <button 
-              className="clear-filter-button"
-              onClick={() => {
-                setPendingFilters(prev => ({
-                  ...prev,
-                  documentTypes: {}
-                }));
-                setSelectedDocType(null);
-              }}
-            >
-              Clear Document Type
-            </button>
-          )}
         </div>
         
-        <div className="filter-actions">
-          <button 
-            className="apply-filters-button" 
-            onClick={applyFilters}
-            disabled={isDisabled}
-          >
-            Apply Filters
-          </button>
-          {(Object.values(pendingFilters.jurisdictions).some(Boolean) || selectedDocType) && (
-            <button 
-              className="clear-all-filters-button" 
-              onClick={() => {
-                clearAllFilters();
-                onFilterChange({});
-              }}
-            >
-              Clear All Filters
-            </button>
-          )}
+        <div className="filter-separator"></div>
+
+        <div className="working-folder-section">
+          <h3 className="filter-group-title">Working Folder</h3>
+          <div className="working-folder-list">
+            {workingFolderDocs.length === 0 ? (
+              <div className="empty-folder-message">
+                <span className="empty-text">No documents selected</span>
+              </div>
+            ) : (
+              workingFolderDocs.map((doc) => (
+                <div key={doc.id} className="working-folder-item">
+                  <span className="doc-title">{doc.title}</span>
+                  <button
+                    className="remove-doc-button"
+                    onClick={() => removeFromWorkingFolder(doc.id)}
+                    title="Remove from working folder"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
+        
+        {(Object.values(filters.jurisdictions).some(Boolean) || 
+          Object.values(filters.documentTypes).some(Boolean)) && (
+          <button 
+            className="clear-all-filters-button" 
+            onClick={() => {
+              clearAllFilters();
+              onFilterChange({});
+            }}
+          >
+            Clear All Filters
+          </button>
+        )}
       </div>
     </div>
   );

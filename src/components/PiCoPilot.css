@@ -1,12 +1,32 @@
-.copilot-container {
+.app-wrapper {
   display: flex;
   height: 100vh;
+  overflow: hidden;
+}
+
+.main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 245px;
+  flex-shrink: 0;
+  background: white;
+  border-right: 1px solid #e0e0e0;
+  overflow-y: auto;
+}
+
+.copilot-container {
+  flex: 1;
+  display: flex;
   background-color: #e7ecef;
   min-width: 0;
-  position: relative;
-  margin-left: 220px; /* Match sidebar width */
   padding: 20px;
   box-sizing: border-box;
+  overflow: hidden;
+  margin-left: 225px;
 }
 
 .copilot-content {
