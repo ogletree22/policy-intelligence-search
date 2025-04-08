@@ -16,7 +16,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  max-width: calc(100% - 245px);
+  max-width: calc(100% - 300px);
 }
 
 .folders-container::-webkit-scrollbar {
@@ -120,7 +120,7 @@
 .folder-card.expanded {
   grid-column: span 2;
   grid-row: span 2;
-  height: 1100px; /* Double the height plus the gap */
+  height: 1085px; /* Double the height plus the gap */
 }
 
 .folder-header {
