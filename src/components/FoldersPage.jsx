@@ -3,7 +3,7 @@ import './FoldersPage.css';
 import SidebarFilters from './SidebarFilters';
 import SearchBar from './SearchBar';
 import { searchKendra, transformKendraResults, normalizeDocumentType } from '../utils/kendraAPI';
-import { FaUserCircle, FaFolder, FaFolderPlus, FaFolderMinus, FaExpand, FaCompress } from 'react-icons/fa';
+import { FaUserCircle, FaFolder, FaFolderPlus, FaFolderMinus, FaExpand, FaCompress, FaEye, FaTimes, FaTrash } from 'react-icons/fa';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 
 // Import mock data as fallback
@@ -633,6 +633,59 @@ const FoldersPage = () => {
             </div>
           </div>
         </div>
+
+        <div className="working-folder-section">
+          <div className="working-folder-header">
+            <span>Working Folder ({workingFolderDocs.length})</span>
+            <div className="working-folder-actions">
+              <button 
+                className="view-folder-button" 
+                onClick={() => setIsWorkingFolderOpen(true)}
+                title="View working folder contents"
+              >
+                <FaEye />
+              </button>
+              <button 
+                className="clear-all-button"
+                onClick={() => {
+                  workingFolderDocs.forEach(doc => {
+                    removeFromWorkingFolder(doc.id);
+                  });
+                }}
+                title="Clear all documents"
+                disabled={workingFolderDocs.length === 0}
+              >
+                <FaTimes />
+              </button>
+            </div>
+          </div>
+          <div className="working-folder-list">
+            {workingFolderDocs.length === 0 ? (
+              <div className="empty-folder-message">
+                <span className="empty-text">No documents selected</span>
+              </div>
+            ) : (
+              workingFolderDocs.map((doc) => (
+                <div key={doc.id} className="working-folder-item">
+                  <span className="doc-title">{doc.title}</span>
+                  <button
+                    className="remove-doc-button"
+                    onClick={() => removeFromWorkingFolder(doc.id)}
+                    title="Remove from working folder"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+        
+        <WorkingFolderView 
+          isOpen={isWorkingFolderOpen}
+          onClose={() => setIsWorkingFolderOpen(false)}
+          documents={workingFolderDocs}
+        />
       </div>
     </div>
   );
