@@ -21,8 +21,13 @@ const WorkingFolderView = ({ isOpen, onClose, documents }) => {
             <ul className="document-list">
               {documents.map((doc, index) => (
                 <li key={index} className="document-item">
-                  <span className="document-title">{doc.title}</span>
-                  <span className="document-jurisdiction">{doc.jurisdiction}</span>
+                  <div className="document-info">
+                    <span className="document-title">{doc.title}</span>
+                    <span className="document-description">{doc.description}</span>
+                    <div className="document-meta">
+                      <span className="document-jurisdiction">{doc.jurisdiction}</span>
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>

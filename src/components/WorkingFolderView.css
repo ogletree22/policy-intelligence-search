@@ -75,11 +75,10 @@
 }
 
 .document-item {
-  padding: 12px;
+  padding: 16px;
   border-bottom: 1px solid #eee;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 
@@ -87,15 +86,40 @@
   border-bottom: none;
 }
 
+.document-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .document-title {
   font-weight: 500;
   color: #1d3557;
-  flex: 1;
+  font-size: 16px;
+}
+
+.document-description {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 4px 0;
+}
+
+.document-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
 }
 
 .document-jurisdiction {
-  color: #666;
-  font-size: 0.9em;
+  color: #457b9d;
+  font-size: 13px;
+  font-weight: 500;
+  background-color: rgba(69, 123, 157, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
 @keyframes slideIn {
