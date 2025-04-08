@@ -519,24 +519,30 @@ const FoldersPage = () => {
         
         <div className="folders-container">
           <div className="folders-header">
-            <h1 className="page-title">Jurisdictions</h1>
-            <div className="search-container">
-              <SearchBar onSearch={handleSearch} showHeader={false} initialValue={searchQuery} />
-              {activeDocType && (
-                <div className="filter-info">
-                  <p>
-                    {activeDocType}
-                    <span className="remove-filter" onClick={() => {
-                      // Create a new filters object with the current document type unchecked
-                      const newFilters = { ...filters };
-                      if (activeDocType in newFilters) {
-                        newFilters[activeDocType] = false;
-                      }
-                      handleFilterChange(newFilters);
-                    }}>×</span>
-                  </p>
-                </div>
-              )}
+            <div>
+              <h1 className="page-title">Jurisdictions</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <SearchBar onSearch={handleSearch} showHeader={false} initialValue={searchQuery} />
+                {usingMockData && (
+                  <div className="mock-data-notice">
+                    <p>Using demo data</p>
+                  </div>
+                )}
+                {activeDocType && (
+                  <div className="filter-info">
+                    <p>
+                      {activeDocType}
+                      <span className="remove-filter" onClick={() => {
+                        const newFilters = { ...filters };
+                        if (activeDocType in newFilters) {
+                          newFilters[activeDocType] = false;
+                        }
+                        handleFilterChange(newFilters);
+                      }}>×</span>
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -549,12 +555,6 @@ const FoldersPage = () => {
           {error && (
             <div className="error-container">
               <p className="error-message">{error}</p>
-            </div>
-          )}
-
-          {usingMockData && !loading.all && (
-            <div className="mock-data-notice">
-              <p>Using demo data - API connection not available</p>
             </div>
           )}
 
