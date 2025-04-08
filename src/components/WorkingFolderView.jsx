@@ -2,7 +2,7 @@ import React from 'react';
 import { FaTimes, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
-import aiTechnologyIcon from '../assets/ai-technology.png';
+import aiTechnologyIcon from '../assets/AI-technology.png';
 import './WorkingFolderView.css';
 
 const WorkingFolderView = ({ isOpen, onClose, documents }) => {
