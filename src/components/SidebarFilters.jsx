@@ -101,42 +101,66 @@ const SidebarFilters = ({
       <h2 className="sidebar-title">Filters</h2>
       <div className="filter-groups-container">
         <div className="filter-group">
-          <h3>Jurisdiction</h3>
-          {JURISDICTIONS.map((jurisdiction) => (
-            <label key={jurisdiction} className="filter-label">
-              <input
-                type="checkbox"
-                checked={!!filters.jurisdictions[jurisdiction]}
-                onChange={() => handleFilterChange('jurisdictions', jurisdiction)}
-              />
-              <span className="filter-label-text">{jurisdiction}</span>
-              <span className="doc-count">
-                {documentCounts?.jurisdictions?.[jurisdiction] || 0}
-              </span>
-            </label>
-          ))}
+          <h3 className="filter-group-title">Jurisdiction</h3>
+          {JURISDICTIONS.map((jurisdiction, index) => {
+            const count = jurisdictionCounts[jurisdiction] || 0;
+            return (
+              <label 
+                key={`${instanceId}-jurisdiction-${index}`} 
+                htmlFor={`${instanceId}-jurisdiction-${index}`}
+                className="filter-label"
+              >
+                <input
+                  type="checkbox"
+                  id={`${instanceId}-jurisdiction-${index}`}
+                  checked={filters.jurisdictions[jurisdiction] || false}
+                  onChange={() => handleFilterChange('jurisdictions', jurisdiction)}
+                />
+                <span className="filter-label-text">
+                  {jurisdiction} 
+                  {count > 0 && <span className="count-inline">({count})</span>}
+                </span>
+              </label>
+            );
+          })}
+          {Object.values(filters.jurisdictions).some(Boolean) && (
+            <button 
+              className="clear-filter-button"
+              onClick={clearJurisdictionFilters}
+            >
+              Clear Jurisdictions
+            </button>
+          )}
         </div>
-
-        <div className="filter-separator" />
 
         <div className="filter-group">
-          <h3>Document Type</h3>
-          {DOCUMENT_TYPES.map((type) => (
-            <label key={type} className="filter-label">
-              <input
-                type="checkbox"
-                checked={!!filters.documentTypes[type]}
-                onChange={() => handleFilterChange('documentTypes', type)}
-              />
-              <span className="filter-label-text">{type}</span>
-              <span className="doc-count">
-                {documentCounts?.documentTypes?.[type] || 0}
-              </span>
-            </label>
-          ))}
+          <h3 className="filter-group-title">Document Type</h3>
+          {DOCUMENT_TYPES.map((type, index) => {
+            const displayType = type.trim();
+            const count = docTypeCounts[type] || 0;
+            
+            return (
+              <label 
+                key={`${instanceId}-doctype-${index}`} 
+                htmlFor={`${instanceId}-doctype-${index}`} 
+                className="filter-label"
+              >
+                <input
+                  type="checkbox"
+                  id={`${instanceId}-doctype-${index}`}
+                  checked={filters.documentTypes[type] || false}
+                  onChange={() => handleFilterChange('documentTypes', type)}
+                />
+                <span className="filter-label-text">
+                  {displayType}
+                  {count > 0 && <span className="count-inline">({count})</span>}
+                </span>
+              </label>
+            );
+          })}
         </div>
-
-        <div className="filter-separator" />
+        
+        <div className="filter-separator"></div>
 
         <div className="working-folder-section">
           <div className="working-folder-header">
