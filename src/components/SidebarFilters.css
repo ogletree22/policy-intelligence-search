@@ -5,7 +5,7 @@
   height: calc(100vh - 4px);
   width: 220px;
   background-color: #a3cef1;
-  padding: 0 20px 20px 20px;
+  padding: 0 15px 20px 15px;
   box-sizing: border-box;
   color: #274c77;
   font-family: 'Roboto Condensed', sans-serif;
@@ -39,31 +39,33 @@
   flex: 1;
   overflow-y: auto;
   padding-bottom: 20px;
-  padding-right: 12px;
+  padding-right: 8px;
+  margin-right: -8px;
 }
 
 .filter-group {
   background-color: rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  padding: 16px;
+  padding: 12px;
   margin-bottom: 16px;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
 }
 
 .filter-group-title {
   font-family: 'Roboto Condensed', sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #274c77;
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
 }
 
 .filter-group label {
   font-family: 'Roboto Condensed', sans-serif;
   display: flex;
   align-items: flex-start;
-  margin-bottom: 8px;
-  font-size: 14px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  line-height: 1.2;
   font-weight: 400;
   color: #343434;
   cursor: pointer;
@@ -141,25 +143,43 @@
   padding: 0 15px;
 }
 
-.apply-filters-button {
+.apply-filters-button, .clear-all-filters-button {
   width: 100%;
   padding: 10px 15px;
-  background-color: #2980b9;
-  color: white;
+  margin-top: 15px;
   border: none;
   border-radius: 4px;
-  font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.apply-filters-button.small-button, .clear-all-filters-button.small-button {
+  margin-top: 0;
+  width: auto;
+}
+
+.apply-filters-button {
+  background-color: #4a90e2;
+  color: white;
 }
 
 .apply-filters-button:hover {
-  background-color: #3498db;
+  background-color: #357ac7;
 }
 
 .apply-filters-button:disabled {
-  background-color: #95a5a6;
+  background-color: #cccccc;
   cursor: not-allowed;
+}
+
+.clear-all-filters-button {
+  background-color: #f44336;
+  color: white;
+}
+
+.clear-all-filters-button:hover {
+  background-color: #d32f2f;
 }
 
 /* Add styles for radio buttons */
@@ -199,40 +219,23 @@
   color: #333;
 }
 
-/* Clear all filters button */
-.clear-all-filters-button {
-  width: 100%;
-  margin-top: 10px;
-  padding: 8px 12px;
-  background-color: #f8f8f8;
-  color: #e74c3c;
-  border: 1px solid #f0f0f0;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.clear-all-filters-button:hover {
-  background-color: #fee;
-  border-color: #e74c3c;
-}
-
 /* Filter label with count styles */
 .filter-label {
   display: flex !important;
   align-items: flex-start !important;
   width: 100%;
   padding: 2px 0;
+  min-height: 20px;
 }
 
 .filter-label-text {
   flex-grow: 1;
   white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   line-height: 1.2;
   margin-right: 5px;
+  font-size: 12px;
 }
 
 .doc-count {
@@ -252,9 +255,46 @@
 
 /* Inline count styling */
 .count-inline {
-  display: inline-block;
-  margin-left: 5px;
-  color: #000000;
-  font-size: 0.9em;
-  font-weight: normal;
+  font-size: 11px;
+  color: #666;
+  margin-left: 4px;
+}
+
+/* Add styling for the show more/show less button */
+.show-more-button {
+  background: none;
+  border: none;
+  color: #4a90e2;
+  cursor: pointer;
+  font-size: 12px;
+  margin: 8px 0;
+  padding: 4px 0;
+  text-align: left;
+  width: 100%;
+}
+
+.show-more-button:hover {
+  text-decoration: underline;
+}
+
+/* Styling for the top action buttons */
+.top-actions {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 15px 15px;
+}
+
+.small-button {
+  font-size: 12px;
+  padding: 6px 12px;
+  flex: 1;
+  margin: 0 4px;
+}
+
+.small-button:first-child {
+  margin-left: 0;
+}
+
+.small-button:last-child {
+  margin-right: 0;
 }

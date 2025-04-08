@@ -16,12 +16,38 @@ import mockDataUT from '../mockDataUT';
 // Define the jurisdictions we want to display
 const jurisdictions = [
   'Colorado',
-  'New Mexico',
-  'South Coast AQMD',
-  'Bay Area AQMD',
+  'New_Mexico',
+  'South_Coast_AQMD',
+  'Bay_Area_AQMD',
   'Texas',
   'Washington'
 ];
+
+// Mapping between Kendra format (with spaces) and code format (with underscores)
+const jurisdictionMapping = {
+  'New Mexico': 'New_Mexico',
+  'South Coast AQMD': 'South_Coast_AQMD',
+  'Bay Area AQMD': 'Bay_Area_AQMD',
+  // Add direct mappings for non-spaced jurisdictions
+  'Colorado': 'Colorado',
+  'Texas': 'Texas',
+  'Washington': 'Washington'
+};
+
+// Reverse mapping for display and Kendra searches
+const reverseJurisdictionMapping = Object.fromEntries(
+  Object.entries(jurisdictionMapping).map(([key, value]) => [value, key])
+);
+
+// Helper function to convert Kendra format to code format
+const getCodeJurisdiction = (kendraJurisdiction) => {
+  return jurisdictionMapping[kendraJurisdiction] || kendraJurisdiction;
+};
+
+// Helper function to convert code format to Kendra format
+const getKendraJurisdiction = (codeJurisdiction) => {
+  return reverseJurisdictionMapping[codeJurisdiction] || codeJurisdiction;
+};
 
 // List of document types for filtering - match exact Kendra values
 const documentTypes = [
@@ -42,16 +68,16 @@ const mockJurisdictionData = {
     name: 'Colorado',
     documents: mockDataCO2,
   },
-  'New Mexico': {
-    name: 'New Mexico',
+  'New_Mexico': {
+    name: 'New_Mexico',
     documents: mockDataNM,
   },
-  'South Coast AQMD': {
-    name: 'South Coast AQMD',
+  'South_Coast_AQMD': {
+    name: 'South_Coast_AQMD',
     documents: mockDataSCAQMD,
   },
-  'Bay Area AQMD': {
-    name: 'Bay Area AQMD',
+  'Bay_Area_AQMD': {
+    name: 'Bay_Area_AQMD',
     documents: mockDataBAAD,
   },
   'Texas': {
@@ -108,15 +134,20 @@ const getDisplayType = (type) => {
   return trimmedType;
 };
 
+// Helper function to format jurisdiction names for display (replace underscores with spaces)
+const formatJurisdictionDisplay = (jurisdiction) => {
+  return jurisdiction.replace(/_/g, ' ');
+};
+
 const FoldersPage = () => {
   const [filters, setFilters] = useState({});
   const [searchQuery, setSearchQuery] = useState('air'); // Default to 'air' as Kendra requires a search term
   const [loading, setLoading] = useState({
     all: false,
     Colorado: false,
-    'New Mexico': false,
-    'South Coast AQMD': false,
-    'Bay Area AQMD': false,
+    'New_Mexico': false,
+    'South_Coast_AQMD': false,
+    'Bay_Area_AQMD': false,
     Texas: false,
     Washington: false
   });
@@ -144,6 +175,9 @@ const FoldersPage = () => {
   
   // Function to query Kendra with retry logic
   const queryWithRetry = async (query, jurisdiction = null, documentType = null, runId) => {
+    // Convert jurisdiction to Kendra format for the API call only
+    const kendraJurisdiction = jurisdiction ? formatJurisdictionDisplay(jurisdiction) : null;
+    
     // Set the specified jurisdiction to loading
     setLoading(prev => ({ 
       ...prev, 
@@ -157,8 +191,8 @@ const FoldersPage = () => {
 
     while (retries < MAX_RETRIES && !success) {
       try {
-        console.log(`Attempting search for query: ${query}, jurisdiction: ${jurisdiction || 'all'}, docType: ${documentType || 'all'}`);
-        searchResponse = await searchKendra(query, jurisdiction, documentType);
+        console.log(`Attempting search for query: ${query}, jurisdiction: ${kendraJurisdiction || 'all'}, docType: ${documentType || 'all'}`);
+        searchResponse = await searchKendra(query, kendraJurisdiction, documentType);
         success = true;
       } catch (error) {
         console.error(`Search attempt ${retries + 1} failed:`, error);
@@ -188,13 +222,13 @@ const FoldersPage = () => {
 
     // Transform and set results
     const transformedResults = transformKendraResults(searchResponse?.results) || [];
-    console.log(`Processed ${transformedResults.length} documents for ${jurisdiction || 'all'}`);
+    console.log(`Processed ${transformedResults.length} documents for ${kendraJurisdiction || 'all'}`);
     
     // Add jurisdiction property to each document and deduplicate
     const processedDocuments = transformedResults
       .map(doc => ({
         ...doc,
-        jurisdiction: jurisdiction || 'All'
+        jurisdiction: jurisdiction || 'All'  // Use code format for internal storage
       }))
       .filter(doc => {
         // Create a unique identifier - use ID if available, otherwise use title+URL
@@ -263,18 +297,24 @@ const FoldersPage = () => {
       // Clear previous results when starting a new search
       setJurisdictionResults({});
       
+      // Determine which jurisdictions to query
+      // If specific jurisdictions are selected, use those
+      // Otherwise, query all available jurisdictions
+      const jurisdictionsToQuery = selectedJurisdictions.length > 0 
+        ? selectedJurisdictions 
+        : jurisdictions;
+      
       // Set all jurisdictions to loading
-      const initialLoadingState = {};
-      jurisdictions.forEach(j => {
+      const initialLoadingState = { all: true };
+      jurisdictionsToQuery.forEach(j => {
         initialLoadingState[j] = true;
       });
-      initialLoadingState.all = true;
       setLoading(initialLoadingState);
       
       setError(null);
       
       try {
-        console.log(`Attempting Kendra searches for jurisdictions with query: "${searchQuery}" and document type: "${activeDocType || 'all'}"`);
+        console.log(`Attempting Kendra searches for ${jurisdictionsToQuery.length} jurisdictions with query: "${searchQuery}" and document type: "${activeDocType || 'all'}"`);
         
         // Array to collect jurisdictions with data
         const jurisdictionsWithData = [];
@@ -284,7 +324,7 @@ const FoldersPage = () => {
         let totalDocuments = 0;
 
         // Run queries in series to avoid race conditions
-        for (const jurisdiction of jurisdictions) {
+        for (const jurisdiction of jurisdictionsToQuery) {
           // If the search run ID has changed, stop processing
           if (currentRunId !== searchRunId.current) {
             console.log('Search run cancelled - newer search in progress');
@@ -324,13 +364,16 @@ const FoldersPage = () => {
           // Format mock data to match our expected structure
           const formattedMockData = {};
           Object.keys(mockJurisdictionData).forEach(key => {
-            formattedMockData[key] = {
-              name: mockJurisdictionData[key].name,
-              documents: mockJurisdictionData[key].documents.map(doc => ({
-                ...doc,
-                jurisdiction: key
-              }))
-            };
+            // Only include mock data for selected jurisdictions if any are selected
+            if (selectedJurisdictions.length === 0 || selectedJurisdictions.includes(key)) {
+              formattedMockData[key] = {
+                name: mockJurisdictionData[key].name,
+                documents: mockJurisdictionData[key].documents.map(doc => ({
+                  ...doc,
+                  jurisdiction: key
+                }))
+              };
+            }
           });
           setJurisdictionResults(formattedMockData);
           setUsingMockData(true);
@@ -351,40 +394,13 @@ const FoldersPage = () => {
           } catch (error) {
             console.error("Failed to fetch document type counts:", error);
           }
-        } else if (usingMockData) {
-          // Calculate counts from mock data
-          const jurisdictionCounts = {};
-          const typeCounts = {};
-          
-          // Count by jurisdiction
-          Object.entries(mockJurisdictionData).forEach(([key, data]) => {
-            if (data?.documents && jurisdictions.includes(key)) {
-              jurisdictionCounts[key] = data.documents.length;
-            }
-          });
-          
-          // Count by document type
-          Object.values(mockJurisdictionData).forEach(({ documents }) => {
-            if (Array.isArray(documents)) {
-              documents.forEach(doc => {
-                const type = normalizeDocumentType(doc.type) || 'Unknown';
-                typeCounts[type] = (typeCounts[type] || 0) + 1;
-              });
-            }
-          });
-          
-          setDocumentCounts({
-            documentTypes: typeCounts,
-            jurisdictions: jurisdictionCounts
-          });
         }
-        
-        // At the end, clear all loading states
-        const finalLoadingState = {};
-        jurisdictions.forEach(j => {
+
+        // Clear loading states
+        const finalLoadingState = { all: false };
+        jurisdictionsToQuery.forEach(j => {
           finalLoadingState[j] = false;
         });
-        finalLoadingState.all = false;
         setLoading(finalLoadingState);
       } catch (error) {
         console.error('Error fetching Kendra search results:', error);
@@ -392,24 +408,26 @@ const FoldersPage = () => {
         // Fall back to mock data with proper structure
         const formattedMockData = {};
         Object.keys(mockJurisdictionData).forEach(key => {
-          formattedMockData[key] = {
-            name: mockJurisdictionData[key].name,
-            documents: mockJurisdictionData[key].documents.map(doc => ({
-              ...doc,
-              jurisdiction: key
-            }))
-          };
+          // Only include mock data for selected jurisdictions if any are selected
+          if (selectedJurisdictions.length === 0 || selectedJurisdictions.includes(key)) {
+            formattedMockData[key] = {
+              name: mockJurisdictionData[key].name,
+              documents: mockJurisdictionData[key].documents.map(doc => ({
+                ...doc,
+                jurisdiction: key
+              }))
+            };
+          }
         });
         setJurisdictionResults(formattedMockData);
         setUsingMockData(true);
         setError(`Error fetching results: ${error.message}`);
         
         // Clear loading states
-        const finalLoadingState = {};
-        jurisdictions.forEach(j => {
+        const finalLoadingState = { all: false };
+        jurisdictionsToQuery.forEach(j => {
           finalLoadingState[j] = false;
         });
-        finalLoadingState.all = false;
         setLoading(finalLoadingState);
       }
     };
@@ -417,7 +435,7 @@ const FoldersPage = () => {
     if (searchQuery) {
       fetchAllJurisdictionResults();
     }
-  }, [searchQuery, activeDocType]); // Run when search query or document type filter changes
+  }, [searchQuery, activeDocType, selectedJurisdictions]); // Run when search query, document type, or selected jurisdictions change
 
   const handleFilterChange = (newFilters) => {
     // Check if any document type filters are active
@@ -431,13 +449,31 @@ const FoldersPage = () => {
       logDocTypeDetails(docType);
     }
     
-    // Extract selected jurisdictions
-    const jurisdictionFilters = jurisdictions.filter(j => newFilters[j]);
+    // Extract selected jurisdictions from all filter keys (not just predefined ones)
+    const jurisdictionFilters = Object.entries(newFilters)
+      .filter(([key, value]) => 
+        value && // Filter is active
+        !documentTypes.includes(key) && // Not a document type
+        (key.includes('AQMD') || key.includes('APCD') || // California district
+         ['Colorado', 'New_Mexico', 'Texas', 'Washington', // Predefined jurisdictions
+          'Alaska', 'Arkansas', 'Connecticut', 'Delaware', 'Florida', 
+          'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Kansas', 'Kentuvky', 
+          'Maryland', 'Massachusetts', 'Michigan', 'Mississippi', 'Nevada',
+          'North_Carolina', 'North_Dakota', 'Oklahoma', 'Oregon', 'Pennsylvania',
+          'South_Carolina', 'South_Dakota', 'Tennessee', 'Vermont', 'Virginia',
+          'Wisconsin', 'Wyoming'].includes(key))
+      )
+      .map(([key]) => key);
+    
     console.log('Jurisdiction filters applied:', jurisdictionFilters);
     
+    // Update state with filter changes, which will trigger a new search
     setActiveDocType(docType);
     setSelectedJurisdictions(jurisdictionFilters);
     setFilters(newFilters);
+    
+    // Reset search run ID to force a new search
+    searchRunId.current = Date.now();
   };
 
   const handleSearch = (query) => {
@@ -524,7 +560,7 @@ const FoldersPage = () => {
           {selectedJurisdictions.length > 0 && (
             <div className="filter-info">
               <p>
-                Filtering jurisdictions: <strong>{selectedJurisdictions.join(', ')}</strong>
+                Filtering jurisdictions: <strong>{selectedJurisdictions.map(formatJurisdictionDisplay).join(', ')}</strong>
               </p>
             </div>
           )}
@@ -543,10 +579,13 @@ const FoldersPage = () => {
                 const filteredDocs = getFilteredDocuments(jurisdiction.documents, jurisdiction.name);
                 if (filteredDocs.length === 0) return null; // Don't show empty folders
                 
+                // Format jurisdiction name for display
+                const displayName = formatJurisdictionDisplay(jurisdiction.name);
+                
                 return (
                   <div key={jurisdiction.name} className="folder-card">
                     <div className="folder-header">
-                      <h2 className="folder-title">{jurisdiction.name}</h2>
+                      <h2 className="folder-title">{displayName}</h2>
                       <div className="folder-meta">
                         <span className="folder-type">Folder</span>
                         <span className="document-count">{filteredDocs.length} documents</span>
