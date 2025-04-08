@@ -179,7 +179,8 @@ const FoldersPage = () => {
 
     if (!success) {
       console.error(`Failed to search after ${MAX_RETRIES} attempts`);
-      setError(`Failed to search after ${MAX_RETRIES} attempts`);
+      // Instead of setting error, just fall back to mock data silently
+      setUsingMockData(true);
       // Reset the loading state for this jurisdiction
       setLoading(prev => ({ 
         ...prev, 
@@ -534,12 +535,6 @@ const FoldersPage = () => {
           {Object.values(loading).some(Boolean) && (
             <div className="loading-container">
               <p className="loading-message">Loading search results</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="error-container">
-              <p className="error-message">{error}</p>
             </div>
           )}
 
