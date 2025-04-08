@@ -820,4 +820,21 @@
   background-color: #e0e0e0;
   margin: 20px 0;
   width: 100%;
+}
+
+.demo-data-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background-color: #fff3cd;
+  border-radius: 4px;
+  margin-left: 12px;
+  height: fit-content;
+}
+
+.demo-data-indicator p {
+  font-size: 13px;
+  color: #856404;
+  margin: 0;
+  white-space: nowrap;
 } 

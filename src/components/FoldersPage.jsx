@@ -328,7 +328,6 @@ const FoldersPage = () => {
         // Check if we got any results at all
         if (totalDocuments === 0) {
           console.warn('No results found in any jurisdiction. Falling back to mock data.');
-          setError("No documents found in the search index. Using demo data instead.");
           // Format mock data to match our expected structure
           const formattedMockData = {};
           Object.keys(mockJurisdictionData).forEach(key => {
@@ -521,25 +520,11 @@ const FoldersPage = () => {
           <div className="folders-header">
             <div>
               <h1 className="page-title">Jurisdictions</h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
                 <SearchBar onSearch={handleSearch} showHeader={false} initialValue={searchQuery} />
                 {usingMockData && (
-                  <div className="mock-data-notice">
+                  <div className="demo-data-indicator">
                     <p>Using demo data</p>
-                  </div>
-                )}
-                {activeDocType && (
-                  <div className="filter-info">
-                    <p>
-                      {activeDocType}
-                      <span className="remove-filter" onClick={() => {
-                        const newFilters = { ...filters };
-                        if (activeDocType in newFilters) {
-                          newFilters[activeDocType] = false;
-                        }
-                        handleFilterChange(newFilters);
-                      }}>×</span>
-                    </p>
                   </div>
                 )}
               </div>
