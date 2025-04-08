@@ -373,15 +373,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px;
+  padding: 8px 12px;
   margin: 4px 0;
-  background-color: #f5f5f5;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  transition: all 0.2s ease;
 }
 
 .working-folder-item:hover {
-  background-color: #e8e8e8;
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 .working-folder-item .doc-title {
@@ -391,6 +391,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #343434;
 }
 
 .remove-doc-button {
@@ -401,11 +402,14 @@
   padding: 4px;
   display: flex;
   align-items: center;
-  transition: color 0.2s;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  font-size: 12px;
 }
 
 .remove-doc-button:hover {
   color: #d32f2f;
+  background-color: rgba(211, 47, 47, 0.1);
 }
 
 .working-folder-header {
@@ -421,6 +425,39 @@
   font-weight: 600;
   font-size: 16px;
   color: #274C77;
+}
+
+.working-folder-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.clear-all-button {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+  border-radius: 4px;
+}
+
+.clear-all-button:hover {
+  color: #c82333;
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.clear-all-button:disabled {
+  color: #dc354580;
+  cursor: not-allowed;
+  background-color: transparent;
+}
+
+.clear-all-button:focus {
+  outline: none;
 }
 
 .view-folder-button {

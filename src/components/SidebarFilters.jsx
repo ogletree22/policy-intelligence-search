@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { FaUserCircle, FaFolder, FaTrash, FaEye } from 'react-icons/fa';
+import { FaUserCircle, FaFolder, FaTrash, FaEye, FaTimes } from 'react-icons/fa';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import './SidebarFilters.css';
 import WorkingFolderView from './WorkingFolderView';
@@ -165,13 +165,28 @@ const SidebarFilters = ({
         <div className="working-folder-section">
           <div className="working-folder-header">
             <span>Working Folder ({workingFolderDocs.length})</span>
-            <button 
-              className="view-folder-button" 
-              onClick={() => setIsWorkingFolderOpen(true)}
-              title="View working folder contents"
-            >
-              <FaEye />
-            </button>
+            <div className="working-folder-actions">
+              <button 
+                className="view-folder-button" 
+                onClick={() => setIsWorkingFolderOpen(true)}
+                title="View working folder contents"
+              >
+                <FaEye />
+              </button>
+              <button 
+                className="clear-all-button"
+                onClick={() => {
+                  // Clear all documents from working folder
+                  workingFolderDocs.forEach(doc => {
+                    removeFromWorkingFolder(doc.id);
+                  });
+                }}
+                title="Clear all documents"
+                disabled={workingFolderDocs.length === 0}
+              >
+                <FaTimes />
+              </button>
+            </div>
           </div>
           <div className="working-folder-list">
             {workingFolderDocs.length === 0 ? (

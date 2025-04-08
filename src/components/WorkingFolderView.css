@@ -38,6 +38,45 @@
   font-size: 20px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copilot-button {
+  background: none;
+  border: none;
+  color: #457b9d;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.copilot-button:hover {
+  background-color: rgba(69, 123, 157, 0.1);
+}
+
+.copilot-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.copilot-text {
+  color: #457b9d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.copilot-button:hover .copilot-text {
+  color: #274c77;
+}
+
 .close-button {
   background: none;
   border: none;
@@ -49,6 +88,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  font-size: 16px;
 }
 
 .close-button:hover {
@@ -75,11 +115,12 @@
 }
 
 .document-item {
-  padding: 16px;
-  border-bottom: 1px solid #eee;
   display: flex;
+  justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #eee;
 }
 
 .document-item:last-child {
@@ -120,6 +161,26 @@
   background-color: rgba(69, 123, 157, 0.1);
   padding: 2px 8px;
   border-radius: 4px;
+}
+
+.document-item .remove-doc-button {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.document-item .remove-doc-button:hover {
+  color: #d32f2f;
+  background-color: rgba(211, 47, 47, 0.1);
 }
 
 @keyframes slideIn {
