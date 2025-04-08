@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { FaUserCircle, FaFolder, FaTrash } from 'react-icons/fa';
+import { FaUserCircle, FaFolder, FaTrash, FaEye } from 'react-icons/fa';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import './SidebarFilters.css';
+import WorkingFolderView from './WorkingFolderView';
 
 const JURISDICTIONS = [
   'Colorado',
@@ -39,6 +40,7 @@ const SidebarFilters = ({
 
   // Get working folder functionality from context
   const { workingFolderDocs, removeFromWorkingFolder } = useWorkingFolder();
+  const [isWorkingFolderOpen, setIsWorkingFolderOpen] = useState(false);
   
   const handleFilterChange = useCallback((category, value) => {
     console.log('Filter change in SidebarFilters:', category, value);
@@ -161,7 +163,16 @@ const SidebarFilters = ({
         <div className="filter-separator"></div>
 
         <div className="working-folder-section">
-          <h3 className="filter-group-title">Working Folder</h3>
+          <div className="working-folder-header">
+            <span>Working Folder ({workingFolderDocs.length})</span>
+            <button 
+              className="view-folder-button" 
+              onClick={() => setIsWorkingFolderOpen(true)}
+              title="View working folder contents"
+            >
+              <FaEye />
+            </button>
+          </div>
           <div className="working-folder-list">
             {workingFolderDocs.length === 0 ? (
               <div className="empty-folder-message">
@@ -197,6 +208,12 @@ const SidebarFilters = ({
           </button>
         )}
       </div>
+
+      <WorkingFolderView 
+        isOpen={isWorkingFolderOpen}
+        onClose={() => setIsWorkingFolderOpen(false)}
+        documents={workingFolderDocs}
+      />
     </div>
   );
 };

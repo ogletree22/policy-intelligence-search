@@ -407,3 +407,36 @@
 .remove-doc-button:hover {
   color: #d32f2f;
 }
+
+.working-folder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.working-folder-header span {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #274C77;
+}
+
+.view-folder-button {
+  background: none;
+  border: none;
+  color: #457b9d;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.view-folder-button:hover {
+  color: #274c77;
+  background-color: rgba(69, 123, 157, 0.1);
+}
