@@ -19,10 +19,11 @@ const SearchBar = ({ onSearch, showHeader = true, initialValue = '' }) => {
     }
   };
 
-  const handleClear = () => {
-    const defaultValue = initialValue || '';
-    setQuery(defaultValue);
-    onSearch(defaultValue); // Trigger search with empty/default value on clear
+  const handleClear = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setQuery('');
+    onSearch('');
   };
 
   const handleChange = (e) => {
@@ -47,7 +48,14 @@ const SearchBar = ({ onSearch, showHeader = true, initialValue = '' }) => {
             onKeyDown={handleKeyPress}
             aria-label="Search documents"
           />
-          {query && <FaTimes className="clear-icon" onClick={handleClear} />}
+          {query && (
+            <FaTimes 
+              className="clear-icon" 
+              onClick={handleClear}
+              role="button"
+              aria-label="Clear search"
+            />
+          )}
         </div>
       </div>
     </div>

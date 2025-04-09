@@ -3,6 +3,8 @@ import './FoldersPage.css';
 import SidebarFilters from './SidebarFilters';
 import SearchBar from './SearchBar';
 import { searchKendra, transformKendraResults, normalizeDocumentType } from '../utils/kendraAPI';
+import { FaUserCircle, FaFolder, FaFolderPlus, FaFolderMinus, FaExpand, FaCompress } from 'react-icons/fa';
+import { useWorkingFolder } from '../context/WorkingFolderContext';
 
 // Import mock data as fallback
 import mockDataCO2 from '../mockDataCO2.js';
@@ -172,7 +174,13 @@ const FoldersPage = () => {
     documentTypes: {},
     jurisdictions: {}
   });
-  
+
+  // Get working folder functionality from context
+  const { workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder } = useWorkingFolder();
+
+  // Track expanded folders
+  const [expandedFolders, setExpandedFolders] = useState(new Set());
+
   // Function to query Kendra with retry logic
   const queryWithRetry = async (query, jurisdiction = null, documentType = null, runId) => {
     // Convert jurisdiction to Kendra format for the API call only
@@ -205,7 +213,8 @@ const FoldersPage = () => {
 
     if (!success) {
       console.error(`Failed to search after ${MAX_RETRIES} attempts`);
-      setError(`Failed to search after ${MAX_RETRIES} attempts`);
+      // Instead of setting error, just fall back to mock data silently
+      setUsingMockData(true);
       // Reset the loading state for this jurisdiction
       setLoading(prev => ({ 
         ...prev, 
@@ -360,7 +369,6 @@ const FoldersPage = () => {
         // Check if we got any results at all
         if (totalDocuments === 0) {
           console.warn('No results found in any jurisdiction. Falling back to mock data.');
-          setError("No documents found in the search index. Using demo data instead.");
           // Format mock data to match our expected structure
           const formattedMockData = {};
           Object.keys(mockJurisdictionData).forEach(key => {
@@ -522,6 +530,18 @@ const FoldersPage = () => {
     return applyFilters(documents, filters, jurisdiction);
   };
 
+  const toggleFolderExpand = (folderName) => {
+    setExpandedFolders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(folderName)) {
+        newSet.delete(folderName);
+      } else {
+        newSet.add(folderName);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div className="app-wrapper">
       <div className="main-layout">
@@ -535,39 +555,22 @@ const FoldersPage = () => {
         
         <div className="folders-container">
           <div className="folders-header">
-            <h1 className="page-title">Jurisdictions</h1>
-            <SearchBar onSearch={handleSearch} showHeader={false} initialValue={searchQuery} />
+            <div>
+              <h1 className="page-title">Jurisdictions</h1>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <SearchBar onSearch={handleSearch} showHeader={false} initialValue={searchQuery} />
+                {usingMockData && (
+                  <div className="demo-data-indicator">
+                    <p>Using demo data</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {Object.values(loading).some(Boolean) && (
             <div className="loading-container">
-              <p className="loading-message">Loading search results...</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="error-container">
-              <p className="error-message">{error}</p>
-            </div>
-          )}
-
-          {usingMockData && !loading.all && (
-            <div className="mock-data-notice">
-              <p>Using demo data - API connection not available</p>
-            </div>
-          )}
-
-          {selectedJurisdictions.length > 0 && (
-            <div className="filter-info">
-              <p>
-                Filtering jurisdictions: <strong>{selectedJurisdictions.map(formatJurisdictionDisplay).join(', ')}</strong>
-              </p>
-            </div>
-          )}
-
-          {activeDocType && (
-            <div className="filter-info">
-              <p>Filtering by document type: <strong>{activeDocType}</strong></p>
+              <p className="loading-message">Loading results...</p>
             </div>
           )}
 
@@ -583,13 +586,24 @@ const FoldersPage = () => {
                 const displayName = formatJurisdictionDisplay(jurisdiction.name);
                 
                 return (
-                  <div key={jurisdiction.name} className="folder-card">
+                  <div key={jurisdiction.name} className={`folder-card ${expandedFolders.has(jurisdiction.name) ? 'expanded' : ''}`}>
                     <div className="folder-header">
-                      <h2 className="folder-title">{displayName}</h2>
-                      <div className="folder-meta">
-                        <span className="folder-type">Folder</span>
-                        <span className="document-count">{filteredDocs.length} documents</span>
+                      <div className="folder-title-container">
+                        <h3 className="folder-title">{jurisdiction.name}</h3>
+                        <div className="folder-meta">
+                          <span className="folder-type">Folder</span>
+                          <span className="document-count">{filteredDocs.length} documents</span>
+                        </div>
                       </div>
+                      <button 
+                        className="expand-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFolderExpand(jurisdiction.name);
+                        }}
+                      >
+                        {expandedFolders.has(jurisdiction.name) ? <FaCompress /> : <FaExpand />}
+                      </button>
                     </div>
                     <div className="folder-content">
                       <div className="folder-files">
@@ -604,18 +618,34 @@ const FoldersPage = () => {
                           
                           return (
                             <div key={uniqueKey} className="file-card">
-                              {doc.url ? (
-                                <a 
-                                  href={doc.url} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="file-title"
+                              <div className="file-header">
+                                {doc.url ? (
+                                  <a 
+                                    href={doc.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="file-title"
+                                  >
+                                    {doc.title}
+                                  </a>
+                                ) : (
+                                  <span className="file-title no-link">{doc.title}</span>
+                                )}
+                                <button
+                                  className={`add-to-folder-button ${workingFolderDocs.some(wDoc => wDoc.id === doc.id) ? 'in-folder' : ''}`}
+                                  onClick={() => {
+                                    const isInFolder = workingFolderDocs.some(wDoc => wDoc.id === doc.id);
+                                    if (isInFolder) {
+                                      removeFromWorkingFolder(doc.id);
+                                    } else {
+                                      addToWorkingFolder(doc);
+                                    }
+                                  }}
+                                  title={workingFolderDocs.some(wDoc => wDoc.id === doc.id) ? "Remove from Working Folder" : "Add to Working Folder"}
                                 >
-                                  {doc.title}
-                                </a>
-                              ) : (
-                                <span className="file-title no-link">{doc.title}</span>
-                              )}
+                                  {workingFolderDocs.some(wDoc => wDoc.id === doc.id) ? <FaFolderMinus /> : <FaFolderPlus />}
+                                </button>
+                              </div>
                               <p className="file-description">{doc.description || 'No description available'}</p>
                             </div>
                           );

@@ -3,6 +3,7 @@ import './PiCoPilot.css';
 import MessageHistory from './MessageHistory';
 import ChatArea from './ChatArea';
 import CitationsPanel from './CitationsPanel';
+import SidebarFilters from './SidebarFilters';
 
 // Import the AI avatar image
 import aiAvatar from '../assets/AI-technology.png';
@@ -35,12 +36,27 @@ const PiCoPilot = () => {
     }
   ];
 
+  const handleFilterChange = (filters) => {
+    // Handle filter changes if needed
+    console.log('Filters changed:', filters);
+  };
+
   return (
-    <div className="copilot-container">
-      <div className="copilot-content">
-        <MessageHistory />
-        <ChatArea />
-        <CitationsPanel />
+    <div className="app-wrapper">
+      <div className="main-layout">
+        <aside className="sidebar">
+          <SidebarFilters 
+            onFilterChange={handleFilterChange}
+            instanceId="copilot-page"
+          />
+        </aside>
+        <div className="copilot-container">
+          <div className="copilot-content">
+            <MessageHistory />
+            <ChatArea />
+            <CitationsPanel />
+          </div>
+        </div>
       </div>
     </div>
   );

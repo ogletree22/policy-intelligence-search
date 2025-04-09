@@ -17,6 +17,7 @@ import mockDataBAAD from './mockDataBAAD';
 import mockDataTX from './mockDataTX';
 import mockDataWA from './mockDataWA';
 import mockDataUT from './mockDataUT';
+import { WorkingFolderProvider } from './context/WorkingFolderContext';
 import './App.css';
 
 // Combine all mock data
@@ -120,30 +121,32 @@ function App() {
 
   return (
     <Router>
-      <FolderProvider>
-        <Routes>
-          <Route 
-            path="/login" 
-            element={
-              !isAuthenticated ? (
-                <LoginPage onLogin={setIsAuthenticated} />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            } 
-          />
-          <Route
-            path="/*"
-            element={
-              isAuthenticated ? (
-                <MainContent />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-        </Routes>
-      </FolderProvider>
+      <WorkingFolderProvider>
+        <FolderProvider>
+          <Routes>
+            <Route 
+              path="/login" 
+              element={
+                !isAuthenticated ? (
+                  <LoginPage onLogin={setIsAuthenticated} />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              } 
+            />
+            <Route
+              path="/*"
+              element={
+                isAuthenticated ? (
+                  <MainContent />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+          </Routes>
+        </FolderProvider>
+      </WorkingFolderProvider>
     </Router>
   );
 }

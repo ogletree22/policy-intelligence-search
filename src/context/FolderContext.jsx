@@ -15,7 +15,7 @@ export const FolderProvider = ({ children }) => {
   const [folders, setFolders] = useState([
     {
       id: 1,
-      name: 'My Documents',
+      name: 'Working Folder',
       documents: []
     }
   ]);
@@ -37,7 +37,7 @@ export const FolderProvider = ({ children }) => {
       console.warn('Invalid folders state, reinitializing...');
       setFolders([{
         id: 1,
-        name: 'My Documents',
+        name: 'Working Folder',
         documents: []
       }]);
       setCurrentFolderId(1);
