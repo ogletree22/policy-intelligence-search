@@ -6,11 +6,16 @@ import './SidebarFilters.css';
 import WorkingFolderView from './WorkingFolderView';
 
 const JURISDICTIONS = [
+  'Colorado',
+  'New_Mexico',
+  'Texas',
+  'South_Coast_AQMD',
+  'Bay_Area_AQMD',
+  'Washington',
   'Alaska',
   'Arkansas',
   'Amador_APCD',
   'Antelope_Valley_AQMD',
-  'Bay_Area_AQMD',
   'Butte_County_AQMD',
   'Calaveras_County_APCD',
   'California_SCAQMD',
@@ -39,12 +44,10 @@ const JURISDICTIONS = [
   'Santa_Barbara_County_APCD',
   'Shasta_County_AQMD',
   'Siskiyou_County_APCD',
-  'South_Coast_AQMD',
   'Tehama_County_APCD',
   'Tuolumne_County_APCD',
   'Ventura_County_AQMD',
   'Yolo-Solano_AQMD',
-  'Colorado',
   'Connecticut',
   'Delaware',
   'Florida',
@@ -60,7 +63,6 @@ const JURISDICTIONS = [
   'Mississippi',
   'Nevada',
   'New_Mexico-Albuquerque',
-  'New_Mexico',
   'North_Carolina',
   'North_Dakota',
   'Oklahoma',
@@ -69,10 +71,8 @@ const JURISDICTIONS = [
   'South_Carolina',
   'South_Dakota',
   'Tennessee',
-  'Texas',
   'Vermont',
   'Virginia',
-  'Washington',
   'Wisconsin',
   'Wyoming'
 ];
@@ -124,11 +124,22 @@ const getJurisdictionCount = (jurisdiction, jurisdictionCounts) => {
     const californiaCount = jurisdictionCounts[`California/${jurisdiction}`] || 0;
     const kendraCount = jurisdictionCounts[kendraJurisdiction] || 0;
     const californiaKendraCount = jurisdictionCounts[`California (${kendraJurisdiction})`] || 0;
-    return directCount + californiaCount + kendraCount + californiaKendraCount;
+    const californiaPrefixCount = jurisdictionCounts[`California - ${kendraJurisdiction}`] || 0;
+    return directCount + californiaCount + kendraCount + californiaKendraCount + californiaPrefixCount;
   }
   
-  // For regular jurisdictions, check both formats
-  return (jurisdictionCounts[jurisdiction] || 0) + (jurisdictionCounts[kendraJurisdiction] || 0);
+  // For regular jurisdictions, check multiple formats
+  const directCount = jurisdictionCounts[jurisdiction] || 0;
+  const kendraCount = jurisdictionCounts[kendraJurisdiction] || 0;
+  const spaceCount = jurisdictionCounts[jurisdiction.replace(/_/g, ' ')] || 0;
+  
+  // Special case for New Mexico
+  if (jurisdiction === 'New_Mexico') {
+    const albuquerqueCount = jurisdictionCounts['New Mexico-Albuquerque'] || 0;
+    return directCount + kendraCount + spaceCount + albuquerqueCount;
+  }
+  
+  return directCount + kendraCount + spaceCount;
 };
 
 const SidebarFilters = ({ 
@@ -143,9 +154,16 @@ const SidebarFilters = ({
     documentTypes: {}
   });
 
+  // Add state to track pending changes
+  const [pendingFilters, setPendingFilters] = useState({
+    jurisdictions: {},
+    documentTypes: {}
+  });
+
   // Set default state to open
   const [isJurisdictionCollapsed, setIsJurisdictionCollapsed] = useState(false);
   const [isDocumentTypeCollapsed, setIsDocumentTypeCollapsed] = useState(false);
+  const [showAllJurisdictions, setShowAllJurisdictions] = useState(false);
 
   // Get working folder functionality from context
   const { workingFolderDocs, removeFromWorkingFolder } = useWorkingFolder();
@@ -154,45 +172,63 @@ const SidebarFilters = ({
   const handleFilterChange = useCallback((category, value) => {
     console.log('Filter change in SidebarFilters:', category, value);
     
-    // Toggle the selected filter
-    const newFilters = {
-      ...filters,
-      [category]: {
-        ...filters[category],
-        [value]: !filters[category][value]
+    // Update pending filters instead of applying immediately
+    setPendingFilters(prev => {
+      // Get the current state of this filter (considering both current and pending)
+      const currentState = filters[category][value] || prev[category][value];
+      
+      return {
+        ...prev,
+        [category]: {
+          ...prev[category],
+          [value]: !currentState // Toggle based on the current combined state
+        }
+      };
+    });
+  }, [filters]);
+
+  const applyFilters = useCallback(() => {
+    // Merge current and pending filters
+    const mergedFilters = {
+      jurisdictions: {
+        ...filters.jurisdictions,
+        ...pendingFilters.jurisdictions
+      },
+      documentTypes: {
+        ...filters.documentTypes,
+        ...pendingFilters.documentTypes
       }
     };
     
-    setFilters(newFilters);
+    // Apply merged filters
+    setFilters(mergedFilters);
     
-    // Immediately apply all active filters
+    // Convert to the format expected by onFilterChange
     const activeFilters = {
-      ...Object.entries(newFilters.jurisdictions)
+      ...Object.entries(mergedFilters.jurisdictions)
         .filter(([_, isSelected]) => isSelected)
         .reduce((acc, [key]) => ({ ...acc, [key]: true }), {}),
-      ...Object.entries(newFilters.documentTypes)
+      ...Object.entries(mergedFilters.documentTypes)
         .filter(([_, isSelected]) => isSelected)
         .reduce((acc, [key]) => ({ ...acc, [key]: true }), {})
     };
-    onFilterChange(activeFilters);
-  }, [filters, onFilterChange]);
-
-  const clearJurisdictionFilters = useCallback(() => {
-    const newFilters = {
-      ...filters,
-      jurisdictions: {}
-    };
-    setFilters(newFilters);
     
-    // Apply remaining document type filters
-    const activeFilters = Object.entries(newFilters.documentTypes)
-      .filter(([_, isSelected]) => isSelected)
-      .reduce((acc, [key]) => ({ ...acc, [key]: true }), {});
     onFilterChange(activeFilters);
-  }, [filters, onFilterChange]);
+    
+    // Clear pending filters after applying
+    setPendingFilters({
+      jurisdictions: {},
+      documentTypes: {}
+    });
+  }, [filters, pendingFilters, onFilterChange]);
 
-  const clearAllFilters = useCallback(() => {
+  const removeFilters = useCallback(() => {
+    // Reset both current and pending filters
     setFilters({
+      jurisdictions: {},
+      documentTypes: {}
+    });
+    setPendingFilters({
       jurisdictions: {},
       documentTypes: {}
     });
@@ -202,17 +238,13 @@ const SidebarFilters = ({
   // Extract document counts from props
   const { documentTypes: docTypeCounts = {}, jurisdictions: jurisdictionCounts = {} } = documentCounts;
 
-  // Sort jurisdictions by count in descending order
-  const sortedJurisdictions = [...JURISDICTIONS].sort((a, b) => {
-    const countA = getJurisdictionCount(a, jurisdictionCounts);
-    const countB = getJurisdictionCount(b, jurisdictionCounts);
-    return countB - countA; // Sort in descending order
-  });
+  // Use the original JURISDICTIONS array order instead of sorting by count
+  const sortedJurisdictions = JURISDICTIONS;
 
   // Get the jurisdictions to display based on collapsed/expanded state
   const visibleJurisdictions = showAllJurisdictions 
     ? sortedJurisdictions 
-    : sortedJurisdictions.slice(0, 11);
+    : sortedJurisdictions.slice(0, 6);
 
   return (
     <div className={`sidebar-filters ${isDisabled ? 'disabled' : ''}`}>
@@ -220,6 +252,26 @@ const SidebarFilters = ({
         <FaUserCircle className="user-icon" />
       </div>
       <h2 className="sidebar-title">Filters</h2>
+      
+      <div className="filter-actions">
+        <button 
+          className="apply-filters-button"
+          onClick={applyFilters}
+          disabled={Object.keys(pendingFilters.jurisdictions).length === 0 && 
+                   Object.keys(pendingFilters.documentTypes).length === 0}
+        >
+          Apply Filters
+        </button>
+        <button 
+          className="remove-filters-button"
+          onClick={removeFilters}
+          disabled={Object.keys(filters.jurisdictions).length === 0 && 
+                   Object.keys(filters.documentTypes).length === 0}
+        >
+          Remove Filters
+        </button>
+      </div>
+
       <div className="filter-groups-container">
         <div className="filter-group">
           <div className="filter-group-title">
@@ -233,27 +285,42 @@ const SidebarFilters = ({
               {isJurisdictionCollapsed ? <FaChevronDown /> : <FaChevronUp />}
             </button>
           </div>
-          {!isJurisdictionCollapsed && JURISDICTIONS.map((jurisdiction, index) => {
-            const count = jurisdictionCounts[jurisdiction] || 0;
-            return (
-              <label 
-                key={`${instanceId}-jurisdiction-${index}`} 
-                htmlFor={`${instanceId}-jurisdiction-${index}`}
-                className="filter-label"
-              >
-                <input
-                  type="checkbox"
-                  id={`${instanceId}-jurisdiction-${index}`}
-                  checked={filters.jurisdictions[jurisdiction] || false}
-                  onChange={() => handleFilterChange('jurisdictions', jurisdiction)}
-                />
-                <span className="filter-label-text">
-                  {jurisdiction} 
-                  {count > 0 && <span className="count-inline">({count})</span>}
-                </span>
-              </label>
-            );
-          })}
+          {!isJurisdictionCollapsed && (
+            <>
+              {visibleJurisdictions.map((jurisdiction, index) => {
+                const count = getJurisdictionCount(jurisdiction, jurisdictionCounts);
+                // Check if jurisdiction is selected in current filters AND not explicitly unchecked in pending
+                const isSelected = filters.jurisdictions[jurisdiction] && 
+                                 pendingFilters.jurisdictions[jurisdiction] !== false;
+                return (
+                  <label 
+                    key={`${instanceId}-jurisdiction-${index}`} 
+                    htmlFor={`${instanceId}-jurisdiction-${index}`}
+                    className="filter-label"
+                  >
+                    <input
+                      type="checkbox"
+                      id={`${instanceId}-jurisdiction-${index}`}
+                      checked={isSelected}
+                      onChange={() => handleFilterChange('jurisdictions', jurisdiction)}
+                    />
+                    <span className="filter-label-text">
+                      {formatJurisdictionName(jurisdiction)}
+                      {count > 0 && <span className="count-inline">({count})</span>}
+                    </span>
+                  </label>
+                );
+              })}
+              {sortedJurisdictions.length > 6 && (
+                <button 
+                  className="show-more-button"
+                  onClick={() => setShowAllJurisdictions(!showAllJurisdictions)}
+                >
+                  {showAllJurisdictions ? 'Show Less' : 'Show More'}
+                </button>
+              )}
+            </>
+          )}
         </div>
 
         <div className="filter-group">
@@ -271,6 +338,9 @@ const SidebarFilters = ({
           {!isDocumentTypeCollapsed && DOCUMENT_TYPES.map((type, index) => {
             const displayType = type.trim();
             const count = docTypeCounts[type] || 0;
+            // Check if document type is selected in current filters AND not explicitly unchecked in pending
+            const isSelected = filters.documentTypes[type] && 
+                             pendingFilters.documentTypes[type] !== false;
             
             return (
               <label 
@@ -281,7 +351,7 @@ const SidebarFilters = ({
                 <input
                   type="checkbox"
                   id={`${instanceId}-doctype-${index}`}
-                  checked={filters.documentTypes[type] || false}
+                  checked={isSelected}
                   onChange={() => handleFilterChange('documentTypes', type)}
                 />
                 <span className="filter-label-text">
