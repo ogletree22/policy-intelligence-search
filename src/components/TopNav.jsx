@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import './TopNav.css';
 import logo from '../assets/logo.png';
 import searchIcon from '../assets/Search-Icon.png';
-import folderIcon from '../assets/Folder.png';
+import folderIcon from '../assets/Folders.png';
 import coPilotIcon from '../assets/AI-technology.png'; // Assuming that's AI Technology icon
 
 const TopNav = () => {

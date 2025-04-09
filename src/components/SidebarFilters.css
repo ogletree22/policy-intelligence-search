@@ -51,14 +51,20 @@
 }
 
 .filter-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: 'Roboto Condensed', sans-serif;
   font-size: 16px;
   font-weight: 600;
   color: #274c77;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  margin: 0 0 12px 0;
+}
+
+.filter-icon {
+  font-size: 16px;
+  color: #457b9d;
+  margin-right: 4px;
 }
 
 .filter-group label {
@@ -350,6 +356,7 @@
   border-radius: 12px;
   margin: 4px 0;
   border-color: #34343430 !important;
+  font-family: 'Roboto', sans-serif;
 }
 
 .empty-text {
@@ -391,6 +398,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #343434;
+  font-family: 'Roboto', sans-serif;
 }
 
 .remove-doc-button {
@@ -419,7 +427,7 @@
 }
 
 .working-folder-header span {
-  font-family: 'Roboto Condensed', sans-serif;
+  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 16px;
   color: #274C77;
@@ -436,7 +444,7 @@
   border: none;
   color: #dc3545;
   cursor: pointer;
-  padding: 4px;
+  padding: 4px 4px !important;
   display: flex;
   align-items: center;
   border-radius: 4px;
@@ -462,7 +470,7 @@
   border: none;
   color: #457b9d;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 4px 4px;
   border-radius: 4px;
   display: flex;
   align-items: center;

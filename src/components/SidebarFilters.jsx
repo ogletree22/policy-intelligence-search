@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { FaUserCircle, FaFolder, FaTrash, FaEye, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
+import { JurisdictionIcon, DocumentTypeIcon } from './icons/FilterIcons';
 import './SidebarFilters.css';
 import WorkingFolderView from './WorkingFolderView';
 
@@ -105,12 +106,17 @@ const SidebarFilters = ({
       <h2 className="sidebar-title">Filters</h2>
       <div className="filter-groups-container">
         <div className="filter-group">
-          <h3 className="filter-group-title">
-            Jurisdiction
-            <button onClick={() => setIsJurisdictionCollapsed(!isJurisdictionCollapsed)} className="collapse-button">
+          <div className="filter-group-title">
+            <JurisdictionIcon className="filter-icon" />
+            <span>Jurisdiction</span>
+            <button 
+              className="collapse-button"
+              onClick={() => setIsJurisdictionCollapsed(!isJurisdictionCollapsed)}
+              aria-label={isJurisdictionCollapsed ? "Expand jurisdiction filters" : "Collapse jurisdiction filters"}
+            >
               {isJurisdictionCollapsed ? <FaChevronDown /> : <FaChevronUp />}
             </button>
-          </h3>
+          </div>
           {!isJurisdictionCollapsed && JURISDICTIONS.map((jurisdiction, index) => {
             const count = jurisdictionCounts[jurisdiction] || 0;
             return (
@@ -135,12 +141,17 @@ const SidebarFilters = ({
         </div>
 
         <div className="filter-group">
-          <h3 className="filter-group-title">
-            Document Type
-            <button onClick={() => setIsDocumentTypeCollapsed(!isDocumentTypeCollapsed)} className="collapse-button">
+          <div className="filter-group-title">
+            <DocumentTypeIcon className="filter-icon" />
+            <span>Document Type</span>
+            <button 
+              className="collapse-button"
+              onClick={() => setIsDocumentTypeCollapsed(!isDocumentTypeCollapsed)}
+              aria-label={isDocumentTypeCollapsed ? "Expand document type filters" : "Collapse document type filters"}
+            >
               {isDocumentTypeCollapsed ? <FaChevronDown /> : <FaChevronUp />}
             </button>
-          </h3>
+          </div>
           {!isDocumentTypeCollapsed && DOCUMENT_TYPES.map((type, index) => {
             const displayType = type.trim();
             const count = docTypeCounts[type] || 0;

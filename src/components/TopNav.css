@@ -73,8 +73,10 @@
     height: 20px;
     width: 22px;
     margin-right: 6px;
-    vertical-align: middle;
-    object-fit: contain;  /* prevents stretching */
+    vertical-align: bottom;
+    object-fit: contain;
+    display: inline-block;
+    margin-bottom: 2px;
   }
   
   
