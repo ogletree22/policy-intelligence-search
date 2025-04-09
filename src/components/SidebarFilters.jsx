@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { FaUserCircle, FaFolder, FaTrash, FaEye, FaTimes } from 'react-icons/fa';
+import { FaUserCircle, FaFolder, FaTrash, FaEye, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import './SidebarFilters.css';
 import WorkingFolderView from './WorkingFolderView';
@@ -37,6 +37,10 @@ const SidebarFilters = ({
     jurisdictions: {},
     documentTypes: {}
   });
+
+  // Set default state to open
+  const [isJurisdictionCollapsed, setIsJurisdictionCollapsed] = useState(false);
+  const [isDocumentTypeCollapsed, setIsDocumentTypeCollapsed] = useState(false);
 
   // Get working folder functionality from context
   const { workingFolderDocs, removeFromWorkingFolder } = useWorkingFolder();
@@ -101,8 +105,13 @@ const SidebarFilters = ({
       <h2 className="sidebar-title">Filters</h2>
       <div className="filter-groups-container">
         <div className="filter-group">
-          <h3 className="filter-group-title">Jurisdiction</h3>
-          {JURISDICTIONS.map((jurisdiction, index) => {
+          <h3 className="filter-group-title">
+            Jurisdiction
+            <button onClick={() => setIsJurisdictionCollapsed(!isJurisdictionCollapsed)} className="collapse-button">
+              {isJurisdictionCollapsed ? <FaChevronDown /> : <FaChevronUp />}
+            </button>
+          </h3>
+          {!isJurisdictionCollapsed && JURISDICTIONS.map((jurisdiction, index) => {
             const count = jurisdictionCounts[jurisdiction] || 0;
             return (
               <label 
@@ -123,19 +132,16 @@ const SidebarFilters = ({
               </label>
             );
           })}
-          {Object.values(filters.jurisdictions).some(Boolean) && (
-            <button 
-              className="clear-filter-button"
-              onClick={clearJurisdictionFilters}
-            >
-              Clear Jurisdictions
-            </button>
-          )}
         </div>
 
         <div className="filter-group">
-          <h3 className="filter-group-title">Document Type</h3>
-          {DOCUMENT_TYPES.map((type, index) => {
+          <h3 className="filter-group-title">
+            Document Type
+            <button onClick={() => setIsDocumentTypeCollapsed(!isDocumentTypeCollapsed)} className="collapse-button">
+              {isDocumentTypeCollapsed ? <FaChevronDown /> : <FaChevronUp />}
+            </button>
+          </h3>
+          {!isDocumentTypeCollapsed && DOCUMENT_TYPES.map((type, index) => {
             const displayType = type.trim();
             const count = docTypeCounts[type] || 0;
             
@@ -209,19 +215,6 @@ const SidebarFilters = ({
             )}
           </div>
         </div>
-        
-        {(Object.values(filters.jurisdictions).some(Boolean) || 
-          Object.values(filters.documentTypes).some(Boolean)) && (
-          <button 
-            className="clear-all-filters-button" 
-            onClick={() => {
-              clearAllFilters();
-              onFilterChange({});
-            }}
-          >
-            Clear All Filters
-          </button>
-        )}
       </div>
 
       <WorkingFolderView 

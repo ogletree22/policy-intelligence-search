@@ -534,15 +534,7 @@ const FoldersPage = () => {
 
           {Object.values(loading).some(Boolean) && (
             <div className="loading-container">
-              <p className="loading-message">Loading search results</p>
-            </div>
-          )}
-
-          {selectedJurisdictions.length > 0 && (
-            <div className="filter-info">
-              <p>
-                Filtering jurisdictions: <strong>{selectedJurisdictions.join(', ')}</strong>
-              </p>
+              <p className="loading-message">Loading results...</p>
             </div>
           )}
 

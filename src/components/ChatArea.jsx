@@ -27,7 +27,7 @@ const ChatArea = () => {
         <div className="breadcrumb">
           <span>Pi Co-Pilot</span>
           <span className="breadcrumb-separator">&gt;</span>
-          <span>HDV NOx research</span>
+          <span>Working Folder</span>
         </div>
       </div>
 

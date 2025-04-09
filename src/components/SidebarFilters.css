@@ -13,7 +13,6 @@
   flex-direction: column;
   border-right: 1px solid rgba(0, 0, 0, 0.05);
   z-index: 1000;
-  transition: opacity 0.3s ease;
 }
 
 .sidebar-filters.disabled {
@@ -45,9 +44,10 @@
 .filter-group {
   background-color: rgba(255, 255, 255, 0.15);
   border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
+  padding: 3px 12px;
+  margin-bottom: 12px;
   box-shadow: none;
+  overflow: hidden;
 }
 
 .filter-group-title {
@@ -55,7 +55,10 @@
   font-size: 16px;
   font-weight: 600;
   color: #274c77;
-  margin: 0 0 12px 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .filter-group label {
@@ -63,11 +66,10 @@
   display: flex;
   align-items: flex-start;
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   color: #343434;
   cursor: pointer;
-  transition: color 0.2s;
   padding: 2px 0;
 }
 
@@ -91,7 +93,6 @@
   background-color: rgba(69, 123, 157, 0.1);
   cursor: pointer;
   position: relative;
-  transition: all 0.2s;
 }
 
 .filter-group input[type="checkbox"]:checked {
@@ -128,7 +129,6 @@
   font-size: 25px;
   color: #274C77;
   cursor: pointer;
-  transition: color 0.2s ease;
 }
 
 .user-icon:hover {
@@ -150,7 +150,6 @@
   border-radius: 4px;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
 .apply-filters-button:hover {
@@ -191,7 +190,6 @@
   color: #666;
   font-size: 0.8rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
 .clear-filter-button:hover {
@@ -210,7 +208,6 @@
   border-radius: 4px;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .clear-all-filters-button:hover {
@@ -277,7 +274,6 @@
   background-color: rgba(69, 123, 157, 0.1);
   cursor: pointer;
   position: relative;
-  transition: all 0.2s;
 }
 
 .filter-group input[type="radio"]:checked {
@@ -307,7 +303,6 @@
   border-radius: 8px;
   padding: 6px 10px;
   margin-bottom: 6px;
-  transition: color 0.2s ease;
   border: none;
 }
 
@@ -382,7 +377,6 @@
   margin: 4px 0;
   background-color: rgba(255, 255, 255, 0.15);
   border-radius: 12px;
-  transition: all 0.2s ease;
 }
 
 .working-folder-item:hover {
@@ -407,7 +401,6 @@
   padding: 4px;
   display: flex;
   align-items: center;
-  transition: all 0.2s ease;
   border-radius: 4px;
   font-size: 12px;
 }
@@ -446,7 +439,6 @@
   padding: 4px;
   display: flex;
   align-items: center;
-  transition: color 0.2s;
   border-radius: 4px;
 }
 
@@ -475,10 +467,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
 }
 
 .view-folder-button:hover {
   color: #274c77;
   background-color: rgba(69, 123, 157, 0.1);
+}
+
+.collapse-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 4px;
+  color: #457b9d;
+  outline: none;
+}
+
+.collapse-button:hover {
+  color: #274c77;
+}
+
+.collapse-button:focus {
+  outline: none;
 }
