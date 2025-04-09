@@ -44,7 +44,7 @@ html, body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  margin-left: 220px;
+  margin-left: 275px;
   padding: 20px;
   box-sizing: border-box;
   min-width: 800px;
@@ -84,14 +84,13 @@ html, body {
 }
 
 .sidebar {
-  width: 220px;
+  width: 275px;
   background-color: white;
   border-right: 1px solid #e0e0e0;
   height: 100%;
   position: fixed;
   left: 0;
   z-index: 10;
-  transition: opacity 0.3s ease;
 }
 
 .sidebar.disabled {

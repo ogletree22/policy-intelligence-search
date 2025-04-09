@@ -1,0 +1,195 @@
+.working-folder-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.working-folder-modal {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.2s ease-out;
+}
+
+.working-folder-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.working-folder-header h3 {
+  margin: 0;
+  color: #274C77;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 20px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copilot-button {
+  background: none;
+  border: none;
+  color: #457b9d;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.copilot-button:hover {
+  background-color: rgba(69, 123, 157, 0.1);
+}
+
+.copilot-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.copilot-text {
+  color: #457b9d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.copilot-button:hover .copilot-text {
+  color: #274c77;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 16px;
+}
+
+.close-button:hover {
+  color: #274C77;
+  background-color: rgba(69, 123, 157, 0.1);
+}
+
+.working-folder-content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.empty-message {
+  color: #666;
+  text-align: center;
+  font-style: italic;
+}
+
+.document-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.document-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.document-item:last-child {
+  border-bottom: none;
+}
+
+.document-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.document-title {
+  font-weight: 500;
+  color: #1d3557;
+  font-size: 16px;
+}
+
+.document-description {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 4px 0;
+}
+
+.document-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.document-jurisdiction {
+  color: #457b9d;
+  font-size: 13px;
+  font-weight: 500;
+  background-color: rgba(69, 123, 157, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.document-item .remove-doc-button {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.document-item .remove-doc-button:hover {
+  color: #d32f2f;
+  background-color: rgba(211, 47, 47, 0.1);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 

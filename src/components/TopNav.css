@@ -7,7 +7,7 @@
     padding: 0 10px;
     border-bottom: 1px solid #e0e0e0;
     position: relative;
-    margin-left: 220px; /* match your sidebar width */
+    margin-left: 275px; /* match your sidebar width */
   }
   
   .topnav-left {
@@ -73,8 +73,10 @@
     height: 20px;
     width: 22px;
     margin-right: 6px;
-    vertical-align: middle;
-    object-fit: contain;  /* prevents stretching */
+    vertical-align: bottom;
+    object-fit: contain;
+    display: inline-block;
+    margin-bottom: 2px;
   }
   
   

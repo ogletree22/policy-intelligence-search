@@ -1,10 +1,10 @@
 // SearchResults.jsx
 import React, { useState, useCallback, useEffect } from 'react';
-import { useFolderContext } from '../context/FolderContext';
+import { useWorkingFolder } from '../context/WorkingFolderContext';
 import './SearchResults.css';
 
 const SearchResults = ({ results }) => {
-  const { addToFolder, removeFromFolder, currentFolder, currentFolderId } = useFolderContext();
+  const { workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder } = useWorkingFolder();
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [documentStates, setDocumentStates] = useState({});
 
@@ -14,30 +14,30 @@ const SearchResults = ({ results }) => {
     results.forEach(result => {
       const docId = Number(result.id);
       newStates[docId] = {
-        inFolder: currentFolder?.documents?.some(doc => Number(doc.id) === docId) || false
+        inFolder: workingFolderDocs.some(doc => Number(doc.id) === docId) || false
       };
     });
     setDocumentStates(newStates);
-  }, [results, currentFolder]);
+  }, [results, workingFolderDocs]);
 
   const isInFolder = useCallback((documentId) => {
     try {
-      if (!documentId || !currentFolder?.documents) {
+      if (!documentId) {
         return false;
       }
       
       const docId = Number(documentId);
-      return currentFolder.documents.some(doc => Number(doc.id) === docId);
+      return workingFolderDocs.some(doc => Number(doc.id) === docId);
     } catch (error) {
       console.error('Error in isInFolder:', error);
       return false;
     }
-  }, [currentFolder]);
+  }, [workingFolderDocs]);
 
   const handleFolderAction = useCallback((document) => {
     try {
-      if (!document?.id || !currentFolder) {
-        console.error('Invalid document or folder:', { document, currentFolder });
+      if (!document?.id) {
+        console.error('Invalid document:', document);
         return;
       }
 
@@ -45,7 +45,7 @@ const SearchResults = ({ results }) => {
       const inFolder = isInFolder(docId);
       
       if (inFolder) {
-        removeFromFolder(docId);
+        removeFromWorkingFolder(docId);
         setDocumentStates(prev => ({
           ...prev,
           [docId]: { ...prev[docId], inFolder: false }
@@ -57,7 +57,7 @@ const SearchResults = ({ results }) => {
           url: document.url,
           description: document.description
         };
-        addToFolder(docToAdd);
+        addToWorkingFolder(docToAdd);
         setDocumentStates(prev => ({
           ...prev,
           [docId]: { ...prev[docId], inFolder: true }
@@ -66,7 +66,7 @@ const SearchResults = ({ results }) => {
     } catch (error) {
       console.error('Error in handleFolderAction:', error);
     }
-  }, [isInFolder, addToFolder, removeFromFolder, currentFolder]);
+  }, [isInFolder, addToWorkingFolder, removeFromWorkingFolder]);
 
   const toggleDescription = (index) => {
     setExpandedDescriptions(prev => ({
@@ -90,7 +90,6 @@ const SearchResults = ({ results }) => {
               <button 
                 className={`add-to-folder-btn ${inFolder ? 'in-folder' : ''}`}
                 onClick={() => handleFolderAction(result)}
-                disabled={!currentFolder}
               >
                 {inFolder ? 'Remove' : 'Add to Folder'}
               </button>
