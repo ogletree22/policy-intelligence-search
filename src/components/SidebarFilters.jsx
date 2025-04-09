@@ -175,7 +175,12 @@ const SidebarFilters = ({
     // Update pending filters instead of applying immediately
     setPendingFilters(prev => {
       // Get the current state of this filter (considering both current and pending)
-      const currentState = filters[category][value] || prev[category][value];
+      const currentState = prev[category][value] !== undefined 
+        ? prev[category][value] 
+        : filters[category][value] || false;
+      
+      // Log the current state before toggling
+      console.log(`Toggling ${category} filter "${value}" from ${currentState} to ${!currentState}`);
       
       return {
         ...prev,
@@ -213,6 +218,10 @@ const SidebarFilters = ({
         .reduce((acc, [key]) => ({ ...acc, [key]: true }), {})
     };
     
+    // Debug log to verify which filters are being sent
+    console.log(`Applying filters with ${Object.keys(activeFilters).length} active filters:`, activeFilters);
+    
+    // Call parent component's filter handler
     onFilterChange(activeFilters);
     
     // Clear pending filters after applying

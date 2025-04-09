@@ -40,6 +40,12 @@ export const searchKendra = async (query = 'air', jurisdiction = null, documentT
     if (fetchFacets) {
       requestBody.facetSummary = true;
       console.log("Requesting facet summary for document counts");
+      
+      // Add document type filter to facet requests if specified
+      if (processedDocType) {
+        requestBody._category = processedDocType;
+        console.log(`Adding document type filter to facet request: "${processedDocType}"`);
+      }
     } else {
       // Add jurisdiction filter if specified - match the Lambda's expected format
       if (trimmedJurisdiction) {

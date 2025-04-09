@@ -10,6 +10,8 @@ import FoldersPage from './components/FoldersPage';
 import PiCoPilot from './components/PiCoPilot';
 import LoginPage from './components/LoginPage';
 import { FolderProvider } from './context/FolderContext';
+import { WorkingFolderProvider } from './context/WorkingFolderContext';
+import { FolderPageProvider } from './context/FolderPageContext';
 import mockDataCO2 from './mockDataCO2.js';
 import mockDataNM from './mockDataNM';
 import mockDataSCAQMD from './mockDataSCAQMD';
@@ -17,7 +19,6 @@ import mockDataBAAD from './mockDataBAAD';
 import mockDataTX from './mockDataTX';
 import mockDataWA from './mockDataWA';
 import mockDataUT from './mockDataUT';
-import { WorkingFolderProvider } from './context/WorkingFolderContext';
 import './App.css';
 
 // Combine all mock data
@@ -123,28 +124,30 @@ function App() {
     <Router>
       <WorkingFolderProvider>
         <FolderProvider>
-          <Routes>
-            <Route 
-              path="/login" 
-              element={
-                !isAuthenticated ? (
-                  <LoginPage onLogin={setIsAuthenticated} />
-                ) : (
-                  <Navigate to="/" replace />
-                )
-              } 
-            />
-            <Route
-              path="/*"
-              element={
-                isAuthenticated ? (
-                  <MainContent />
-                ) : (
-                  <Navigate to="/login" replace />
-                )
-              }
-            />
-          </Routes>
+          <FolderPageProvider>
+            <Routes>
+              <Route 
+                path="/login" 
+                element={
+                  !isAuthenticated ? (
+                    <LoginPage onLogin={setIsAuthenticated} />
+                  ) : (
+                    <Navigate to="/" replace />
+                  )
+                } 
+              />
+              <Route
+                path="/*"
+                element={
+                  isAuthenticated ? (
+                    <MainContent />
+                  ) : (
+                    <Navigate to="/login" replace />
+                  )
+                }
+              />
+            </Routes>
+          </FolderPageProvider>
         </FolderProvider>
       </WorkingFolderProvider>
     </Router>
