@@ -143,21 +143,31 @@
 
 /* Add styles for the Apply Filters button */
 .filter-actions {
-  margin-top: 20px;
-  padding: 0 15px;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 0 16px;
 }
 
-.apply-filters-button, .clear-all-filters-button {
-  width: 100%;
-  padding: 10px 15px;
-  margin-top: 15px;
+.apply-filters-button,
+.remove-filters-button {
+  flex: 1;
+  padding: 8px 16px;
   border: none;
   border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.apply-filters-button:hover {
-  background-color: #357ac7;
+.apply-filters-button {
+  background-color: #0066cc;
+  color: white;
+}
+
+.apply-filters-button:hover:not(:disabled) {
+  background-color: #0052a3;
 }
 
 .apply-filters-button:disabled {
@@ -165,13 +175,20 @@
   cursor: not-allowed;
 }
 
-.clear-all-filters-button {
-  background-color: #f44336;
-  color: white;
+.remove-filters-button {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
 }
 
-.clear-all-filters-button:hover {
-  background-color: #d32f2f;
+.remove-filters-button:hover:not(:disabled) {
+  background-color: #e6e6e6;
+}
+
+.remove-filters-button:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
 }
 
 /* Add styles for radio buttons */
@@ -504,4 +521,30 @@
 
 .collapse-button:focus {
   outline: none;
+}
+
+.show-more-button {
+  background: none;
+  border: none;
+  color: #0066cc;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 0;
+  text-align: left;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.show-more-button:hover {
+  text-decoration: underline;
+}
+
+.count-badge {
+  background-color: #e6e6e6;
+  border-radius: 12px;
+  color: #333;
+  display: inline-block;
+  font-size: 12px;
+  margin-left: 8px;
+  padding: 2px 8px;
 }
