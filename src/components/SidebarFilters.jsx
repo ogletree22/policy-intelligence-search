@@ -260,27 +260,28 @@ const SidebarFilters = ({
       <div className="user-profile">
         <FaUserCircle className="user-icon" />
       </div>
-      <h2 className="sidebar-title">Filters</h2>
-      
-      <div className="filter-actions">
-        <button 
-          className="apply-filters-button"
-          onClick={applyFilters}
-          disabled={Object.keys(pendingFilters.jurisdictions).length === 0 && 
-                   Object.keys(pendingFilters.documentTypes).length === 0}
-        >
-          Apply Filters
-        </button>
-        <button 
-          className="remove-filters-button"
-          onClick={removeFilters}
-          disabled={Object.keys(filters.jurisdictions).length === 0 && 
-                   Object.keys(filters.documentTypes).length === 0}
-        >
-          Remove Filters
-        </button>
+      <div className="sidebar-header">
+        <h2 className="sidebar-title">Filters</h2>
+        <div className="filter-actions">
+          <button 
+            className="apply-filters-button"
+            onClick={applyFilters}
+            disabled={Object.keys(pendingFilters.jurisdictions).length === 0 && 
+                     Object.keys(pendingFilters.documentTypes).length === 0}
+          >
+            Apply
+          </button>
+          <button 
+            className="remove-filters-button"
+            onClick={removeFilters}
+            disabled={Object.keys(filters.jurisdictions).length === 0 && 
+                     Object.keys(filters.documentTypes).length === 0}
+          >
+            Remove
+          </button>
+        </div>
       </div>
-
+      
       <div className="filter-groups-container">
         <div className="filter-group">
           <div className="filter-group-title">

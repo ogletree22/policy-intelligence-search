@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
 import { searchKendra, transformKendraResults } from '../utils/kendraAPI';
 
 // Import mock data as fallback
@@ -267,6 +267,7 @@ export const FolderPageProvider = ({ children }) => {
   
   // Modified function that accepts a query parameter and optional jurisdictions
   const fetchAllJurisdictionResultsWithQuery = async (queryToUse, explicitJurisdictions = null) => {
+    console.log(`Starting search with query: "${queryToUse}" and jurisdictions: ${explicitJurisdictions}`);
     // Create a new search run ID
     const currentRunId = Date.now();
     console.log(`Starting new search run ID: ${currentRunId} for query: "${queryToUse}"`);
@@ -283,7 +284,6 @@ export const FolderPageProvider = ({ children }) => {
       ? [...explicitJurisdictions] 
       : selectedJurisdictions.length > 0 ? [...selectedJurisdictions] : [...jurisdictions];
     
-    // Debug log to verify exactly which jurisdictions we're querying
     console.log(`Using jurisdictions for search: ${jurisdictionsToQuery.join(', ')}`);
     
     // Set all jurisdictions to loading
@@ -296,7 +296,6 @@ export const FolderPageProvider = ({ children }) => {
     setError(null);
     
     try {
-      // Make sure we log the exact document type being sent to Kendra
       console.log(`Search run ${currentRunId} parameters:
       - Query: "${queryToUse}"
       - Document type: "${activeDocType || 'all'}"
@@ -311,7 +310,6 @@ export const FolderPageProvider = ({ children }) => {
 
       // Run queries in series to avoid race conditions
       for (const jurisdiction of jurisdictionsToQuery) {
-        // If the search run ID has changed, stop processing
         if (currentRunId !== searchRunId.current) {
           console.log(`Search run ${currentRunId} cancelled - newer search ${searchRunId.current} in progress`);
           break;
@@ -320,12 +318,10 @@ export const FolderPageProvider = ({ children }) => {
         const result = await queryWithRetry(queryToUse, jurisdiction, activeDocType, currentRunId);
         
         if (result && result.success) {
-          // Count documents from the result
           const documentsCount = result.documents.length;
           resultCounts[jurisdiction] = documentsCount;
           totalDocuments += documentsCount;
           
-          // If we got any results at all for this jurisdiction, track it
           if (documentsCount > 0) {
             jurisdictionsWithData.push(jurisdiction);
           }
@@ -338,52 +334,17 @@ export const FolderPageProvider = ({ children }) => {
         'Total documents:', totalDocuments
       );
 
-      // If the search run ID has changed, this result is stale
       if (currentRunId !== searchRunId.current) {
         return;
       }
 
-      // Check if we got any results at all
       if (totalDocuments === 0) {
         console.warn('No results found in any jurisdiction. Falling back to mock data.');
-        // Format mock data to match our expected structure
-        const formattedMockData = {};
-        Object.keys(mockJurisdictionData).forEach(key => {
-          // Only include mock data for selected jurisdictions if any are selected
-          if (selectedJurisdictions.length === 0 || selectedJurisdictions.includes(key)) {
-            formattedMockData[key] = {
-              name: mockJurisdictionData[key].name,
-              documents: mockJurisdictionData[key].documents.map(doc => ({
-                ...doc,
-                jurisdiction: key
-              }))
-            };
-          }
-        });
-        setJurisdictionResults(formattedMockData);
         setUsingMockData(true);
       } else {
-        // We've already set jurisdiction results in queryWithRetry
         setUsingMockData(false);
       }
-      
-      // After all queries are completed, calculate document counts
-      if (currentRunId === searchRunId.current && !usingMockData) {
-        // Request facet data to get counts
-        try {
-          console.log(`Requesting facets with document type filter: ${activeDocType || 'none'}`);
-          // Include the document type parameter in the facet request
-          const facetResponse = await searchKendra(queryToUse, null, activeDocType, true);
-          if (facetResponse && facetResponse.facets) {
-            setDocumentCounts(facetResponse.facets);
-            console.log("Document counts updated from facets:", facetResponse.facets);
-          }
-        } catch (error) {
-          console.error("Failed to fetch document type counts:", error);
-        }
-      }
 
-      // Clear loading states
       const finalLoadingState = { all: false };
       jurisdictionsToQuery.forEach(j => {
         finalLoadingState[j] = false;
@@ -391,26 +352,8 @@ export const FolderPageProvider = ({ children }) => {
       setLoading(finalLoadingState);
     } catch (error) {
       console.error('Error fetching Kendra search results:', error);
-      
-      // Fall back to mock data with proper structure
-      const formattedMockData = {};
-      Object.keys(mockJurisdictionData).forEach(key => {
-        // Only include mock data for selected jurisdictions if any are selected
-        if (selectedJurisdictions.length === 0 || selectedJurisdictions.includes(key)) {
-          formattedMockData[key] = {
-            name: mockJurisdictionData[key].name,
-            documents: mockJurisdictionData[key].documents.map(doc => ({
-              ...doc,
-              jurisdiction: key
-            }))
-          };
-        }
-      });
-      setJurisdictionResults(formattedMockData);
       setUsingMockData(true);
       setError(`Error fetching results: ${error.message}`);
-      
-      // Clear loading states
       const finalLoadingState = { all: false };
       jurisdictionsToQuery.forEach(j => {
         finalLoadingState[j] = false;
@@ -425,81 +368,27 @@ export const FolderPageProvider = ({ children }) => {
   };
 
   // Function to update filters from SidebarFilters component
-  const handleFilterChange = (newFilters) => {
-    // Check if any document type filters are active
-    const documentTypes = [
-      'Regulation',
-      ' Source Report',
-      'Compliance Document',
-      'Guidance-Policy',
-      'Form-Template',
-      'State Implementation Plan',
-      'Protocol',
-      'General Info Item',
-      'Legislation'
-    ];
+  const handleFilterChange = useCallback((newFilters) => {
+    console.log('Filter settings being applied:', newFilters);
+    const { documentType, jurisdictions } = newFilters;
     
-    const selectedDocTypes = documentTypes.filter(type => newFilters[type]);
-    
-    // Only use the first selected document type (if any)
-    const docType = selectedDocTypes.length > 0 ? selectedDocTypes[0] : null;
-    
-    // Extract selected jurisdictions - FIX: Make more robust to ensure all jurisdictions are captured
-    const jurisdictionFilters = Object.entries(newFilters)
-      .filter(([key, value]) => 
-        value && // Filter is active
-        !documentTypes.includes(key) && // Not a document type
-        key !== 'all' && // Not the 'all' pseudo-jurisdiction
-        (
-          // Include all our standard jurisdictions
-          jurisdictions.includes(key) ||
-          // Plus any California districts
-          key.includes('AQMD') || 
-          key.includes('APCD') || 
-          // Plus any other state
-          ['Alaska', 'Arkansas', 'Connecticut', 'Delaware', 'Florida', 
-           'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Kansas', 'Kentucky', 
-           'Maryland', 'Massachusetts', 'Michigan', 'Mississippi', 'Nevada',
-           'North_Carolina', 'North_Dakota', 'Oklahoma', 'Oregon', 'Pennsylvania',
-           'South_Carolina', 'South_Dakota', 'Tennessee', 'Vermont', 'Virginia',
-           'Wisconsin', 'Wyoming'].includes(key)
-        )
-      )
-      .map(([key]) => key);
-    
-    console.log('Document type filter applied:', docType);
-    console.log('Filter settings being applied:', {
-      docType,
-      jurisdictions: jurisdictionFilters
-    });
-    
-    // Debug to verify all selected jurisdictions are captured
-    console.log('All selected jurisdictions:', jurisdictionFilters);
-    
-    // Log the raw filter object for debugging
-    console.log('Raw filter object:', newFilters);
-    
-    // Store the current search query for use later
-    const currentQuery = searchQuery;
-    
-    // Update state with filter changes - IMPORTANT: Set this BEFORE running the search
-    setActiveDocType(docType);
-    setSelectedJurisdictions(jurisdictionFilters);
-    console.log('Updated selectedJurisdictions state to:', jurisdictionFilters);
+    // Update selected jurisdictions
+    const updatedSelectedJurisdictions = jurisdictions || [];
+    console.log('All selected jurisdictions:', updatedSelectedJurisdictions);
+    setSelectedJurisdictions(updatedSelectedJurisdictions);
+
+    // Update active document type
+    setActiveDocType(documentType || null);
+    console.log('Active document type set to:', documentType || 'all');
+
+    // Apply filters
     setFilters(newFilters);
-    
-    // Clear any existing results to avoid showing stale data
+    console.log('Filters applied:', newFilters);
+
+    // Clear existing results and execute search
     setJurisdictionResults({});
-    
-    // Reset search run ID to force a new search
-    const newSearchId = Date.now();
-    console.log(`Creating new filter search ID: ${newSearchId}`);
-    searchRunId.current = newSearchId;
-    
-    // Execute the search using the current query but with new filters
-    // Pass the current query and explicitly pass the jurisdictionFilters to avoid state update timing issues
-    fetchAllJurisdictionResultsWithQuery(currentQuery, jurisdictionFilters);
-  };
+    fetchAllJurisdictionResultsWithQuery(searchQuery, updatedSelectedJurisdictions);
+  }, [searchQuery]);
 
   // Function to toggle folder expansion
   const toggleFolderExpand = (folderName) => {
@@ -605,6 +494,17 @@ export const FolderPageProvider = ({ children }) => {
     return applyFilters(documents, filters, jurisdiction);
   };
 
+  const removeFilters = useCallback(() => {
+    // Reset both current and pending filters
+    setFilters({
+      jurisdictions: {},
+      documentTypes: {}
+    });
+    setSelectedJurisdictions([]);
+    setActiveDocType(null);
+    setUsingMockData(false); // Ensure we don't revert to mock data
+  }, []);
+
   const value = {
     filters,
     searchQuery,
@@ -620,7 +520,8 @@ export const FolderPageProvider = ({ children }) => {
     handleSearch,
     toggleFolderExpand,
     initializeSearch,
-    getFilteredDocuments
+    getFilteredDocuments,
+    removeFilters
   };
 
   return (
