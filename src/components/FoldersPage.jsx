@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import './FoldersPage.css';
 import SidebarFilters from './SidebarFilters';
 import SearchBar from './SearchBar';
-import { FaFolderPlus, FaFolderMinus, FaExpand, FaCompress } from 'react-icons/fa';
+import { FaFolderPlus, FaFolderMinus, FaExpand, FaCompress, FaExclamationTriangle } from 'react-icons/fa';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { useFolderPage } from '../context/FolderPageContext';
 
@@ -184,20 +184,17 @@ const FoldersPage = () => {
               <h1 className="page-title">Jurisdictions</h1>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <SearchBar onSearch={handleSearch} showHeader={false} initialValue={searchQuery} />
+                {Object.values(loading).some(Boolean) && (
+                  <div className="spinner"></div>
+                )}
                 {usingMockData && (
                   <div className="demo-data-indicator">
-                    <p>Using demo data</p>
+                    <FaExclamationTriangle className="demo-icon" />
                   </div>
                 )}
               </div>
             </div>
           </div>
-
-          {Object.values(loading).some(Boolean) && (
-            <div className="loading-container">
-              <p className="loading-message">Loading results...</p>
-            </div>
-          )}
 
           <div className="folders-scroll-container">
             <div className="folders-grid">

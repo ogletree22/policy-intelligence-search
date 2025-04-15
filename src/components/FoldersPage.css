@@ -834,8 +834,6 @@
 .demo-data-indicator {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
-  background-color: #fff3cd;
   border-radius: 4px;
   margin-left: 12px;
   height: fit-content;
@@ -879,4 +877,33 @@
 .clear-all-button:focus {
   outline: none;
   box-shadow: none;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.demo-circle {
+  width: 10px;
+  height: 10px;
+  background-color: #fff3cd;
+  border-radius: 50%;
+}
+
+.demo-icon {
+  color: #ffcc00;
+  font-size: 18px;
+  margin-left: 8px;
+  padding-right: 8px;
 } 

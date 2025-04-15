@@ -190,18 +190,18 @@ export const FolderPageProvider = ({ children }) => {
         const docIdentifier = doc.id || `${doc.title}:${doc.url}`;
         
         // Initialize the jurisdiction object if needed
-        if (!seenDocuments.current[jurisdiction]) {
-          seenDocuments.current[jurisdiction] = new Set();
+        if (!seenDocuments.current[jurisdiction || 'all']) {
+          seenDocuments.current[jurisdiction || 'all'] = new Set();
         }
         
         // Check if we've seen this document before in this jurisdiction
-        if (seenDocuments.current[jurisdiction].has(docIdentifier)) {
-          console.log(`Skipping duplicate document in ${jurisdiction}: ${doc.title}`);
+        if (seenDocuments.current[jurisdiction || 'all'].has(docIdentifier)) {
+          console.log(`Skipping duplicate document in ${jurisdiction || 'all'}: ${doc.title}`);
           return false;
         }
         
         // Mark this document as seen
-        seenDocuments.current[jurisdiction].add(docIdentifier);
+        seenDocuments.current[jurisdiction || 'all'].add(docIdentifier);
         
         return true;
       });
@@ -235,7 +235,7 @@ export const FolderPageProvider = ({ children }) => {
       success: true,
       documents: processedDocuments,
       totalAvailable: searchResponse?.totalAvailable,
-      jurisdiction: jurisdiction
+      jurisdiction: jurisdiction || 'all'
     };
   };
 
@@ -279,10 +279,14 @@ export const FolderPageProvider = ({ children }) => {
     // Clear previous results when starting a new search
     setJurisdictionResults({});
     
-    // Determine which jurisdictions to query - use explicitly passed ones if available
-    const jurisdictionsToQuery = explicitJurisdictions 
-      ? [...explicitJurisdictions] 
-      : selectedJurisdictions.length > 0 ? [...selectedJurisdictions] : [...jurisdictions];
+    // Determine which jurisdictions to query
+    const jurisdictionsToQuery = explicitJurisdictions === null ? 
+      [...jurisdictions] : // If null, use all jurisdictions
+      explicitJurisdictions.length > 0 ? 
+        [...explicitJurisdictions] : // If non-empty array, use those jurisdictions
+        selectedJurisdictions.length > 0 ? 
+          [...selectedJurisdictions] : // If selected jurisdictions exist, use those
+          [...jurisdictions]; // Otherwise, use all jurisdictions
     
     console.log(`Using jurisdictions for search: ${jurisdictionsToQuery.join(', ')}`);
     
@@ -338,9 +342,11 @@ export const FolderPageProvider = ({ children }) => {
         return;
       }
 
-      if (totalDocuments === 0) {
+      // Only fall back to mock data if we have no results AND we're not explicitly clearing filters
+      if (totalDocuments === 0 && explicitJurisdictions !== null) {
         console.warn('No results found in any jurisdiction. Falling back to mock data.');
         setUsingMockData(true);
+        setJurisdictionResults(mockJurisdictionData);
       } else {
         setUsingMockData(false);
       }
@@ -369,25 +375,34 @@ export const FolderPageProvider = ({ children }) => {
 
   // Function to update filters from SidebarFilters component
   const handleFilterChange = useCallback((newFilters) => {
+    console.log('Applying filters with search query:', searchQuery);
+    console.log('Current jurisdiction results:', jurisdictionResults);
     console.log('Filter settings being applied:', newFilters);
-    const { documentType, jurisdictions } = newFilters;
+    
+    // Extract jurisdictions and document types from the filters
+    const selectedJurisdictionsList = Object.entries(newFilters)
+      .filter(([key, value]) => value && jurisdictions.includes(key))
+      .map(([key]) => key);
+    
+    const selectedDocType = Object.entries(newFilters)
+      .filter(([key, value]) => value && ['regulation', 'report', 'compliance', 'guidance', 'policy', 'form', 'template', 'implementation', 'protocol', 'general', 'legislation'].includes(key))
+      .map(([key]) => key)[0] || null;
+
+    console.log('Selected jurisdictions:', selectedJurisdictionsList);
+    console.log('Selected document type:', selectedDocType);
     
     // Update selected jurisdictions
-    const updatedSelectedJurisdictions = jurisdictions || [];
-    console.log('All selected jurisdictions:', updatedSelectedJurisdictions);
-    setSelectedJurisdictions(updatedSelectedJurisdictions);
+    setSelectedJurisdictions(selectedJurisdictionsList);
 
     // Update active document type
-    setActiveDocType(documentType || null);
-    console.log('Active document type set to:', documentType || 'all');
+    setActiveDocType(selectedDocType);
 
     // Apply filters
     setFilters(newFilters);
-    console.log('Filters applied:', newFilters);
 
     // Clear existing results and execute search
     setJurisdictionResults({});
-    fetchAllJurisdictionResultsWithQuery(searchQuery, updatedSelectedJurisdictions);
+    fetchAllJurisdictionResultsWithQuery(searchQuery, selectedJurisdictionsList);
   }, [searchQuery]);
 
   // Function to toggle folder expansion
@@ -448,41 +463,41 @@ export const FolderPageProvider = ({ children }) => {
 
   // Filter documents based on current filters
   const applyFilters = (documents = [], activeFilters = {}, jurisdiction = null) => {
-    // Ensure documents is always an array
     if (!Array.isArray(documents)) {
       console.warn('Expected documents to be an array but got:', typeof documents);
       return [];
     }
 
-    // Debug log to verify which jurisdictions are active when filtering
-    console.log('Filtering documents for jurisdiction:', jurisdiction);
-    console.log('Selected jurisdictions when filtering:', selectedJurisdictions);
-
-    // If we have selected jurisdictions and this jurisdiction isn't in the list, skip it
-    if (selectedJurisdictions.length > 0 && jurisdiction && !selectedJurisdictions.includes(jurisdiction)) {
-      console.log(`Jurisdiction ${jurisdiction} is not in selected jurisdictions, returning empty array`);
-      return [];
+    // If no filters are active, return all documents without reverting to demo data
+    if (!activeDocType && selectedJurisdictions.length === 0) {
+      setUsingMockData(false);
+      return documents;
     }
 
-    // If we made it here, jurisdiction check passed, so do normal filtering
     return documents.filter(doc => {
-      // First apply search query if it exists (for mock data)
-      const matchesSearch = !searchQuery || usingMockData ? (
-        doc?.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        doc?.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc?.keywords?.some(keyword => keyword.toLowerCase().includes(searchQuery.toLowerCase()))
-      ) : true; // If using API data, search is already applied
+      // Check jurisdiction filter
+      if (selectedJurisdictions.length > 0) {
+        if (!jurisdiction || !selectedJurisdictions.includes(jurisdiction)) {
+          return false;
+        }
+      }
 
-      if (!matchesSearch) return false;
+      // Check document type filter
+      if (activeDocType) {
+        const normalizedDocType = normalizeDocumentType(doc?.type);
+        if (normalizedDocType !== activeDocType) {
+          return false;
+        }
+      }
 
-      // For API-sourced data, we've already filtered by document type at the API level
-      if (!usingMockData && activeDocType) return true;
-
-      // For mock data, apply the document type filter locally
-      if (usingMockData && activeDocType) {
-        // Normalize the document type for comparison
-        const normalizedType = normalizeDocumentType(doc?.type);
-        return normalizedType === activeDocType;
+      // Check search query
+      if (searchQuery && usingMockData) {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+          doc?.title?.toLowerCase().includes(searchLower) || 
+          doc?.description?.toLowerCase().includes(searchLower) ||
+          doc?.keywords?.some(keyword => keyword.toLowerCase().includes(searchLower))
+        );
       }
 
       return true;
@@ -496,14 +511,18 @@ export const FolderPageProvider = ({ children }) => {
 
   const removeFilters = useCallback(() => {
     // Reset both current and pending filters
-    setFilters({
-      jurisdictions: {},
-      documentTypes: {}
-    });
+    setFilters({});
     setSelectedJurisdictions([]);
     setActiveDocType(null);
-    setUsingMockData(false); // Ensure we don't revert to mock data
-  }, []);
+    setUsingMockData(false);
+    
+    // Clear existing results
+    setJurisdictionResults({});
+    
+    // Execute search with null jurisdiction to search all
+    console.log('Removing filters and searching all jurisdictions');
+    fetchAllJurisdictionResultsWithQuery(searchQuery, null);
+  }, [searchQuery]);
 
   const value = {
     filters,
