@@ -8,6 +8,12 @@ import { useWorkingFolder } from '../context/WorkingFolderContext';
 const FolderPanel = ({ subtitle = "Working folder" }) => {
   const { workingFolderDocs, removeFromWorkingFolder } = useWorkingFolder();
 
+  const handleRemove = (docId) => {
+    if (docId) {
+      removeFromWorkingFolder(docId);
+    }
+  };
+
   const renderHeader = () => (
     <>
       <h2 className="folder-title">Working Folder</h2>
@@ -26,7 +32,7 @@ const FolderPanel = ({ subtitle = "Working folder" }) => {
         <FolderResultCard
           key={doc.id}
           document={doc}
-          onRemove={removeFromWorkingFolder}
+          onRemove={() => handleRemove(doc.id)}
         />
       ))}
       {workingFolderDocs.length === 0 && (

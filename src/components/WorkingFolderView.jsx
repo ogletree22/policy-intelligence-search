@@ -11,6 +11,12 @@ const WorkingFolderView = ({ isOpen, onClose, documents }) => {
   
   if (!isOpen) return null;
 
+  const handleRemove = (docId) => {
+    if (docId) {
+      removeFromWorkingFolder(docId);
+    }
+  };
+
   return (
     <div className="working-folder-overlay">
       <div className="working-folder-modal">
@@ -49,7 +55,7 @@ const WorkingFolderView = ({ isOpen, onClose, documents }) => {
                   </div>
                   <button
                     className="remove-doc-button"
-                    onClick={() => removeFromWorkingFolder(doc.id)}
+                    onClick={() => handleRemove(doc.id)}
                     title="Remove from Working Folder"
                   >
                     <FaTrash />

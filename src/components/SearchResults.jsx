@@ -1,10 +1,12 @@
 // SearchResults.jsx
 import React, { useState, useCallback, useEffect } from 'react';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
+import { useSearchPage } from '../context/SearchPageContext';
 import './SearchResults.css';
 
-const SearchResults = ({ results }) => {
+const SearchResults = () => {
   const { workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder } = useWorkingFolder();
+  const { results, loading, error, usingMockData } = useSearchPage();
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [documentStates, setDocumentStates] = useState({});
 
@@ -12,61 +14,39 @@ const SearchResults = ({ results }) => {
   useEffect(() => {
     const newStates = {};
     results.forEach(result => {
-      const docId = Number(result.id);
+      const docId = result.id;
       newStates[docId] = {
-        inFolder: workingFolderDocs.some(doc => Number(doc.id) === docId) || false
+        inFolder: workingFolderDocs.some(doc => doc.id === docId)
       };
     });
     setDocumentStates(newStates);
   }, [results, workingFolderDocs]);
 
-  const isInFolder = useCallback((documentId) => {
-    try {
-      if (!documentId) {
-        return false;
-      }
-      
-      const docId = Number(documentId);
-      return workingFolderDocs.some(doc => Number(doc.id) === docId);
-    } catch (error) {
-      console.error('Error in isInFolder:', error);
-      return false;
-    }
-  }, [workingFolderDocs]);
-
   const handleFolderAction = useCallback((document) => {
-    try {
-      if (!document?.id) {
-        console.error('Invalid document:', document);
-        return;
-      }
-
-      const docId = Number(document.id);
-      const inFolder = isInFolder(docId);
-      
-      if (inFolder) {
-        removeFromWorkingFolder(docId);
-        setDocumentStates(prev => ({
-          ...prev,
-          [docId]: { ...prev[docId], inFolder: false }
-        }));
-      } else {
-        const docToAdd = {
-          id: docId,
-          title: document.title,
-          url: document.url,
-          description: document.description
-        };
-        addToWorkingFolder(docToAdd);
-        setDocumentStates(prev => ({
-          ...prev,
-          [docId]: { ...prev[docId], inFolder: true }
-        }));
-      }
-    } catch (error) {
-      console.error('Error in handleFolderAction:', error);
+    const docId = document.id;
+    const inFolder = workingFolderDocs.some(doc => doc.id === docId);
+    
+    if (inFolder) {
+      removeFromWorkingFolder(docId);
+      setDocumentStates(prev => ({
+        ...prev,
+        [docId]: { ...prev[docId], inFolder: false }
+      }));
+    } else {
+      addToWorkingFolder({
+        id: docId,
+        title: document.title,
+        url: document.url,
+        description: document.description,
+        jurisdiction: document.jurisdiction,
+        type: document.type
+      });
+      setDocumentStates(prev => ({
+        ...prev,
+        [docId]: { ...prev[docId], inFolder: true }
+      }));
     }
-  }, [isInFolder, addToWorkingFolder, removeFromWorkingFolder]);
+  }, [workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder]);
 
   const toggleDescription = (index) => {
     setExpandedDescriptions(prev => ({
@@ -75,10 +55,28 @@ const SearchResults = ({ results }) => {
     }));
   };
 
+  if (loading) {
+    return (
+      <div className="results-container">
+        <div className="loading-spinner">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="results-container">
+        <div className="error-message">
+          Error loading results. Please try again.
+        </div>
+      </div>
+    );
+  }
+
   const renderResults = () => (
     <div className="results-scroll-area">
       {results.map((result, index) => {
-        const docId = Number(result.id);
+        const docId = result.id;
         const inFolder = documentStates[docId]?.inFolder || false;
         
         return (
@@ -107,6 +105,11 @@ const SearchResults = ({ results }) => {
                 <span className="tag">{result.jurisdiction}</span>
                 <span className="tag">{result.type}</span>
               </div>
+              {usingMockData && (
+                <div className="mock-data-indicator">
+                  Demo Data
+                </div>
+              )}
             </div>
           </div>
         );
@@ -119,6 +122,7 @@ const SearchResults = ({ results }) => {
       <div className="results-content">
         <p className="doc-count">
           {results.length} of {results.length} documents
+          {usingMockData && <span className="mock-data-text"> (Demo Data)</span>}
         </p>
         {renderResults()}
       </div>

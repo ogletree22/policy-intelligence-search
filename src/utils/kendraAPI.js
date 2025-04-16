@@ -13,10 +13,10 @@ const INDEX_ID = 'ac2e614a-1a60-4788-921f-439355c5756d';
  * @param {boolean} [fetchFacets] - Whether to fetch facet counts instead of search results
  * @returns {Promise<Object>} - Search results or facet counts
  */
-export const searchKendra = async (query = 'air', jurisdiction = null, documentType = null, fetchFacets = false) => {
+export const searchKendra = async (query = '', jurisdiction = null, documentType = null, fetchFacets = false) => {
   try {
     // Trim inputs but preserve the leading space in " Source Report"
-    const trimmedQuery = query?.trim() || 'air';
+    const trimmedQuery = query?.trim() || '';
     const trimmedJurisdiction = jurisdiction?.trim() || null;
     
     // Special handling for document type - don't trim " Source Report"
@@ -32,7 +32,7 @@ export const searchKendra = async (query = 'air', jurisdiction = null, documentT
     
     // Match the exact format the Lambda function expects based on the Lambda code
     const requestBody = {
-      QueryText: trimmedQuery, // Lambda expects "QueryText" with this capitalization
+      QueryText: trimmedQuery || '*', // Use '*' for empty queries to get all documents
       IndexId: INDEX_ID
     };
 
@@ -50,6 +50,7 @@ export const searchKendra = async (query = 'air', jurisdiction = null, documentT
       // Add jurisdiction filter if specified - match the Lambda's expected format
       if (trimmedJurisdiction) {
         requestBody.jurisdiction = trimmedJurisdiction;
+        console.log(`Adding jurisdiction filter: "${trimmedJurisdiction}"`);
       }
 
       // Add document type filter if specified - Lambda expects _category parameter
@@ -61,7 +62,7 @@ export const searchKendra = async (query = 'air', jurisdiction = null, documentT
     }
 
     // Log request for debugging
-    console.log(`Making Kendra ${fetchFacets ? 'facet' : 'search'} request${trimmedJurisdiction ? ' for ' + trimmedJurisdiction : ''}${processedDocType ? ' with document type "' + processedDocType + '"' : ''}:`, requestBody);
+    console.log('Making Kendra request with body:', JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(API_ENDPOINT, {
       method: 'POST',
@@ -80,6 +81,9 @@ export const searchKendra = async (query = 'air', jurisdiction = null, documentT
     }
 
     const data = await response.json();
+    
+    // Log the raw response for debugging
+    console.log('Raw Kendra response:', JSON.stringify(data, null, 2).substring(0, 1000) + '...');
     
     // If we requested facets, return them
     if (fetchFacets) {
@@ -190,14 +194,25 @@ export const searchKendra = async (query = 'air', jurisdiction = null, documentT
       };
     }
     
-    // Otherwise, return search results as before
-    const totalAvailable = data.TotalNumberOfResults || data.TotalResultCount || data.FacetResults?.length || data.length || 0;
+    // For search results, ensure we have an array of results
+    let resultsArray;
+    if (Array.isArray(data)) {
+      resultsArray = data;
+    } else if (data.ResultItems && Array.isArray(data.ResultItems)) {
+      resultsArray = data.ResultItems;
+    } else if (data.results && Array.isArray(data.results)) {
+      resultsArray = data.results;
+    } else {
+      console.error('Unexpected response format:', data);
+      resultsArray = [];
+    }
     
-    console.log(`Received ${Array.isArray(data) ? data.length : 0} results${trimmedJurisdiction ? ' for ' + trimmedJurisdiction : ''}${processedDocType ? ' with document type "' + processedDocType + '"' : ''}, Total available: ${totalAvailable}`);
+    const totalAvailable = data.TotalNumberOfResults || data.TotalResultCount || resultsArray.length || 0;
     
-    // Return the results
+    console.log(`Received ${resultsArray.length} results${trimmedJurisdiction ? ' for ' + trimmedJurisdiction : ''}${processedDocType ? ' with document type "' + processedDocType + '"' : ''}, Total available: ${totalAvailable}`);
+    
     return {
-      results: data,
+      results: resultsArray,
       totalAvailable: totalAvailable
     };
   } catch (error) {
@@ -431,6 +446,7 @@ export const transformKendraResults = (kendraResponse) => {
       url: documentUrl || item.SourceUri || '',  // Ensure SourceUri is used for URL
       description: description,
       type: documentType,
+      jurisdiction: getJurisdictionFromResponse(item), // Add jurisdiction field
       source: item.UpdatedAt || item.CreatedAt || new Date().toISOString()
     };
   });
@@ -438,95 +454,75 @@ export const transformKendraResults = (kendraResponse) => {
 
 /**
  * Helper function to extract jurisdiction from Lambda response
- * The Lambda doesn't return jurisdiction in the response, so we'll extract from source or title if possible
  */
 function getJurisdictionFromResponse(item) {
-  const title = item.DocumentTitle || '';
-  const uri = item.SourceUri || '';
-  const excerpt = item.ExcerptText || '';
-  
-  // Try to extract jurisdiction from title or URI
-  const jurisdictions = [
-    'Colorado', 
-    'New Mexico', 
-    'South Coast AQMD', 
-    'Bay Area AQMD',
-    'Texas',
-    'Washington',
-    'Utah',
-    'South Dakota' // Add South Dakota to our list
-  ];
-  
-  // First check direct matches in title or URI
-  for (const jurisdiction of jurisdictions) {
-    if (title.includes(jurisdiction) || uri.includes(jurisdiction)) {
-      // For South Dakota, we want to map it to one of our defined jurisdictions
-      if (jurisdiction === 'South Dakota') {
-        return 'Colorado'; // Map South Dakota documents to Colorado folder
-      }
-      return jurisdiction;
+  // First check DocumentAttributes for jurisdiction
+  if (Array.isArray(item.DocumentAttributes)) {
+    const jurisdictionAttr = item.DocumentAttributes.find(
+      attr => attr.Key === 'jurisdiction' || attr.Key === 'jurisdiction_name'
+    );
+    if (jurisdictionAttr?.Value?.StringValue) {
+      return jurisdictionAttr.Value.StringValue;
     }
   }
+
+  const title = item.DocumentTitle || '';
+  const uri = item.SourceUri || '';
   
-  // Check for state abbreviations
-  if (title.includes('NM ') || 
-      title.includes(' NM') || 
-      title.includes('NM-') || 
-      title.includes('-NM') || 
-      uri.includes('/NM/') || 
-      uri.includes('nmenv.') || 
-      excerpt.includes('New Mexico') || 
-      excerpt.includes('NMED')) {
-    return 'New Mexico';
+  // Check for California APCDs/AQMDs first
+  if (title.includes('Santa Barbara County APCD') || uri.includes('santabarbara') || uri.includes('sbcapcd')) {
+    return 'Santa Barbara County APCD';
   }
-  
-  if (title.includes('CO ') || 
-      title.includes(' CO') || 
-      title.includes('CO-') || 
-      title.includes('-CO') || 
-      uri.includes('/CO/') || 
-      uri.includes('colorado.gov')) {
-    return 'Colorado';
+  if (title.includes('San Joaquin Valley APCD') || uri.includes('valleyair')) {
+    return 'San Joaquin Valley APCD';
   }
-  
-  // Handle abbreviated versions
-  if ((title.includes('SCAQMD') || uri.includes('SCAQMD') || 
-       title.includes('South Coast') || uri.includes('aqmd.gov'))) {
+  if (title.includes('South Coast AQMD') || title.includes('SCAQMD') || uri.includes('aqmd.gov')) {
     return 'South Coast AQMD';
   }
-  
-  if ((title.includes('BAAQMD') || uri.includes('BAAQMD') || 
-       title.includes('Bay Area') || uri.includes('baaqmd'))) {
+  if (title.includes('Bay Area AQMD') || title.includes('BAAQMD') || uri.includes('baaqmd')) {
     return 'Bay Area AQMD';
   }
-  
-  // If no jurisdiction is found, look for state codes in the title
+
+  // Check for state jurisdictions
+  if (title.startsWith('Kentucky') || uri.includes('kentucky.gov') || uri.includes('/ky/')) {
+    return 'Kentucky';
+  }
+  if (title.startsWith('Colorado') || uri.includes('colorado.gov') || uri.includes('/co/')) {
+    return 'Colorado';
+  }
+  if (title.startsWith('Texas') || uri.includes('texas.gov') || uri.includes('/tx/')) {
+    return 'Texas';
+  }
+  if (title.startsWith('New Mexico') || uri.includes('newmexico.gov') || uri.includes('/nm/')) {
+    return 'New Mexico';
+  }
+  if (title.startsWith('Washington') || uri.includes('washington.gov') || uri.includes('/wa/')) {
+    return 'Washington';
+  }
+
+  // Check for state codes in the title
   if (title.includes(' - ')) {
     const stateCode = title.split(' - ')[0].trim();
-    
-    // Map state codes to jurisdictions
     const stateMapping = {
+      'KY': 'Kentucky',
       'CO': 'Colorado',
-      'NM': 'New Mexico',
       'TX': 'Texas',
-      'WA': 'Washington',
-      'UT': 'Utah',
-      'SD': 'Colorado' // Map South Dakota to Colorado
+      'NM': 'New Mexico',
+      'WA': 'Washington'
     };
-    
     if (stateMapping[stateCode]) {
       return stateMapping[stateCode];
     }
   }
-  
-  // Check excerpt text for jurisdiction clues - this is a last resort
-  const excerptLower = excerpt.toLowerCase();
-  if (excerptLower.includes('colorado')) return 'Colorado';
-  if (excerptLower.includes('new mexico')) return 'New Mexico';
-  if (excerptLower.includes('texas')) return 'Texas';
-  if (excerptLower.includes('washington')) return 'Washington';
-  if (excerptLower.includes('utah')) return 'Utah';
-  
-  // Default to Colorado for any unmatched documents
-  return 'Colorado';
+
+  // If no clear jurisdiction is found, check the content
+  const content = [title, uri, item.ExcerptText || ''].join(' ').toLowerCase();
+  if (content.includes('kentucky')) return 'Kentucky';
+  if (content.includes('colorado')) return 'Colorado';
+  if (content.includes('texas')) return 'Texas';
+  if (content.includes('new mexico')) return 'New Mexico';
+  if (content.includes('washington')) return 'Washington';
+
+  // If still no match, return Unknown instead of defaulting to Colorado
+  return 'Unknown';
 } 

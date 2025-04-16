@@ -2,6 +2,12 @@ import React from 'react';
 import './FolderResultCard.css';
 
 const FolderResultCard = ({ document, onRemove }) => {
+  const handleRemove = () => {
+    if (document?.id) {
+      onRemove(document.id);
+    }
+  };
+
   return (
     <div className="folder-result-card">
       <div className="card-header">
@@ -10,7 +16,7 @@ const FolderResultCard = ({ document, onRemove }) => {
         </h3>
         <button 
           className="remove-button" 
-          onClick={() => onRemove(document.id)}
+          onClick={handleRemove}
           aria-label="Remove from folder"
         >
           ×
