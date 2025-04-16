@@ -266,8 +266,8 @@ const SidebarFilters = ({
           <button 
             className="apply-filters-button"
             onClick={applyFilters}
-            disabled={Object.keys(pendingFilters.jurisdictions).length === 0 && 
-                     Object.keys(pendingFilters.documentTypes).length === 0}
+            disabled={!Object.values(pendingFilters.jurisdictions).some(Boolean) && 
+                     !Object.values(pendingFilters.documentTypes).some(Boolean)}
           >
             Apply
           </button>
@@ -299,9 +299,11 @@ const SidebarFilters = ({
             <>
               {visibleJurisdictions.map((jurisdiction, index) => {
                 const count = getJurisdictionCount(jurisdiction, jurisdictionCounts);
-                // Check if jurisdiction is selected in current filters AND not explicitly unchecked in pending
-                const isSelected = filters.jurisdictions[jurisdiction] && 
-                                 pendingFilters.jurisdictions[jurisdiction] !== false;
+                // Check both current filters and pending filters
+                const isSelected = (
+                  (filters.jurisdictions[jurisdiction] && pendingFilters.jurisdictions[jurisdiction] !== false) ||
+                  pendingFilters.jurisdictions[jurisdiction] === true
+                );
                 return (
                   <label 
                     key={`${instanceId}-jurisdiction-${index}`} 
@@ -348,9 +350,11 @@ const SidebarFilters = ({
           {!isDocumentTypeCollapsed && DOCUMENT_TYPES.map((type, index) => {
             const displayType = type.trim();
             const count = docTypeCounts[type] || 0;
-            // Check if document type is selected in current filters AND not explicitly unchecked in pending
-            const isSelected = filters.documentTypes[type] && 
-                             pendingFilters.documentTypes[type] !== false;
+            // Check both current filters and pending filters
+            const isSelected = (
+              (filters.documentTypes[type] && pendingFilters.documentTypes[type] !== false) ||
+              pendingFilters.documentTypes[type] === true
+            );
             
             return (
               <label 

@@ -18,6 +18,7 @@
 .sidebar-filters.disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transition: opacity 0.3s ease;
 }
 
 .sidebar-filters.disabled * {
@@ -61,6 +62,11 @@
   margin-right: 6px;
   box-shadow: none;
   overflow: hidden;
+  transition: background-color 0.2s ease;
+}
+
+.filter-group:hover {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .filter-group-title {
@@ -72,12 +78,18 @@
   font-weight: 600;
   color: #274c77;
   margin: 0 0 0px 0;
+  transition: color 0.2s ease;
 }
 
 .filter-icon {
   font-size: 16px;
   color: #457b9d;
   margin-right: 4px;
+  transition: color 0.2s ease;
+}
+
+.filter-group:hover .filter-icon {
+  color: #274c77;
 }
 
 .filter-group label {
@@ -90,10 +102,9 @@
   color: #343434;
   cursor: pointer;
   padding: 2px 0;
-}
-
-.filter-group label:last-child {
-  margin-bottom: 0;
+  transition: color 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .filter-group label:hover {
@@ -112,11 +123,25 @@
   background-color: rgba(69, 123, 157, 0.1);
   cursor: pointer;
   position: relative;
+  transition: all 0.2s ease;
 }
 
 .filter-group input[type="checkbox"]:checked {
   background-color: #457b9d;
   border: none;
+  animation: checkmark 0.2s ease-out;
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .filter-group input[type="checkbox"]:checked::after {
@@ -129,43 +154,31 @@
   border: solid white;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
+  animation: checkmarkDraw 0.2s ease-out;
 }
 
-.filter-group input[type="checkbox"]:hover {
-  background-color: rgba(69, 123, 157, 0.2);
+@keyframes checkmarkDraw {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: 8px;
+    opacity: 1;
+  }
 }
 
-.user-profile {
-  display: flex;
-  justify-content: left;
-  align-items: left;
-  padding: 8px 0;
-  border-bottom: 1px solid #e0e0e0;
-  margin-bottom: 16px;
-}
-
-.user-icon {
-  font-size: 25px;
-  color: #274C77;
-  cursor: pointer;
-}
-
-.user-icon:hover {
-  color: #274c77;
-}
-
-/* Add styles for the Apply Filters button */
 .apply-filters-button,
 .remove-filters-button {
-  padding: 4px 10px;
+  padding: 4px 12px;
   border: none;
   border-radius: 15px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 400;
   cursor: pointer;
-  transition: background-color 0.2s;
-  background-color: #457b9d;
+  transition: background-color 0.2s ease;
   color: #ffffff;
+  background-color: #457b9d;
 }
 
 .apply-filters-button:hover:not(:disabled),
@@ -175,66 +188,11 @@
 
 .apply-filters-button:disabled,
 .remove-filters-button:disabled {
-  background-color: #f0f0f0;
+  background-color: #e0e0e0;
   color: #999;
   cursor: not-allowed;
 }
 
-/* Add styles for radio buttons */
-.radio-label {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 8px;
-  cursor: pointer;
-  padding: 2px 0;
-}
-
-.radio-label input[type="radio"],
-.filter-group input[type="checkbox"] {
-  margin-right: 8px;
-  cursor: pointer;
-  margin-top: 2px; /* Align with first line of text */
-  flex-shrink: 0;
-}
-
-/* Clear filter buttons */
-.clear-filter-button {
-  margin-top: 8px;
-  margin-left: 24px; /* Align with radio button text */
-  padding: 4px 8px;
-  background-color: #f0f0f0;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  color: #666;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.clear-filter-button:hover {
-  background-color: #e0e0e0;
-  color: #333;
-}
-
-/* Clear all filters button */
-.clear-all-filters-button {
-  width: 100%;
-  margin-top: 10px;
-  padding: 8px 12px;
-  background-color: #f8f8f8;
-  color: #e74c3c;
-  border: 1px solid #f0f0f0;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-.clear-all-filters-button:hover {
-  background-color: #fee;
-  border-color: #e74c3c;
-}
-
-/* Filter label with count styles */
 .filter-label {
   display: flex !important;
   align-items: flex-start !important;
@@ -242,6 +200,7 @@
   padding: 2px 0;
   background-color: transparent !important;
   border: none !important;
+  transition: all 0.2s ease;
 }
 
 .filter-label-text {
@@ -254,6 +213,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: all 0.2s ease;
 }
 
 .doc-count {
@@ -269,16 +229,12 @@
   border: none !important;
   box-shadow: none !important;
   font-weight: 600;
+  transition: opacity 0.2s ease;
+  opacity: 0.8;
 }
 
-/* Inline count styling */
-.count-inline {
-  display: inline-flex;
-  margin-left: 8px;
-  color: #274c77;
-  font-size: 0.9em;
-  font-weight: normal;
-  opacity: 0.8;
+.filter-label:hover .doc-count {
+  opacity: 1;
 }
 
 .filter-group input[type="radio"] {
@@ -397,10 +353,11 @@
   margin: 4px 0;
   background-color: rgba(255, 255, 255, 0.15);
   border-radius: 12px;
+  transition: background-color 0.2s ease;
 }
 
 .working-folder-item:hover {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .working-folder-item .doc-title {
@@ -488,6 +445,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .view-folder-button:hover {
@@ -537,4 +495,24 @@
   font-size: 12px;
   margin-left: 8px;
   padding: 2px 8px;
+}
+
+.user-profile {
+  display: flex;
+  justify-content: left;
+  align-items: left;
+  padding: 8px 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.user-icon {
+  font-size: 25px;
+  color: #274C77;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.user-icon:hover {
+  color: #457b9d;
 }
