@@ -170,6 +170,12 @@ const FoldersPage = () => {
   return (
     <div className="folders-page">
       <FolderSearchBar />
+      {usingMockData && (
+        <div className="mock-data-warning">
+          <FaExclamationTriangle className="warning-icon" />
+          <span>Using mock data - API connection may be unavailable</span>
+        </div>
+      )}
       <div className="app-wrapper">
         <div className="main-layout">
           <aside className="sidebar">

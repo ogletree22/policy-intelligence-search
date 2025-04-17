@@ -906,4 +906,20 @@
   font-size: 18px;
   margin-left: 8px;
   padding-right: 8px;
+}
+
+.mock-data-warning {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 12px;
+  margin: 10px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #ffeeba;
+}
+
+.mock-data-warning .warning-icon {
+  color: #856404;
 } 
