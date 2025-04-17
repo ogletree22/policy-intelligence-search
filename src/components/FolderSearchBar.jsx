@@ -7,6 +7,14 @@ import { useFolderPage } from '../context/FolderPageContext';
 const FolderSearchBar = () => {
   const { searchQuery, handleSearch } = useFolderPage();
   const [query, setQuery] = useState(searchQuery);
+  const [searchHistory] = useState([
+    'air quality',
+    'landfill',
+    'emissions',
+    'nox regulations',
+    'waste management',
+    'permits'
+  ]);
 
   // Sync local state with context when searchQuery changes
   useEffect(() => {
@@ -30,6 +38,10 @@ const FolderSearchBar = () => {
   const handleChange = (e) => {
     const newValue = e.target.value;
     setQuery(newValue);
+    // If the value matches a history item exactly, trigger search
+    if (searchHistory.includes(newValue)) {
+      handleSearch(newValue);
+    }
   };
 
   return (
@@ -47,7 +59,13 @@ const FolderSearchBar = () => {
             onChange={handleChange}
             onKeyDown={handleKeyPress}
             aria-label="Search documents in folder"
+            list="folder-search-history"
           />
+          <datalist id="folder-search-history">
+            {searchHistory.map((item, index) => (
+              <option key={index} value={item} />
+            ))}
+          </datalist>
           {query && (
             <FaTimes 
               className="clear-icon" 

@@ -7,6 +7,14 @@ import { useSearchPage } from '../context/SearchPageContext';
 const SearchBar = ({ showHeader = true }) => {
   const [query, setQuery] = useState('');
   const { searchQuery, handleSearch } = useSearchPage();
+  const [searchHistory] = useState([
+    'air quality',
+    'landfill',
+    'emissions',
+    'nox regulations',
+    'waste management',
+    'permits'
+  ]);
 
   // Update local state when context searchQuery changes
   useEffect(() => {
@@ -32,6 +40,10 @@ const SearchBar = ({ showHeader = true }) => {
   const handleChange = (e) => {
     const newValue = e.target.value;
     setQuery(newValue);
+    // If the value matches a history item exactly, trigger search
+    if (searchHistory.includes(newValue)) {
+      handleSearch(newValue);
+    }
   };
 
   return (
@@ -49,7 +61,13 @@ const SearchBar = ({ showHeader = true }) => {
             onChange={handleChange}
             onKeyDown={handleKeyPress}
             aria-label="Search documents"
+            list="search-history"
           />
+          <datalist id="search-history">
+            {searchHistory.map((item, index) => (
+              <option key={index} value={item} />
+            ))}
+          </datalist>
           {query && (
             <FaTimes 
               className="clear-icon" 
