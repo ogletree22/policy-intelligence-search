@@ -74,7 +74,8 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 20px 15px 0 0;
+  padding: 0 15px 0 0;
+  border-top: 20px solid #e7ecef;
   background-color: #e7ecef;
 }
 

@@ -1,0 +1,23 @@
+.folder-search-input {
+    width: 100%;
+    border: none;
+    font-size: 15px;
+    font-family: 'Roboto', sans-serif;
+    background-color: transparent;
+    color: #1d3557;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.folder-search-input:focus {
+    outline: none;
+}
+
+.folder-search-input:-webkit-autofill,
+.folder-search-input:-webkit-autofill:hover,
+.folder-search-input:-webkit-autofill:focus,
+.folder-search-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #1d3557 !important;
+} 

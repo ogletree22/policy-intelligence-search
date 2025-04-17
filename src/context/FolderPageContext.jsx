@@ -465,30 +465,22 @@ export const FolderPageProvider = ({ children }) => {
   };
 
   // Initialize search on first load if needed
-  const initializeSearch = () => {
+  const initializeSearch = useCallback(() => {
+    // Only initialize if we don't have any results yet
     if (Object.keys(jurisdictionResults).length === 0 && !loading.all) {
-      // Only initialize if we have a search query
-      if (searchQuery) {
-        console.log('Initializing search with query:', searchQuery);
-        
-        // Set a unique search ID for this initialization
-        const initialSearchId = Date.now();
-        searchRunId.current = initialSearchId;
-        
-        // Set a slight delay to allow for any pending searches to be processed
-        setTimeout(() => {
-          // Only proceed if no other search has started
-          if (searchRunId.current === initialSearchId) {
-            fetchAllJurisdictionResultsWithQuery(searchQuery);
-          } else {
-            console.log('Skipping initial search as another search is already in progress');
-          }
-        }, 50);
-      } else {
-        console.log('No initial search query, skipping initialization');
-      }
+      console.log('Initializing folder page search');
+      setLoading(prev => ({ ...prev, all: true }));
+      
+      // Use setTimeout to ensure this runs after the current render cycle
+      setTimeout(() => {
+        if (searchQuery) {
+          fetchAllJurisdictionResultsWithQuery(searchQuery);
+        } else {
+          fetchAllJurisdictionResults();
+        }
+      }, 0);
     }
-  };
+  }, [searchQuery, jurisdictionResults, loading.all]);
 
   // Normalize document type for filtering
   const normalizeDocumentType = (type) => {
@@ -517,9 +509,8 @@ export const FolderPageProvider = ({ children }) => {
       return [];
     }
 
-    // If no filters are active, return all documents without reverting to demo data
+    // If no filters are active, return all documents
     if (!activeDocType && selectedJurisdictions.length === 0) {
-      setUsingMockData(false);
       return documents;
     }
 
@@ -554,9 +545,9 @@ export const FolderPageProvider = ({ children }) => {
   };
 
   // Get filtered documents for a jurisdiction
-  const getFilteredDocuments = (documents, jurisdiction) => {
+  const getFilteredDocuments = useCallback((documents, jurisdiction) => {
     return applyFilters(documents, filters, jurisdiction);
-  };
+  }, [filters, activeDocType, selectedJurisdictions, searchQuery, usingMockData]);
 
   const removeFilters = useCallback(() => {
     // Reset both current and pending filters

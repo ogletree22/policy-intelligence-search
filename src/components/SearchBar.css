@@ -40,10 +40,21 @@
     font-family: 'Roboto', sans-serif;
     background-color: transparent;
     color: #1d3557;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
   
 .search-input-wrapper input:focus {
     outline: none;
+}
+  
+.search-input-wrapper input:-webkit-autofill,
+.search-input-wrapper input:-webkit-autofill:hover,
+.search-input-wrapper input:-webkit-autofill:focus,
+.search-input-wrapper input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #1d3557 !important;
 }
   
 .search-icon-img {

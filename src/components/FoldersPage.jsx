@@ -22,7 +22,10 @@ const jurisdictions = [
   'South_Coast_AQMD',
   'Bay_Area_AQMD',
   'Texas',
-  'Washington'
+  'Washington',
+  'Arizona',
+  'New_York',
+  'Sacramento_AQMD'
 ];
 
 // Mapping between Kendra format (with spaces) and code format (with underscores)
@@ -30,10 +33,13 @@ const jurisdictionMapping = {
   'New Mexico': 'New_Mexico',
   'South Coast AQMD': 'South_Coast_AQMD',
   'Bay Area AQMD': 'Bay_Area_AQMD',
+  'Sacramento AQMD': 'Sacramento_AQMD',
   // Add direct mappings for non-spaced jurisdictions
   'Colorado': 'Colorado',
   'Texas': 'Texas',
-  'Washington': 'Washington'
+  'Washington': 'Washington',
+  'Arizona': 'Arizona',
+  'New York': 'New_York'
 };
 
 // Reverse mapping for display and Kendra searches
@@ -164,8 +170,13 @@ const FoldersPage = () => {
 
   // Initialize search on first mount or when returning to the page
   useEffect(() => {
-    initializeSearch();
-  }, []); // Only run on mount
+    // Small delay to ensure context is fully initialized
+    const timer = setTimeout(() => {
+      initializeSearch();
+    }, 0);
+    
+    return () => clearTimeout(timer);
+  }, [initializeSearch]); // Add initializeSearch to dependencies
 
   return (
     <div className="folders-page">
@@ -199,7 +210,7 @@ const FoldersPage = () => {
                     <div key={jurisdiction.name} className={`folder-card ${expandedFolders.has(jurisdiction.name) ? 'expanded' : ''}`}>
                       <div className="folder-header">
                         <div className="folder-title-container">
-                          <h3 className="folder-title">{jurisdiction.name}</h3>
+                          <h3 className="folder-title">{jurisdiction.name.replace(/_/g, ' ')}</h3>
                           <div className="folder-meta">
                             <span className="folder-type">Folder</span>
                             <span className="document-count">{filteredDocs.length} documents</span>

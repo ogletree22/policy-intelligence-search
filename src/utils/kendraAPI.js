@@ -94,15 +94,16 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       
       // Jurisdiction mapping from API values to UI values
       const jurisdictionMapping = {
-        'Texas': 'Texas',
+        'New Mexico': 'New_Mexico',
+        'South Coast AQMD': 'South_Coast_AQMD',
+        'Bay Area AQMD': 'Bay_Area_AQMD',
+        'Sacramento AQMD': 'Sacramento_AQMD',
+        // Add direct mappings for non-spaced jurisdictions
         'Colorado': 'Colorado',
-        'California (SCAQMD)': 'South Coast AQMD',
-        'South Coast AQMD': 'South Coast AQMD',
+        'Texas': 'Texas',
         'Washington': 'Washington',
-        'New Mexico': 'New Mexico',
-        'Bay Area AQMD': 'Bay Area AQMD',
-        'BAAQMD': 'Bay Area AQMD',
-        'San Francisco BAAQMD': 'Bay Area AQMD'
+        'Arizona': 'Arizona',
+        'New York': 'New_York'
       };
       
       // Define our primary jurisdictions (UI values)
@@ -112,7 +113,10 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
         'New Mexico',
         'Washington',
         'South Coast AQMD',
-        'Bay Area AQMD'
+        'Bay Area AQMD',
+        'Arizona',
+        'New York',
+        'Sacramento AQMD'
       ];
       
       // Check if facets are in an expected format
@@ -154,33 +158,15 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
               }
             });
             
-            // Add default counts for missing jurisdictions
-            // Since Washington and Bay Area AQMD are not in the top facets but we know they exist
-            if (!jurisdictionCounts['Washington']) {
-              console.log("Adding default count for Washington");
-              jurisdictionCounts['Washington'] = 50; // Based on the debug logs you shared
-            }
-            
-            if (!jurisdictionCounts['Bay Area AQMD']) {
-              console.log("Adding default count for Bay Area AQMD");
-              jurisdictionCounts['Bay Area AQMD'] = 45; // An approximation
-            }
-            
-            if (!jurisdictionCounts['New Mexico']) {
-              console.log("Adding default count for New Mexico");
-              jurisdictionCounts['New Mexico'] = 40; // An approximation
-            }
-            
             // Log the final jurisdiction counts
             console.log("Processed jurisdiction counts:", jurisdictionCounts);
             
-            // Verify all primary jurisdictions have counts
+            // Set zero counts for jurisdictions with no results instead of warning
             primaryJurisdictions.forEach(jurisdiction => {
               if (!jurisdictionCounts[jurisdiction]) {
-                console.warn(`Missing count for primary jurisdiction: ${jurisdiction}`);
-              } else {
-                console.log(`${jurisdiction}: ${jurisdictionCounts[jurisdiction]}`);
+                jurisdictionCounts[jurisdiction] = 0;
               }
+              console.log(`${jurisdiction}: ${jurisdictionCounts[jurisdiction]}`);
             });
           }
         });
