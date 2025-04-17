@@ -32,7 +32,7 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
     
     // Match the exact format the Lambda function expects based on the Lambda code
     const requestBody = {
-      QueryText: trimmedQuery || '*', // Use '*' for empty queries to get all documents
+      QueryText: trimmedQuery ? `*${trimmedQuery}*` : '*', // Add wildcards for partial matches
       IndexId: INDEX_ID
     };
 

@@ -2,22 +2,20 @@ import React, { useState, useEffect } from 'react';
 import './SearchBar.css';
 import { FaTimes } from 'react-icons/fa';
 import searchIcon from '../assets/Search-Icon.png';
-import { useSearchPage } from '../context/SearchPageContext';
+import { useFolderPage } from '../context/FolderPageContext';
 
-const SearchBar = ({ showHeader = true }) => {
-  const [query, setQuery] = useState('');
-  const { searchQuery, handleSearch } = useSearchPage();
+const FolderSearchBar = () => {
+  const { searchQuery, handleSearch } = useFolderPage();
+  const [query, setQuery] = useState(searchQuery);
 
-  // Update local state when context searchQuery changes
+  // Sync local state with context when searchQuery changes
   useEffect(() => {
-    if (searchQuery !== undefined) {
-      setQuery(searchQuery);
-    }
+    setQuery(searchQuery);
   }, [searchQuery]);
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
-      console.log('Main SearchBar: Triggering search with query:', query);
+      console.log('FolderSearchBar: Triggering search with query:', query);
       handleSearch(query);
     }
   };
@@ -36,19 +34,19 @@ const SearchBar = ({ showHeader = true }) => {
 
   return (
     <div className="search-panel-header">
-      {showHeader && <h2 className="search-title">Document search</h2>}
+      <h2 className="search-title">Document search</h2>
       <div className="search-controls">
         <div className="search-input-wrapper">
           <img src={searchIcon} alt="Search" className="search-icon-img" />
           <input
             type="text"
-            id="document-search"
-            name="document-search"
+            id="folder-document-search"
+            name="folder-document-search"
             placeholder="e.g. air quality (press Enter to search)"
             value={query}
             onChange={handleChange}
             onKeyDown={handleKeyPress}
-            aria-label="Search documents"
+            aria-label="Search documents in folder"
           />
           {query && (
             <FaTimes 
@@ -64,4 +62,4 @@ const SearchBar = ({ showHeader = true }) => {
   );
 };
 
-export default SearchBar;
+export default FolderSearchBar; 

@@ -73,7 +73,7 @@ const reverseJurisdictionMapping = Object.fromEntries(
 
 export const FolderPageProvider = ({ children }) => {
   const [filters, setFilters] = useState({});
-  const [searchQuery, setSearchQuery] = useState('air'); // Default to 'air' as Kendra requires a search term
+  const [searchQuery, setSearchQuery] = useState(''); // Changed from 'air' to empty string
   const [loading, setLoading] = useState({
     all: false,
     Colorado: false,
@@ -241,28 +241,23 @@ export const FolderPageProvider = ({ children }) => {
 
   // Function to handle search queries
   const handleSearch = (query) => {
-    const sanitizedQuery = query || 'air'; // Ensure we always have at least 'air' as a fallback
-    console.log(`Search requested: "${sanitizedQuery}" (replacing "${searchQuery}")`);
+    console.log(`Search requested: "${query}" (replacing "${searchQuery}")`);
     
-    if (sanitizedQuery === searchQuery) {
+    if (query === searchQuery) {
       console.log('Same search query, skipping duplicate search');
       return;
     }
     
     // Update the query first
-    setSearchQuery(sanitizedQuery);
+    setSearchQuery(query);
     
     // Create a new search run ID and store it
     const newSearchId = Date.now();
     console.log(`Creating new search run ID: ${newSearchId}`);
     searchRunId.current = newSearchId;
     
-    // Clear any existing results to avoid showing stale data
-    setJurisdictionResults({});
-    
-    // Execute the search with the new query - pass the sanitizedQuery directly
-    // instead of relying on the state update to be immediate
-    fetchAllJurisdictionResultsWithQuery(sanitizedQuery);
+    // Execute the search with the new query
+    fetchAllJurisdictionResultsWithQuery(query);
   };
   
   // Modified function that accepts a query parameter and optional jurisdictions
@@ -275,9 +270,6 @@ export const FolderPageProvider = ({ children }) => {
     
     // Reset seen documents for a new search
     seenDocuments.current = {};
-    
-    // Clear previous results when starting a new search
-    setJurisdictionResults({});
     
     // Determine which jurisdictions to query
     const jurisdictionsToQuery = explicitJurisdictions === null ? 
@@ -311,6 +303,13 @@ export const FolderPageProvider = ({ children }) => {
       
       // Track if we have any actual results
       let totalDocuments = 0;
+      
+      // Initialize counts
+      const jurisdictionCounts = {};
+      const documentTypeCounts = {};
+      
+      // Keep track of results as they come in
+      const searchResults = {};
 
       // Run queries in series to avoid race conditions
       for (const jurisdiction of jurisdictionsToQuery) {
@@ -326,17 +325,41 @@ export const FolderPageProvider = ({ children }) => {
           resultCounts[jurisdiction] = documentsCount;
           totalDocuments += documentsCount;
           
+          // Store results for this jurisdiction
+          searchResults[jurisdiction] = {
+            name: jurisdiction,
+            documents: result.documents
+          };
+          
+          // Update jurisdiction counts
+          jurisdictionCounts[jurisdiction] = documentsCount;
+          
+          // Update document type counts
+          result.documents.forEach(doc => {
+            if (doc.type) {
+              documentTypeCounts[doc.type] = (documentTypeCounts[doc.type] || 0) + 1;
+            }
+          });
+          
           if (documentsCount > 0) {
             jurisdictionsWithData.push(jurisdiction);
           }
         }
       }
 
-      console.log('All Kendra searches completed with jurisdictions that have data:', 
+      // Update document counts in state
+      setDocumentCounts({
+        documentTypes: documentTypeCounts,
+        jurisdictions: jurisdictionCounts
+      });
+
+      console.log('All Kendra searches completed:', {
         jurisdictionsWithData, 
-        'Result counts:', resultCounts,
-        'Total documents:', totalDocuments
-      );
+        resultCounts,
+        totalDocuments,
+        documentTypeCounts,
+        jurisdictionCounts
+      });
 
       if (currentRunId !== searchRunId.current) {
         return;
@@ -349,6 +372,8 @@ export const FolderPageProvider = ({ children }) => {
         setJurisdictionResults(mockJurisdictionData);
       } else {
         setUsingMockData(false);
+        // Update with the collected results
+        setJurisdictionResults(searchResults);
       }
 
       const finalLoadingState = { all: false };
@@ -421,23 +446,26 @@ export const FolderPageProvider = ({ children }) => {
   // Initialize search on first load if needed
   const initializeSearch = () => {
     if (Object.keys(jurisdictionResults).length === 0 && !loading.all) {
-      // Capture the current query
-      const initialQuery = searchQuery || 'air';
-      console.log('Initializing search with query:', initialQuery);
-      
-      // Set a unique search ID for this initialization
-      const initialSearchId = Date.now();
-      searchRunId.current = initialSearchId;
-      
-      // Set a slight delay to allow for any pending searches to be processed
-      setTimeout(() => {
-        // Only proceed if no other search has started
-        if (searchRunId.current === initialSearchId) {
-          fetchAllJurisdictionResultsWithQuery(initialQuery);
-        } else {
-          console.log('Skipping initial search as another search is already in progress');
-        }
-      }, 50);
+      // Only initialize if we have a search query
+      if (searchQuery) {
+        console.log('Initializing search with query:', searchQuery);
+        
+        // Set a unique search ID for this initialization
+        const initialSearchId = Date.now();
+        searchRunId.current = initialSearchId;
+        
+        // Set a slight delay to allow for any pending searches to be processed
+        setTimeout(() => {
+          // Only proceed if no other search has started
+          if (searchRunId.current === initialSearchId) {
+            fetchAllJurisdictionResultsWithQuery(searchQuery);
+          } else {
+            console.log('Skipping initial search as another search is already in progress');
+          }
+        }, 50);
+      } else {
+        console.log('No initial search query, skipping initialization');
+      }
     }
   };
 

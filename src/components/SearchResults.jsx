@@ -73,6 +73,16 @@ const SearchResults = () => {
     );
   }
 
+  if (!results || results.length === 0) {
+    return (
+      <div className="results-container">
+        <div className="no-results-message">
+          No results found. Try a different search term.
+        </div>
+      </div>
+    );
+  }
+
   const renderResults = () => (
     <div className="results-scroll-area">
       {results.map((result, index) => {

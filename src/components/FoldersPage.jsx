@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import './FoldersPage.css';
 import SidebarFilters from './SidebarFilters';
-import SearchBar from './SearchBar';
 import { FaFolderPlus, FaFolderMinus, FaExpand, FaCompress, FaExclamationTriangle } from 'react-icons/fa';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { useFolderPage } from '../context/FolderPageContext';
+import FolderSearchBar from './FolderSearchBar';
 
 // Import mock data as fallback
 import mockDataCO2 from '../mockDataCO2.js';
@@ -168,116 +168,99 @@ const FoldersPage = () => {
   }, []); // Only run on mount
 
   return (
-    <div className="app-wrapper">
-      <div className="main-layout">
-        <aside className="sidebar">
-          <SidebarFilters 
-            onFilterChange={handleFilterChange} 
-            instanceId="folders-page" 
-            documentCounts={documentCounts}
-          />
-        </aside>
-        
-        <div className="folders-container">
-          <div className="folders-header">
-            <div>
-              <h1 className="page-title">Jurisdictions</h1>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <SearchBar onSearch={handleSearch} showHeader={false} initialValue={searchQuery} />
-                {Object.values(loading).some(Boolean) && (
-                  <div className="spinner"></div>
-                )}
-                {usingMockData && (
-                  <div className="demo-data-indicator">
-                    <FaExclamationTriangle className="demo-icon" />
+    <div className="folders-page">
+      <FolderSearchBar />
+      <div className="app-wrapper">
+        <div className="main-layout">
+          <aside className="sidebar">
+            <SidebarFilters 
+              onFilterChange={handleFilterChange} 
+              instanceId="folders-page" 
+              documentCounts={documentCounts}
+            />
+          </aside>
+          
+          <div className="folders-container">
+            <div className="folders-scroll-container">
+              <div className="folders-grid">
+                {Object.values(jurisdictionResults).map((jurisdiction) => {
+                  if (!jurisdiction) return null; // Skip if jurisdiction data isn't loaded yet
+                  
+                  const filteredDocs = getFilteredDocuments(jurisdiction.documents, jurisdiction.name);
+                  if (filteredDocs.length === 0) return null; // Don't show empty folders
+                  
+                  return (
+                    <div key={jurisdiction.name} className={`folder-card ${expandedFolders.has(jurisdiction.name) ? 'expanded' : ''}`}>
+                      <div className="folder-header">
+                        <div className="folder-title-container">
+                          <h3 className="folder-title">{jurisdiction.name}</h3>
+                          <div className="folder-meta">
+                            <span className="folder-type">Folder</span>
+                            <span className="document-count">{filteredDocs.length} documents</span>
+                          </div>
+                        </div>
+                        <button 
+                          className="expand-button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFolderExpand(jurisdiction.name);
+                          }}
+                        >
+                          {expandedFolders.has(jurisdiction.name) ? <FaCompress /> : <FaExpand />}
+                        </button>
+                      </div>
+                      <div className="folder-content">
+                        <div className="folder-files">
+                          {filteredDocs.map((doc, index) => {
+                            // Generate a truly unique key using jurisdiction, document ID and index
+                            const uniqueKey = `${jurisdiction.name}-${doc.id || ''}-${index}`;
+                            
+                            return (
+                              <div key={uniqueKey} className="file-card">
+                                <div className="file-header">
+                                  {doc.url ? (
+                                    <a 
+                                      href={doc.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="file-title"
+                                    >
+                                      {doc.title}
+                                    </a>
+                                  ) : (
+                                    <span className="file-title no-link">{doc.title}</span>
+                                  )}
+                                  <button
+                                    className={`add-to-folder-button ${workingFolderDocs.some(wDoc => wDoc.id === doc.id) ? 'in-folder' : ''}`}
+                                    onClick={() => {
+                                      const isInFolder = workingFolderDocs.some(wDoc => wDoc.id === doc.id);
+                                      if (isInFolder) {
+                                        removeFromWorkingFolder(doc.id);
+                                      } else {
+                                        addToWorkingFolder(doc);
+                                      }
+                                    }}
+                                    title={workingFolderDocs.some(wDoc => wDoc.id === doc.id) ? "Remove from Working Folder" : "Add to Working Folder"}
+                                  >
+                                    {workingFolderDocs.some(wDoc => wDoc.id === doc.id) ? <FaFolderMinus /> : <FaFolderPlus />}
+                                  </button>
+                                </div>
+                                <p className="file-description">{doc.description || 'No description available'}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {!loading.all && Object.keys(jurisdictionResults).length === 0 && (
+                  <div className="no-results">
+                    <p>No results found. Try adjusting your search query or filters.</p>
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-
-          <div className="folders-scroll-container">
-            <div className="folders-grid">
-              {Object.values(jurisdictionResults).map((jurisdiction) => {
-                if (!jurisdiction) return null; // Skip if jurisdiction data isn't loaded yet
-                
-                const filteredDocs = getFilteredDocuments(jurisdiction.documents, jurisdiction.name);
-                if (filteredDocs.length === 0) return null; // Don't show empty folders
-                
-                // Format jurisdiction name for display
-                const displayName = formatJurisdictionDisplay(jurisdiction.name);
-                
-                return (
-                  <div key={jurisdiction.name} className={`folder-card ${expandedFolders.has(jurisdiction.name) ? 'expanded' : ''}`}>
-                    <div className="folder-header">
-                      <div className="folder-title-container">
-                        <h3 className="folder-title">{jurisdiction.name}</h3>
-                        <div className="folder-meta">
-                          <span className="folder-type">Folder</span>
-                          <span className="document-count">{filteredDocs.length} documents</span>
-                        </div>
-                      </div>
-                      <button 
-                        className="expand-button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFolderExpand(jurisdiction.name);
-                        }}
-                      >
-                        {expandedFolders.has(jurisdiction.name) ? <FaCompress /> : <FaExpand />}
-                      </button>
-                    </div>
-                    <div className="folder-content">
-                      <div className="folder-files">
-                        {filteredDocs.map((doc, index) => {
-                          // Generate a truly unique key using jurisdiction, document ID and index
-                          const uniqueKey = `${jurisdiction.name}-${doc.id || ''}-${index}`;
-                          
-                          return (
-                            <div key={uniqueKey} className="file-card">
-                              <div className="file-header">
-                                {doc.url ? (
-                                  <a 
-                                    href={doc.url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
-                                    className="file-title"
-                                  >
-                                    {doc.title}
-                                  </a>
-                                ) : (
-                                  <span className="file-title no-link">{doc.title}</span>
-                                )}
-                                <button
-                                  className={`add-to-folder-button ${workingFolderDocs.some(wDoc => wDoc.id === doc.id) ? 'in-folder' : ''}`}
-                                  onClick={() => {
-                                    const isInFolder = workingFolderDocs.some(wDoc => wDoc.id === doc.id);
-                                    if (isInFolder) {
-                                      removeFromWorkingFolder(doc.id);
-                                    } else {
-                                      addToWorkingFolder(doc);
-                                    }
-                                  }}
-                                  title={workingFolderDocs.some(wDoc => wDoc.id === doc.id) ? "Remove from Working Folder" : "Add to Working Folder"}
-                                >
-                                  {workingFolderDocs.some(wDoc => wDoc.id === doc.id) ? <FaFolderMinus /> : <FaFolderPlus />}
-                                </button>
-                              </div>
-                              <p className="file-description">{doc.description || 'No description available'}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {!loading.all && Object.keys(jurisdictionResults).length === 0 && (
-                <div className="no-results">
-                  <p>No results found. Try adjusting your search query or filters.</p>
-                </div>
-              )}
             </div>
           </div>
         </div>

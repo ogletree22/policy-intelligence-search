@@ -177,13 +177,15 @@ export const SearchPageProvider = ({ children }) => {
           setDocumentCounts(facetResponse.facets);
         }
         
-        if (apiResults && apiResults.length > 0) {
-          console.log('Setting results from empty query search:', apiResults.length, 'items');
-          setResults(apiResults);
-          setUsingMockData(false);
-        } else {
-          console.log('No results from empty query search');
-          setResults([]);
+        if (currentRunId === searchRunId.current) {
+          if (apiResults && apiResults.length > 0) {
+            console.log('Setting results from empty query search:', apiResults.length, 'items');
+            setResults(apiResults);
+            setUsingMockData(false);
+          } else {
+            console.log('No results from empty query search');
+            setResults([]);
+          }
         }
       } catch (error) {
         console.error('Error fetching all documents:', error);
