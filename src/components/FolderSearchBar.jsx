@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './SearchBar.css';
 import { FaTimes } from 'react-icons/fa';
+import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import searchIcon from '../assets/Search-Icon.png';
 import { useFolderPage } from '../context/FolderPageContext';
 
 const FolderSearchBar = () => {
-  const { searchQuery, handleSearch } = useFolderPage();
+  const { searchQuery, handleSearch, loading } = useFolderPage();
   const [query, setQuery] = useState(searchQuery);
   const [searchHistory] = useState([
     'air quality',
@@ -46,7 +47,7 @@ const FolderSearchBar = () => {
 
   return (
     <div className="search-panel-header">
-      <h2 className="search-title">Document search</h2>
+      <h2 className="search-title">Search documents by folder</h2>
       <div className="search-controls">
         <div className="search-input-wrapper">
           <img src={searchIcon} alt="Search" className="search-icon-img" />
@@ -66,6 +67,9 @@ const FolderSearchBar = () => {
               <option key={index} value={item} />
             ))}
           </datalist>
+          {loading?.all && (
+            <AiOutlineLoading3Quarters className="loading-spinner" />
+          )}
           {query && (
             <FaTimes 
               className="clear-icon" 
