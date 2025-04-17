@@ -52,7 +52,10 @@ const jurisdictions = [
   'South_Coast_AQMD',
   'Bay_Area_AQMD',
   'Texas',
-  'Washington'
+  'Washington',
+  'Arizona',
+  'New_York',
+  'Sacramento_AQMD'
 ];
 
 // Mapping between Kendra format (with spaces) and code format (with underscores)
@@ -60,10 +63,13 @@ const jurisdictionMapping = {
   'New Mexico': 'New_Mexico',
   'South Coast AQMD': 'South_Coast_AQMD',
   'Bay Area AQMD': 'Bay_Area_AQMD',
+  'Sacramento AQMD': 'Sacramento_AQMD',
   // Add direct mappings for non-spaced jurisdictions
   'Colorado': 'Colorado',
   'Texas': 'Texas',
-  'Washington': 'Washington'
+  'Washington': 'Washington',
+  'Arizona': 'Arizona',
+  'New York': 'New_York'
 };
 
 // Reverse mapping for display and Kendra searches
@@ -81,7 +87,10 @@ export const FolderPageProvider = ({ children }) => {
     'South_Coast_AQMD': false,
     'Bay_Area_AQMD': false,
     Texas: false,
-    Washington: false
+    Washington: false,
+    Arizona: false,
+    'New_York': false,
+    'Sacramento_AQMD': false
   });
   const [error, setError] = useState(null);
   const [jurisdictionResults, setJurisdictionResults] = useState({});
@@ -272,7 +281,7 @@ export const FolderPageProvider = ({ children }) => {
     seenDocuments.current = {};
     
     // Determine which jurisdictions to query
-    const jurisdictionsToQuery = explicitJurisdictions === null ? 
+    let jurisdictionsToQuery = explicitJurisdictions === null ? 
       [...jurisdictions] : // If null, use all jurisdictions
       explicitJurisdictions.length > 0 ? 
         [...explicitJurisdictions] : // If non-empty array, use those jurisdictions
@@ -297,16 +306,48 @@ export const FolderPageProvider = ({ children }) => {
       - Document type: "${activeDocType || 'all'}"
       - Jurisdictions: ${jurisdictionsToQuery.join(', ')}`);
       
-      // Array to collect jurisdictions with data
-      const jurisdictionsWithData = [];
+      // First, get facet counts from a single API call
+      const facetResponse = await searchKendra(queryToUse, null, activeDocType, true);
+      if (facetResponse && facetResponse.facets) {
+        console.log('Raw facet data:', JSON.stringify(facetResponse.facets, null, 2));
+        // Update document counts with the facet data
+        setDocumentCounts(facetResponse.facets);
+        
+        // If we have jurisdiction counts, use them to determine which jurisdictions to query
+        if (facetResponse.facets.jurisdictions) {
+          console.log('Processing jurisdiction facets:', facetResponse.facets.jurisdictions);
+          const jurisdictionsWithResults = Object.keys(facetResponse.facets.jurisdictions)
+            .filter(j => {
+              const hasResults = facetResponse.facets.jurisdictions[j] > 0;
+              console.log(`Jurisdiction "${j}" has ${facetResponse.facets.jurisdictions[j]} results`);
+              return hasResults;
+            })
+            .map(j => {
+              // Convert API format to our internal format
+              const internalFormat = jurisdictionMapping[j] || j.replace(/ /g, '_');
+              console.log(`Mapping jurisdiction "${j}" to internal format "${internalFormat}"`);
+              return internalFormat;
+            });
+          
+          if (jurisdictionsWithResults.length > 0) {
+            console.log('Found jurisdictions with results:', jurisdictionsWithResults);
+            jurisdictionsToQuery = jurisdictionsWithResults;
+          } else {
+            console.log('No jurisdictions found with results in facets');
+          }
+        } else {
+          console.log('No jurisdiction facets found in response');
+        }
+      } else {
+        console.log('No facet data received from API');
+      }
+      
+      // Array to collect all documents
+      const allDocuments = [];
       const resultCounts = {};
       
       // Track if we have any actual results
       let totalDocuments = 0;
-      
-      // Initialize counts
-      const jurisdictionCounts = {};
-      const documentTypeCounts = {};
       
       // Keep track of results as they come in
       const searchResults = {};
@@ -325,40 +366,20 @@ export const FolderPageProvider = ({ children }) => {
           resultCounts[jurisdiction] = documentsCount;
           totalDocuments += documentsCount;
           
+          // Add documents to the combined list
+          allDocuments.push(...result.documents);
+          
           // Store results for this jurisdiction
           searchResults[jurisdiction] = {
             name: jurisdiction,
             documents: result.documents
           };
-          
-          // Update jurisdiction counts
-          jurisdictionCounts[jurisdiction] = documentsCount;
-          
-          // Update document type counts
-          result.documents.forEach(doc => {
-            if (doc.type) {
-              documentTypeCounts[doc.type] = (documentTypeCounts[doc.type] || 0) + 1;
-            }
-          });
-          
-          if (documentsCount > 0) {
-            jurisdictionsWithData.push(jurisdiction);
-          }
         }
       }
 
-      // Update document counts in state
-      setDocumentCounts({
-        documentTypes: documentTypeCounts,
-        jurisdictions: jurisdictionCounts
-      });
-
       console.log('All Kendra searches completed:', {
-        jurisdictionsWithData, 
         resultCounts,
-        totalDocuments,
-        documentTypeCounts,
-        jurisdictionCounts
+        totalDocuments
       });
 
       if (currentRunId !== searchRunId.current) {
