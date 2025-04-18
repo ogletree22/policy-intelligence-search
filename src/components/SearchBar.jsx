@@ -3,10 +3,11 @@ import './SearchBar.css';
 import { FaTimes } from 'react-icons/fa';
 import searchIcon from '../assets/Search-Icon.png';
 import { useSearchPage } from '../context/SearchPageContext';
+import LoadingSpinner from './LoadingSpinner';
 
 const SearchBar = ({ showHeader = true }) => {
-  const [query, setQuery] = useState('');
-  const { searchQuery, handleSearch } = useSearchPage();
+  const { searchQuery, handleSearch, loading } = useSearchPage();
+  const [query, setQuery] = useState(searchQuery);
   const [searchHistory] = useState([
     'air quality',
     'landfill',
@@ -68,6 +69,7 @@ const SearchBar = ({ showHeader = true }) => {
               <option key={index} value={item} />
             ))}
           </datalist>
+          {loading && <LoadingSpinner />}
           {query && (
             <FaTimes 
               className="clear-icon" 

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './SearchBar.css';
 import { FaTimes } from 'react-icons/fa';
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import searchIcon from '../assets/Search-Icon.png';
 import { useFolderPage } from '../context/FolderPageContext';
+import LoadingSpinner from './LoadingSpinner';
 
 const FolderSearchBar = () => {
   const { searchQuery, handleSearch, loading } = useFolderPage();
   const [query, setQuery] = useState(searchQuery);
+  const [localLoading, setLocalLoading] = useState(false);
   const [searchHistory] = useState([
     'air quality',
     'landfill',
@@ -22,6 +23,11 @@ const FolderSearchBar = () => {
     setQuery(searchQuery);
   }, [searchQuery]);
 
+  // Update local loading state when context loading changes
+  useEffect(() => {
+    setLocalLoading(loading?.all || false);
+  }, [loading]);
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       console.log('FolderSearchBar: Triggering search with query:', query);
@@ -33,6 +39,7 @@ const FolderSearchBar = () => {
     e.preventDefault();
     e.stopPropagation();
     setQuery('');
+    setLocalLoading(false); // Immediately clear loading state
     handleSearch('');
   };
 
@@ -67,9 +74,7 @@ const FolderSearchBar = () => {
               <option key={index} value={item} />
             ))}
           </datalist>
-          {loading?.all && (
-            <AiOutlineLoading3Quarters className="loading-spinner" />
-          )}
+          {localLoading && <LoadingSpinner />}
           {query && (
             <FaTimes 
               className="clear-icon" 
