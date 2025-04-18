@@ -88,7 +88,7 @@ const FoldersPage: React.FC = () => {
   return (
     <div className="folders-container">
       <div className="folders-header">
-        <h1>Documents in folders search</h1>
+        <h1>Document search</h1>
       </div>
 
       <div className="search-container">

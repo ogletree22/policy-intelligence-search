@@ -1,0 +1,67 @@
+.pulsing-loader-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  height: 100%;
+  position: absolute;
+  right: -80px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 16px;
+}
+
+.pulsing-loader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+}
+
+.pulsing-icon {
+  height: 48px;
+  width: 48px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px #6DB3F2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    filter: drop-shadow(0 0 5px #6DB3F2);
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 15px #6DB3F2);
+    transform: scale(1.1);
+  }
+  100% {
+    filter: drop-shadow(0 0 5px #6DB3F2);
+    transform: scale(1);
+  }
+}
+
+/* Dark mode styles */
+:root.dark-mode .pulsing-icon {
+  filter: drop-shadow(0 0 5px #A3CEF1);
+}
+
+:root.dark-mode .pulsing-icon {
+  animation-name: pulse-dark;
+}
+
+@keyframes pulse-dark {
+  0% {
+    filter: drop-shadow(0 0 5px #A3CEF1);
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 15px #A3CEF1);
+    transform: scale(1.1);
+  }
+  100% {
+    filter: drop-shadow(0 0 5px #A3CEF1);
+    transform: scale(1);
+  }
+} 

@@ -257,6 +257,28 @@ export const FolderPageProvider = ({ children }) => {
       return;
     }
     
+    // If query is empty, immediately clear everything without triggering any API calls
+    if (!query || query.trim() === '') {
+      searchRunId.current = 0; // Reset search run ID to cancel any pending searches
+      setSearchQuery('');
+      setJurisdictionResults({});
+      setLoading({
+        all: false,
+        Colorado: false,
+        'New_Mexico': false,
+        'South_Coast_AQMD': false,
+        'Bay_Area_AQMD': false,
+        Texas: false,
+        Washington: false,
+        Arizona: false,
+        'New_York': false,
+        'Sacramento_AQMD': false
+      });
+      setError(null);
+      seenDocuments.current = {};
+      return;
+    }
+    
     // Update the query first
     setSearchQuery(query);
     
