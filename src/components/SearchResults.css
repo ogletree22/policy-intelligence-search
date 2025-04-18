@@ -44,6 +44,7 @@
   box-sizing: border-box;
 }
 
+/* Web styles (default) */
 .result-card {
   background: white;
   border-radius: 8px;
@@ -220,6 +221,15 @@
   color: #aaa;
 }
 
+.mock-data-indicator {
+  font-size: 12px;
+  color: #666;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+}
+
+/* Mobile styles */
 @media (max-width: 768px) {
   .results-container {
     margin-top: 10px;
@@ -231,6 +241,10 @@
 
   .result-card {
     padding: 12px;
+    position: relative;
+    touch-action: pan-x;
+    overflow: hidden;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out, background-color 0.3s ease;
   }
 
   .result-header {
@@ -238,23 +252,111 @@
     gap: 8px;
   }
 
-  .button-group {
-    width: 100%;
-    justify-content: space-between;
-  }
-}
-
-@media (max-width: 480px) {
-  .results-content {
-    padding: 10px;
+  .add-to-folder-btn {
+    display: none;
   }
 
-  .result-card {
-    padding: 10px;
+  .folder-indicator {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 32px 32px 0;
+    border-color: transparent #ffb300 transparent transparent;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  .result-card.in-folder .folder-indicator {
+    opacity: 1;
+  }
+
+  .result-card::before {
+    content: '→';
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: #4CAF50;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .result-card::after {
+    content: '←';
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: #f44336;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .result-card.in-folder::before {
+    display: none;
+  }
+
+  .result-card:not(.in-folder)::after {
+    display: none;
+  }
+
+  .result-card.swiping-right::before {
+    opacity: 1;
+  }
+
+  .result-card.swiping-left::after {
+    opacity: 1;
+  }
+
+  .swipe-hint {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    font-size: 12px;
+    color: #666;
+    opacity: 0.7;
+    pointer-events: none;
   }
 
   .result-tags {
     flex-wrap: wrap;
   }
+}
+
+/* Dark mode styles */
+:root.dark-mode .results-content {
+  background-color: #1a1a1a;
+}
+
+:root.dark-mode .result-card {
+  background-color: #2d2d2d;
+  border-color: #404040;
+}
+
+:root.dark-mode .result-title a {
+  color: #4a9eff;
+}
+
+:root.dark-mode .result-description {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .tag {
+  background-color: #274c7720;
+  color: #4a9eff;
+}
+
+:root.dark-mode .mock-data-indicator {
+  background-color: #404040;
+  color: #999;
+}
+
+:root.dark-mode .swipe-hint {
+  color: #999;
 }
 

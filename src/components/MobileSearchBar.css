@@ -1,0 +1,63 @@
+.mobile-search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background-color: white;
+}
+
+.mobile-search-input {
+  width: 100%;
+  padding: 12px 16px;
+  padding-right: 48px;
+  border: none;
+  border-radius: 0;
+  font-size: 16px;
+  outline: none;
+  background: transparent;
+}
+
+.mobile-search-button {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background-color: #274C77;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-search-button:hover {
+  background-color: #1d3857;
+}
+
+.mobile-search-button:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+/* Dark mode styles */
+:root.dark-mode .mobile-search-container {
+  background-color: #2d2d2d;
+}
+
+:root.dark-mode .mobile-search-input {
+  color: white;
+}
+
+:root.dark-mode .mobile-search-button {
+  background-color: #274C77;
+}
+
+:root.dark-mode .mobile-search-button:hover {
+  background-color: #1d3857;
+} 

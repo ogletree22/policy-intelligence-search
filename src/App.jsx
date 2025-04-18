@@ -9,6 +9,8 @@ import FolderPanel from './components/FolderPanel';
 import FoldersPage from './components/FoldersPage';
 import PiCoPilot from './components/PiCoPilot';
 import LoginPage from './components/LoginPage';
+import MobileLayout from './components/MobileLayout';
+import { useMobileDetect } from './utils/mobileDetect';
 import { FolderProvider } from './context/FolderContext';
 import { WorkingFolderProvider } from './context/WorkingFolderContext';
 import { FolderPageProvider } from './context/FolderPageContext';
@@ -36,11 +38,19 @@ const MOCK_DOCUMENTS = [
 function MainContent() {
   const location = useLocation();
   const { results, loading, error, usingMockData, documentCounts, handleFilterChange } = useSearchPage();
+  const isMobile = useMobileDetect();
 
   const isHomePage = location.pathname === '/' || location.hash === '#/';
   const isFoldersPage = location.pathname === '/folders' || location.hash === '#/folders';
   const isPiCoPilotPage = location.pathname === '/copilot' || location.hash === '#/copilot';
 
+  // Return mobile layout if on mobile device
+  if (isMobile) {
+    console.log('Rendering mobile layout');
+    return <MobileLayout />;
+  }
+
+  // Desktop layout
   return (
     <div className="app-wrapper">
       <div className="top-border" />
