@@ -242,7 +242,7 @@
   .result-card {
     padding: 12px;
     position: relative;
-    touch-action: pan-x;
+    touch-action: pan-y pinch-zoom;
     overflow: hidden;
     transition: transform 0.3s ease-out, opacity 0.3s ease-out, background-color 0.3s ease;
   }
@@ -358,5 +358,26 @@
 
 :root.dark-mode .swipe-hint {
   color: #999;
+}
+
+.error-message {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+  color: #d32f2f;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  line-height: 1.2;
+  font-size: 14px;
+  max-width: 100%;
+}
+
+/* Dark mode styles */
+:root.dark-mode .error-message {
+  background-color: #1a1a1a;
+  color: #ff6b6b;
 }
 
