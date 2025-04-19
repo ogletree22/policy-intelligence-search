@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './MobileWelcomeOverlay.css';
 
 const MobileWelcomeOverlay = ({ onClose }) => {
@@ -16,7 +16,7 @@ const MobileWelcomeOverlay = ({ onClose }) => {
               <p>Swipe right to add documents to your working folder</p>
             </div>
             <div className="feature-item">
-              <div className="swipe-indicator left">←</div>
+              <div className="swipe-indicator left">→</div>
               <p>Swipe left to remove documents from your working folder</p>
             </div>
           </div>

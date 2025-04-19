@@ -57,6 +57,7 @@ const SearchResults = () => {
     if (!isMobile) return;
     setTouchStart({
       x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
       docId
     });
     setTouchEnd(null);
@@ -65,17 +66,27 @@ const SearchResults = () => {
   const handleTouchMove = (e, docId) => {
     if (!isMobile || !touchStart) return;
     
-    setTouchEnd({
-      x: e.targetTouches[0].clientX,
-      docId
-    });
+    const xDiff = touchStart.x - e.targetTouches[0].clientX;
+    const yDiff = touchStart.y - e.targetTouches[0].clientY;
+    
+    // If vertical scrolling is dominant, don't trigger swipe
+    if (Math.abs(yDiff) > Math.abs(xDiff)) {
+      setSwipingStates({});
+      return;
+    }
 
-    // Update swiping state for visual feedback
-    const swipeDistance = touchStart.x - e.targetTouches[0].clientX;
-    setSwipingStates(prev => ({
-      ...prev,
-      [docId]: swipeDistance
-    }));
+    // Only trigger swipe if horizontal movement is significant
+    if (Math.abs(xDiff) > 10) {
+      setTouchEnd({
+        x: e.targetTouches[0].clientX,
+        docId
+      });
+
+      setSwipingStates(prev => ({
+        ...prev,
+        [docId]: xDiff
+      }));
+    }
   };
 
   const handleTouchEnd = (doc) => {

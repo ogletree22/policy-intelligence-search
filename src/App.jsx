@@ -9,6 +9,7 @@ import FolderPanel from './components/FolderPanel';
 import FoldersPage from './components/FoldersPage';
 import PiCoPilot from './components/PiCoPilot';
 import LoginPage from './components/LoginPage';
+import MobileLoginPage from './components/MobileLoginPage';
 import MobileLayout from './components/MobileLayout';
 import { useMobileDetect } from './utils/mobileDetect';
 import { FolderProvider } from './context/FolderContext';
@@ -94,6 +95,7 @@ function MainContent() {
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isMobile = useMobileDetect();
 
   return (
     <Router>
@@ -106,7 +108,11 @@ function App() {
                   path="/login" 
                   element={
                     !isAuthenticated ? (
-                      <LoginPage onLogin={setIsAuthenticated} />
+                      isMobile ? (
+                        <MobileLoginPage onLogin={setIsAuthenticated} />
+                      ) : (
+                        <LoginPage onLogin={setIsAuthenticated} />
+                      )
                     ) : (
                       <Navigate to="/" replace />
                     )
