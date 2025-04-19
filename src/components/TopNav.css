@@ -79,5 +79,33 @@
     margin-bottom: 2px;
   }
   
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 20px;
+  }
+  
+  .user-email {
+    color: #274c77;
+    font-size: 14px;
+  }
+  
+  .sign-out-button {
+    padding: 6px 12px;
+    background-color: #e7ecef;
+    border: 1px solid #274c77;
+    border-radius: 4px;
+    color: #274c77;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+  
+  .sign-out-button:hover {
+    background-color: #274c77;
+    color: white;
+  }
+  
   
   

@@ -16,6 +16,8 @@ import { FolderProvider } from './context/FolderContext';
 import { WorkingFolderProvider } from './context/WorkingFolderContext';
 import { FolderPageProvider } from './context/FolderPageContext';
 import { SearchPageProvider, useSearchPage } from './context/SearchPageContext';
+import { AuthProvider, AuthContext } from './context/AuthContext';
+import './aws-config';
 import mockDataCO2 from './mockDataCO2.js';
 import mockDataNM from './mockDataNM';
 import mockDataSCAQMD from './mockDataSCAQMD';
@@ -94,8 +96,12 @@ function MainContent() {
 }
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const isMobile = useMobileDetect();
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Router>
@@ -107,11 +113,11 @@ function App() {
                 <Route 
                   path="/login" 
                   element={
-                    !isAuthenticated ? (
+                    !user ? (
                       isMobile ? (
-                        <MobileLoginPage onLogin={setIsAuthenticated} />
+                        <MobileLoginPage />
                       ) : (
-                        <LoginPage onLogin={setIsAuthenticated} />
+                        <LoginPage />
                       )
                     ) : (
                       <Navigate to="/" replace />
@@ -121,7 +127,7 @@ function App() {
                 <Route
                   path="/*"
                   element={
-                    isAuthenticated ? (
+                    user ? (
                       <MainContent />
                     ) : (
                       <Navigate to="/login" replace />
@@ -137,4 +143,10 @@ function App() {
   );
 }
 
-export default App;
+export default function AppWithAuth() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+}

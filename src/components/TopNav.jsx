@@ -1,13 +1,24 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import './TopNav.css';
 import logo from '../assets/logo.png';
 import searchIcon from '../assets/Search-Icon.png';
 import folderIcon from '../assets/Folders.png';
 import coPilotIcon from '../assets/AI-technology.png'; // Assuming that's AI Technology icon
+import piLogo from '../assets/PI_Logo_2024.png';
 
 const TopNav = () => {
   const location = useLocation();
+  const { user, signOut } = useContext(AuthContext);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <header className="topnav">
@@ -33,6 +44,12 @@ const TopNav = () => {
             PI Co-Pilot
           </Link>
         </nav>
+        {user && (
+          <div className="user-info">
+            <span className="user-email">{user.username}</span>
+            <button onClick={handleSignOut} className="sign-out-button">Sign Out</button>
+          </div>
+        )}
       </div>
     </header>
   );
