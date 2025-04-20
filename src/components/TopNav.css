@@ -59,6 +59,16 @@
     background-color: #c4c4c4;
   }
   
+  .nav-icon {
+    height: 20px;
+    width: 22px;
+    margin-right: 6px;
+    vertical-align: bottom;
+    object-fit: contain;
+    display: inline-block;
+    margin-bottom: 2px;
+  }
+  
   .topnav-icon {
     font-size: 18px;
     color: #274c77;
@@ -69,14 +79,88 @@
     color: #457B9D;
   }
 
-  .nav-icon {
-    height: 20px;
-    width: 22px;
-    margin-right: 6px;
-    vertical-align: bottom;
-    object-fit: contain;
-    display: inline-block;
-    margin-bottom: 2px;
+  .user-menu {
+    position: relative;
+  }
+  
+  .user-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #274C77;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    border: none;
+    padding: 0;
+    transition: background-color 0.2s ease;
+  }
+  
+  .user-icon:hover {
+    background-color: #1d3857;
+  }
+  
+  .user-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    min-width: 160px;
+    overflow: hidden;
+    z-index: 102;
+  }
+  
+  .user-dropdown-content {
+    padding: 8px 0;
+  }
+  
+  .user-email {
+    padding: 8px 16px;
+    color: #666;
+    font-size: 13px;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 8px;
+  }
+  
+  .user-dropdown button {
+    width: 100%;
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .user-dropdown button:hover {
+    background-color: rgba(39, 76, 119, 0.08);
+  }
+  
+  /* Dark mode styles */
+  :root.dark-mode .user-dropdown {
+    background-color: #2d2d2d;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  :root.dark-mode .user-email {
+    color: #999;
+    border-bottom-color: #404040;
+  }
+  
+  :root.dark-mode .user-dropdown button {
+    color: #e0e0e0;
+  }
+  
+  :root.dark-mode .user-dropdown button:hover {
+    background-color: rgba(74, 158, 255, 0.15);
   }
   
   

@@ -504,15 +504,84 @@
   padding: 8px 0;
   border-bottom: 1px solid #e0e0e0;
   margin-bottom: 16px;
+  position: relative;
 }
 
 .user-icon {
-  font-size: 25px;
-  color: #274C77;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #274C77;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: color 0.2s ease;
+  font-size: 16px;
+  border: none;
+  padding: 0;
+  transition: background-color 0.2s ease;
 }
 
 .user-icon:hover {
-  color: #457b9d;
+  background-color: #1d3857;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.user-dropdown-content {
+  padding: 8px 0;
+}
+
+.user-email {
+  padding: 8px 16px;
+  color: #666;
+  font-size: 13px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.user-dropdown button {
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.user-dropdown button:hover {
+  background-color: rgba(39, 76, 119, 0.08);
+}
+
+/* Dark mode styles */
+[data-theme="dark"] .user-dropdown {
+  background-color: #2d2d2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .user-email {
+  color: #999;
+  border-bottom-color: #404040;
+}
+
+[data-theme="dark"] .user-dropdown button {
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .user-dropdown button:hover {
+  background-color: rgba(74, 158, 255, 0.15);
 }

@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { FaUserCircle, FaFolder, FaTrash, FaEye, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import React, { useState, useCallback, useContext } from 'react';
+import { FaUser, FaFolder, FaTrash, FaEye, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { JurisdictionIcon, DocumentTypeIcon } from './icons/FilterIcons';
+import { AuthContext } from '../context/AuthContext';
 import './SidebarFilters.css';
 import WorkingFolderView from './WorkingFolderView';
 
@@ -148,6 +149,8 @@ const SidebarFilters = ({
   instanceId = 'default', 
   documentCounts = {}
 }) => {
+  const { signOut, user } = useContext(AuthContext);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   // Add state to track all filters
   const [filters, setFilters] = useState({
     jurisdictions: {},
@@ -255,10 +258,47 @@ const SidebarFilters = ({
     ? sortedJurisdictions 
     : sortedJurisdictions.slice(0, 6);
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setShowUserMenu(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  // Close user menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showUserMenu && !event.target.closest('.user-profile')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showUserMenu]);
+
   return (
     <div className={`sidebar-filters ${isDisabled ? 'disabled' : ''}`}>
       <div className="user-profile">
-        <FaUserCircle className="user-icon" />
+        <button 
+          className="user-icon"
+          onClick={() => setShowUserMenu(!showUserMenu)}
+          aria-label="User menu"
+        >
+          <FaUser />
+        </button>
+        {showUserMenu && (
+          <div className="user-dropdown">
+            <div className="user-dropdown-content">
+              <div className="user-email">{user?.username}</div>
+              <button onClick={handleSignOut}>Sign Out</button>
+            </div>
+          </div>
+        )}
       </div>
       <div className="sidebar-header">
         <h2 className="sidebar-title">Filters</h2>

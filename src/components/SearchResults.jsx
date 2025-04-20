@@ -9,6 +9,19 @@ const SearchResults = () => {
   const { results, loading, error, usingMockData } = useSearchPage();
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [documentStates, setDocumentStates] = useState({});
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [swipingStates, setSwipingStates] = useState({});
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Reset document states when results or folder changes
   useEffect(() => {
@@ -28,10 +41,6 @@ const SearchResults = () => {
     
     if (inFolder) {
       removeFromWorkingFolder(docId);
-      setDocumentStates(prev => ({
-        ...prev,
-        [docId]: { ...prev[docId], inFolder: false }
-      }));
     } else {
       addToWorkingFolder({
         id: docId,
@@ -41,12 +50,94 @@ const SearchResults = () => {
         jurisdiction: document.jurisdiction,
         type: document.type
       });
-      setDocumentStates(prev => ({
-        ...prev,
-        [docId]: { ...prev[docId], inFolder: true }
-      }));
     }
   }, [workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder]);
+
+  const handleTouchStart = (e, docId) => {
+    if (!isMobile) return;
+    setTouchStart({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+      docId
+    });
+    setTouchEnd(null);
+  };
+
+  const handleTouchMove = (e, docId) => {
+    if (!isMobile || !touchStart) return;
+    
+    const xDiff = touchStart.x - e.targetTouches[0].clientX;
+    const yDiff = touchStart.y - e.targetTouches[0].clientY;
+    
+    // If vertical scrolling is dominant, don't trigger swipe
+    if (Math.abs(yDiff) > Math.abs(xDiff)) {
+      setSwipingStates({});
+      return;
+    }
+
+    // Only trigger swipe if horizontal movement is significant
+    if (Math.abs(xDiff) > 10) {
+      setTouchEnd({
+        x: e.targetTouches[0].clientX,
+        docId
+      });
+
+      setSwipingStates(prev => ({
+        ...prev,
+        [docId]: xDiff
+      }));
+    }
+  };
+
+  const handleTouchEnd = (doc) => {
+    if (!isMobile || !touchStart || !touchEnd) return;
+    
+    const swipeDistance = touchStart.x - touchEnd.x;
+    const minSwipeDistance = 100; // minimum distance for swipe
+
+    if (Math.abs(swipeDistance) > minSwipeDistance) {
+      const isInFolder = workingFolderDocs.some(wDoc => wDoc.id === doc.id);
+      
+      if (swipeDistance > 0) { // Swipe left to remove
+        if (isInFolder) {
+          removeFromWorkingFolder(doc.id);
+        }
+      } else { // Swipe right to add
+        if (!isInFolder) {
+          addToWorkingFolder({
+            id: doc.id,
+            title: doc.title,
+            url: doc.url,
+            description: doc.description,
+            jurisdiction: doc.jurisdiction,
+            type: doc.type
+          });
+        }
+      }
+    }
+
+    // Reset states
+    setTouchStart(null);
+    setTouchEnd(null);
+    setSwipingStates(prev => ({
+      ...prev,
+      [doc.id]: 0
+    }));
+  };
+
+  const getSwipeStyle = (docId) => {
+    if (!isMobile || !touchStart || touchStart.docId !== docId || !swipingStates[docId]) return {};
+    
+    const swipeDistance = swipingStates[docId];
+    const maxSwipe = 150;
+    const limitedSwipe = Math.max(Math.min(swipeDistance, maxSwipe), -maxSwipe);
+    const opacity = 1 - (Math.abs(limitedSwipe) / maxSwipe) * 0.3;
+    
+    return {
+      transform: `translateX(${-limitedSwipe}px)`,
+      opacity
+    };
+  };
 
   const toggleDescription = (index) => {
     setExpandedDescriptions(prev => ({
@@ -74,13 +165,7 @@ const SearchResults = () => {
   }
 
   if (!results || results.length === 0) {
-    return (
-      <div className="results-container">
-        <div className="no-results-message">
-          No results found. Try a different search term.
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const renderResults = () => (
@@ -90,17 +175,27 @@ const SearchResults = () => {
         const inFolder = documentStates[docId]?.inFolder || false;
         
         return (
-          <div key={index} className="result-card">
+          <div 
+            key={index} 
+            className={`result-card ${inFolder ? 'in-folder' : ''}`}
+            onTouchStart={(e) => handleTouchStart(e, docId)}
+            onTouchMove={(e) => handleTouchMove(e, docId)}
+            onTouchEnd={() => handleTouchEnd(result)}
+            style={getSwipeStyle(docId)}
+          >
+            {isMobile && <div className="folder-indicator" />}
             <div className="result-header">
               <h3 className="result-title">
                 <a href={result.url} target="_blank" rel="noopener noreferrer">{result.title}</a>
               </h3>
-              <button 
-                className={`add-to-folder-btn ${inFolder ? 'in-folder' : ''}`}
-                onClick={() => handleFolderAction(result)}
-              >
-                {inFolder ? 'Remove' : 'Add to Folder'}
-              </button>
+              {!isMobile && (
+                <button 
+                  className={`add-to-folder-btn ${inFolder ? 'in-folder' : ''}`}
+                  onClick={() => handleFolderAction(result)}
+                >
+                  {inFolder ? 'Remove' : 'Add to Folder'}
+                </button>
+              )}
             </div>
             <div className="description-container">
               <p 
@@ -121,6 +216,11 @@ const SearchResults = () => {
                 </div>
               )}
             </div>
+            {isMobile && (
+              <div className="swipe-hint">
+                {inFolder ? '← Swipe left to remove' : '→ Swipe right to add'}
+              </div>
+            )}
           </div>
         );
       })}

@@ -4,7 +4,8 @@ import './TopNav.css';
 import logo from '../assets/logo.png';
 import searchIcon from '../assets/Search-Icon.png';
 import folderIcon from '../assets/Folders.png';
-import coPilotIcon from '../assets/AI-technology.png'; // Assuming that's AI Technology icon
+import coPilotIcon from '../assets/AI-technology.png';
+import piLogo from '../assets/PI_Logo_2024.png';
 
 const TopNav = () => {
   const location = useLocation();

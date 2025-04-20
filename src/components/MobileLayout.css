@@ -1,0 +1,305 @@
+.mobile-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background-color: #ffffff;
+  overflow: hidden; /* Prevent body scroll */
+}
+
+.mobile-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 101;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 2px solid #274C77;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+}
+
+.brand-logo-long {
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+}
+
+.brand-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.mobile-tabs {
+  display: flex;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.tab-button {
+  padding: 6px 10px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  outline: none;
+}
+
+.tab-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.tab-button:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.tab-button.active {
+  color: #274C77;
+  background-color: rgba(39, 76, 119, 0.08);
+}
+
+.mobile-content {
+  position: fixed;
+  top: 60px;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background-color: #f8f9fa;
+  padding-bottom: 60px;
+}
+
+.mobile-layout .search-bar-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0;
+  background-color: white;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  z-index: 100;
+}
+
+.mobile-layout .search-bar-container input {
+  width: 100%;
+  padding: 12px 16px;
+  padding-right: 48px;
+  border: none;
+  border-radius: 0;
+  font-size: 16px;
+  outline: none;
+  background: transparent;
+}
+
+.mobile-layout .search-bar-container .search-button {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background-color: #274C77;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-layout .search-bar-container .search-button:hover {
+  background-color: #1d3857;
+}
+
+.mobile-layout .search-bar-container .clear-button {
+  display: none;
+}
+
+.mobile-folder-indicator {
+  position: fixed;
+  bottom: 76px;
+  left: 16px;
+  right: 16px;
+  background-color: #274C77;
+  color: white;
+  padding: 14px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 100;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Dark mode styles */
+:root.dark-mode .mobile-layout {
+  background-color: #1a1a1a;
+}
+
+:root.dark-mode .mobile-header {
+  background-color: rgba(45, 45, 45, 0.95);
+  border-bottom-color: #274C77;
+}
+
+:root.dark-mode .mobile-tabs {
+  border-bottom-color: #404040;
+}
+
+:root.dark-mode .tab-button {
+  color: #999;
+}
+
+:root.dark-mode .tab-button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+:root.dark-mode .tab-button.active {
+  color: #4a9eff;
+  background-color: rgba(74, 158, 255, 0.15);
+}
+
+:root.dark-mode .mobile-content {
+  background-color: #1a1a1a;
+}
+
+:root.dark-mode .mobile-layout .search-bar-container {
+  background-color: #2d2d2d;
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+:root.dark-mode .mobile-layout .search-bar-container input {
+  color: white;
+}
+
+:root.dark-mode .mobile-layout .search-bar-container .search-button {
+  background-color: #274C77;
+}
+
+:root.dark-mode .mobile-layout .search-bar-container .search-button:hover {
+  background-color: #1d3857;
+}
+
+.search-section {
+  min-height: 100%;
+}
+
+.chat-section {
+  min-height: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+:root.dark-mode .chat-section {
+  background-color: #2d2d2d;
+}
+
+:root.dark-mode .brand-header {
+  background-color: rgba(45, 45, 45, 0.95);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+:root.dark-mode .brand-name {
+  color: #fff;
+}
+
+.mobile-layout .results-scroll-area {
+  padding-right: 0 !important;
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #274C77;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  border: none;
+  padding: 0;
+  transition: background-color 0.2s ease;
+}
+
+.user-icon:hover {
+  background-color: #1d3857;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-width: 120px;
+  overflow: hidden;
+  z-index: 102;
+}
+
+.user-dropdown button {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.user-dropdown button:hover {
+  background-color: rgba(39, 76, 119, 0.08);
+}
+
+/* Dark mode styles */
+:root.dark-mode .user-dropdown {
+  background-color: #2d2d2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark-mode .user-dropdown button {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .user-dropdown button:hover {
+  background-color: rgba(74, 158, 255, 0.15);
+} 

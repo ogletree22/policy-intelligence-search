@@ -1,11 +1,10 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './LoginPage.css';
+import './MobileLoginPage.css';
 import piLogo from '../assets/PI_Logo_2024.png';
-import appScreenshot from '../assets/app_screenshot.png';
 import { AuthContext } from '../context/AuthContext';
 
-const LoginPage = () => {
+const MobileLoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,23 +54,24 @@ const LoginPage = () => {
   };
 
   const renderConfirmationForm = () => (
-    <form className="login-form" onSubmit={handleSubmit}>
-      <h2>Verify Your Email</h2>
+    <form onSubmit={handleSubmit}>
+      <h1>Verify Your Email</h1>
       <p className="confirmation-text">Please enter the verification code sent to your email.</p>
-      <input
-        type="text"
-        placeholder="Verification Code"
-        value={confirmationCode}
-        onChange={(e) => setConfirmationCode(e.target.value)}
-        className="login-form-input"
-        required
-      />
-      <button type="submit" className="login-form-button">Verify Account</button>
+      <div className="input-group">
+        <input
+          type="text"
+          placeholder="Verification Code"
+          value={confirmationCode}
+          onChange={(e) => setConfirmationCode(e.target.value)}
+          required
+        />
+      </div>
+      <button type="submit" className="login-button">Verify Account</button>
     </form>
   );
 
   const renderForm = () => (
-    <form className="login-form" onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       {error && <div className="error-message">{error}</div>}
       {!isLogin && (
         <>
@@ -101,7 +101,6 @@ const LoginPage = () => {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="login-form-input"
           required
         />
       </div>
@@ -111,7 +110,6 @@ const LoginPage = () => {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="login-form-input"
           required
         />
       </div>
@@ -122,13 +120,12 @@ const LoginPage = () => {
             placeholder="Confirm Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="login-form-input"
             required
           />
         </div>
       )}
-      <button type="submit" className="login-form-button">
-        {isLogin ? 'Login' : 'Sign Up'}
+      <button type="submit" className="login-button">
+        {isLogin ? 'Login' : 'Sign up'}
       </button>
       <div className="auth-switch">
         <button
@@ -150,26 +147,15 @@ const LoginPage = () => {
   );
 
   return (
-    <div className="login-container">
-      <div className="login-layout">
-        <div className="app-preview">
-          <img src={appScreenshot} alt="Policy Intelligence App Preview" className="app-screenshot" />
-        </div>
-        
-        <div className="login-content">
-          <div className="login-header">
-            <img src={piLogo} alt="Policy Intelligence Logo" className="login-logo-image" />
-            <p className="login-logo-subtitle">
-              {showConfirmation ? 'Verify your account' : isLogin ? 'Login to your account' : 'Create an account'}
-            </p>
-            <p className="login-logo-subtitle">Access to policy & guidance documents</p>
-          </div>
-          
-          {showConfirmation ? renderConfirmationForm() : renderForm()}
-        </div>
+    <div className="mobile-login">
+      <div className="login-content">
+        <img src={piLogo} alt="Policy Intelligence Logo" className="login-logo" />
+        <h1>{isLogin ? 'Login to your account' : 'Create your account'}</h1>
+        <p className="subtitle">Access to policy & guidance documents</p>
+        {showConfirmation ? renderConfirmationForm() : renderForm()}
       </div>
     </div>
   );
 };
 
-export default LoginPage; 
+export default MobileLoginPage; 

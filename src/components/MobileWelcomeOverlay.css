@@ -1,0 +1,177 @@
+.welcome-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.welcome-content {
+  background-color: white;
+  width: 90%;
+  max-width: 360px;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+.welcome-content h2 {
+  color: #274C77;
+  font-size: 20px;
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.welcome-content p {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0 0 16px;
+}
+
+.feature-section {
+  margin-bottom: 16px;
+  padding: 0 12px;
+}
+
+.feature-section h3 {
+  color: #274C77;
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+
+.feature-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 8px;
+  width: 100%;
+}
+
+.feature-item.info {
+  padding-left: 0;
+}
+
+.feature-item p {
+  margin: 0;
+  flex: 1;
+}
+
+.swipe-indicator {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+}
+
+.swipe-indicator.right {
+  background-color: #4CAF50;
+}
+
+.swipe-indicator.left {
+  background-color: #f44336;
+  transform: rotate(180deg);
+}
+
+.swipe-indicator.folder {
+  background-color: #f5f5f5;
+}
+
+.folder-triangle {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 10px 10px 0;
+  border-color: transparent #ffb300 transparent transparent;
+  border-top-right-radius: 3px;
+}
+
+.got-it-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #274C77;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 8px;
+}
+
+.got-it-button:hover {
+  background-color: #1d3857;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Dark mode styles */
+:root.dark-mode .welcome-content {
+  background-color: #2d2d2d;
+}
+
+:root.dark-mode .welcome-content h2,
+:root.dark-mode .feature-section h3 {
+  color: #4a9eff;
+}
+
+:root.dark-mode .welcome-content p {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .swipe-indicator.folder {
+  background-color: #404040;
+}
+
+:root.dark-mode .got-it-button {
+  background-color: #274C77;
+}
+
+:root.dark-mode .got-it-button:hover {
+  background-color: #1d3857;
+} 
