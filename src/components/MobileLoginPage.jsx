@@ -233,4 +233,87 @@ const MobileLoginPage = () => {
               onChange={handleConfirmPasswordChange}
               required
             />
-            <span className={`
+            <span className={`password-warning ${passwordMatchError ? 'visible' : ''}`}>⚠️</span>
+          </div>
+        </>
+      )}
+      {isLogin && (
+        <>
+          <div className="login-options">
+            <div className="remember-me-container">
+              <label className="remember-me-label">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={handleRememberMeChange}
+                  className="remember-me-checkbox"
+                />
+                <span className="remember-me-text">Remember me</span>
+              </label>
+            </div>
+            <div className="forgot-password">
+              <button type="button" onClick={handleForgotPassword} className="forgot-password-link">
+                Forgot password?
+              </button>
+            </div>
+          </div>
+          <button type="submit" className="login-button">
+            Log in
+          </button>
+          <div className="divider">
+            <span>OR</span>
+          </div>
+          <button 
+            type="button"
+            onClick={() => {
+              setIsLogin(false);
+              setError('');
+              setFirstName('');
+              setLastName('');
+              setPassword('');
+              setConfirmPassword('');
+            }}
+            className="create-account-button"
+          >
+            Create new account
+          </button>
+        </>
+      )}
+      {!isLogin && (
+        <>
+          <button type="submit" className="login-button">
+            Sign Up
+          </button>
+          <div className="back-to-login">
+            <button 
+              type="button"
+              onClick={() => {
+                setIsLogin(true);
+                setError('');
+                setFirstName('');
+                setLastName('');
+                setPassword('');
+                setConfirmPassword('');
+              }}
+            >
+              Back to login
+            </button>
+          </div>
+        </>
+      )}
+    </form>
+  );
+
+  return (
+    <div className="mobile-login">
+      <div className="login-content">
+        <img src={piLogo} alt="Policy Intelligence Logo" className="login-logo" />
+        <h1>{isLogin ? 'Login to your account' : 'Create your account'}</h1>
+        <p className="subtitle">Access to policy & guidance documents</p>
+        {showConfirmation ? renderConfirmationForm() : renderForm()}
+      </div>
+    </div>
+  );
+};
+
+export default MobileLoginPage;
