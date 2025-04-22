@@ -80,7 +80,7 @@ const MobileLoginPage = () => {
 
       if (showResetPassword) {
         if (!email) {
-          setError('Please enter your email');
+          setError('Please enter your login name');
           return;
         }
         await resetPassword(email);
@@ -124,15 +124,17 @@ const MobileLoginPage = () => {
 
   const renderResetPasswordForm = () => (
     <form className="login-form" onSubmit={handleSubmit}>
-      <p className="confirmation-text">Please enter your email address to receive a password reset code.</p>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="login-form-input"
-        required
-      />
+      <p className="confirmation-text">Please enter your login name to receive a password reset code.</p>
+      <div className="input-group">
+        <input
+          type="email"
+          placeholder="Login name"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="login-form-input"
+          required
+        />
+      </div>
       <button type="submit" className="login-form-button">Recover Password</button>
       <div className="back-to-login">
         <button
@@ -166,7 +168,7 @@ const MobileLoginPage = () => {
   );
 
   const renderForm = () => (
-    <form className="login-form" onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       {error && (
         <div className="error-message">{error}</div>
       )}
@@ -195,10 +197,9 @@ const MobileLoginPage = () => {
       <div className="input-group">
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Login name"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="login-form-input"
           required
         />
       </div>
@@ -308,12 +309,14 @@ const MobileLoginPage = () => {
     <div className="mobile-login">
       <div className="login-content">
         <img src={piLogo} alt="Policy Intelligence Logo" className="login-logo" />
-        <h1>{isLogin ? 'Login to your account' : 'Create your account'}</h1>
-        <p className="subtitle">Access to policy & guidance documents</p>
-        {showConfirmation ? renderConfirmationForm() : renderForm()}
+        <p className="subtitle">Revolutionizing policy access</p>
+        <h1 className={showResetPassword ? 'reset-password' : ''}>
+          {showResetPassword ? 'Reset your password' : showConfirmation ? 'Verify your account' : isLogin ? 'Login to your account' : 'Create your account'}
+        </h1>
+        {showResetPassword ? renderResetPasswordForm() : showConfirmation ? renderConfirmationForm() : renderForm()}
       </div>
     </div>
   );
 };
 
-export default MobileLoginPage;
+export default MobileLoginPage; 

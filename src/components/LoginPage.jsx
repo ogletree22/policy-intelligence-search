@@ -81,7 +81,7 @@ const LoginPage = () => {
 
       if (showResetPassword) {
         if (!email) {
-          setError('Please enter your email');
+          setError('Please enter your login name');
           return;
         }
         await resetPassword(email);
@@ -126,10 +126,10 @@ const LoginPage = () => {
 
   const renderResetPasswordForm = () => (
     <form className="login-form" onSubmit={handleSubmit}>
-      <p className="confirmation-text">Please enter your email address to receive a password reset code.</p>
+      <p className="confirmation-text">Please enter your login name to receive a password reset code.</p>
       <input
         type="email"
-        placeholder="Email"
+        placeholder="Login name"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="login-form-input"
@@ -196,7 +196,7 @@ const LoginPage = () => {
       <div className="input-group">
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Login name"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="login-form-input"

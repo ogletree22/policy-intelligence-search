@@ -96,11 +96,26 @@
   text-align: center;
 }
 
-.subtitle {
-  font-size: 16px;
-  color: #666;
+.login-logo-subtitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #274C77;
   margin: 0 0 32px;
   text-align: center;
+  opacity: 0;
+  animation: fadeIn 1s ease-out forwards;
+}
+
+.login-logo-subtitle.reset-password {
+  margin: 0 0 16px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 26px;
+  text-align: center;
+  font-style: italic;
 }
 
 .input-group {
@@ -108,27 +123,82 @@
   margin-bottom: 8px;
   opacity: 1;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .input-group input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #E0E0E0;
+  padding: 8px 12px;
+  padding-right: 32px; /* Make room for the warning icon */
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 14px;
-  background: #F8F9FA;
+  background-color: white;
   color: #333;
   box-sizing: border-box;
+  height: 36px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  box-shadow: none;
 }
 
 .input-group input:focus {
   outline: none;
+  border-color: #274c77;
+  background-color: white;
+  color: #333;
   border-color: #274C77;
   background: white;
 }
 
 .input-group input::placeholder {
   color: #999;
+}
+
+.password-warning {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #dc3545;
+  cursor: help;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.password-warning.visible {
+  opacity: 1;
+}
+
+.password-warning::after {
+  content: 'Passwords do not match';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.password-warning:hover::after {
+  opacity: 1;
+}
+
+/* Dark mode styles */
+:root.dark-mode .password-warning {
+  color: #ff6b6b;
+}
+
+:root.dark-mode .password-warning::after {
+  background: rgba(255, 107, 107, 0.9);
 }
 
 .login-button {
@@ -153,16 +223,22 @@
   max-width: 200px;
   height: auto;
   display: block;
-  margin: 0 auto 20px;
+  margin: 0 auto 8px;
   animation: fadeIn 1s ease-out;
 }
 
 .login-logo-subtitle {
-  font-size: 15px;
-  color: #8b8c89;
-  margin: 5px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #274C77;
+  margin: 0 0 32px;
+  text-align: center;
   opacity: 0;
   animation: fadeIn 1s ease-out forwards;
+}
+
+.login-logo-subtitle.reset-password {
+  margin: 0 0 16px;
 }
 
 .login-form {
@@ -212,7 +288,17 @@
   font-weight: 500;
   font-size: 14px;
   height: 36px;
-  margin-top: 4px;
+  margin-bottom: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.login-form-button:hover {
+  background-color: #1d3958;
+}
+
+.login-form-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(39, 76, 119, 0.1);
 }
 
 .auth-switch {
@@ -253,11 +339,45 @@
 .error-message {
   color: #dc3545;
   font-size: 14px;
-  margin-bottom: 16px;
-  padding: 8px;
+  margin: 0 0 16px;
+  padding: 8px 12px;
   background-color: #f8d7da;
   border-radius: 4px;
-  text-align: center;
+  text-align: left;
+  border-left: 4px solid #dc3545;
+}
+
+.forgot-password {
+  text-align: right;
+  margin-bottom: 16px;
+}
+
+.forgot-password-link {
+  background: none;
+  border: none;
+  color: #0066cc;
+  font-size: 14px;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  outline: none;
+}
+
+.forgot-password-link:focus {
+  outline: none;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+}
+
+/* Dark mode styles */
+:root.dark-mode .forgot-password button {
+  color: #4a9eff;
+}
+
+:root.dark-mode .forgot-password button:hover {
+  color: #6bb5ff;
 }
 
 /* Responsive design */
@@ -292,4 +412,217 @@
   .login-form {
     gap: 12px;
   }
+}
+
+.password-reset-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.forgot-password-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.forgot-password-button {
+  background: #274c77;
+  border: none;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 24px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.forgot-password-button:hover {
+  background-color: #1d3857;
+  transform: translateY(-1px);
+}
+
+.forgot-password-hint {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Dark mode styles */
+:root.dark-mode .forgot-password-section {
+  background-color: rgba(74, 158, 255, 0.1);
+}
+
+:root.dark-mode .forgot-password-button {
+  background-color: #4a9eff;
+}
+
+:root.dark-mode .forgot-password-button:hover {
+  background-color: #3a7ecc;
+}
+
+:root.dark-mode .forgot-password-hint {
+  color: #999;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 0;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.divider span {
+  padding: 0 10px;
+  color: #666;
+  font-size: 14px;
+}
+
+.create-account-button {
+  width: 100%;
+  padding: 8px 12px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  height: 36px;
+  margin-top: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.create-account-button:hover {
+  background-color: rgba(163, 206, 241, 0.1);
+}
+
+.back-to-login {
+  text-align: right;
+  margin-top: 0;
+}
+
+.back-to-login button {
+  background: none;
+  border: none;
+  color: #0066cc;
+  font-size: 14px;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  outline: none;
+}
+
+.back-to-login button:focus {
+  outline: none;
+}
+
+.back-to-login button:hover {
+  text-decoration: underline;
+}
+
+.remember-me-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.remember-me-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-me-checkbox {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.remember-me-text {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Dark mode styles for remember me */
+:root.dark-mode .remember-me-text {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .remember-me-checkbox {
+  accent-color: #4a9eff;
+}
+
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+  color: #4b5563;
+}
+
+.password-toggle.active {
+  color: #a3cef1;
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.password-toggle path {
+  transition: fill 0.2s ease;
+}
+
+/* Dark mode styles */
+.dark .password-toggle {
+  color: #9ca3af;
+}
+
+.dark .password-toggle:hover {
+  color: #d1d5db;
+}
+
+.dark .password-toggle.active {
+  color: #a3cef1;
+}
+
+/* Adjust input padding to accommodate both icons */
+.input-group input[type="password"],
+.input-group input[type="text"] {
+  padding-right: 60px; /* Make room for both warning and toggle icons */
 } 
