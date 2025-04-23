@@ -144,7 +144,7 @@ const MobileLoginPage = () => {
           required
         />
       </div>
-      <button type="submit" className="login-form-button">Recover Password</button>
+      <button type="submit" className="login-form-button">Reset Password</button>
       <div className="back-to-login">
         <button
           type="button"
@@ -161,7 +161,6 @@ const MobileLoginPage = () => {
 
   const renderConfirmationForm = () => (
     <form onSubmit={handleSubmit}>
-      <h1>{showResetPassword ? 'Reset Your Password' : 'Verify Your Email'}</h1>
       <p className="confirmation-text">
         {showResetPassword 
           ? 'Please enter the verification code sent to your email and your new password.'
