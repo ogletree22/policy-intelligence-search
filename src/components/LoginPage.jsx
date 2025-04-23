@@ -73,22 +73,30 @@ const LoginPage = () => {
     
     try {
       if (showConfirmation) {
-        await confirmSignUp(email, confirmationCode);
-        setShowConfirmation(false);
-        setIsLogin(true);
-        return;
+        if (showResetPassword) {
+          await confirmResetPassword(email, confirmationCode, newPassword);
+          setShowResetPassword(false);
+          setShowConfirmation(false);
+          setIsLogin(true);
+          return;
+        } else {
+          await confirmSignUp(email, confirmationCode);
+          setShowConfirmation(false);
+          setIsLogin(true);
+          return;
+        }
       }
 
       if (showResetPassword) {
         if (!email) {
-          setError('Please enter your login name');
+          setError('Please enter your email address');
           return;
         }
         await resetPassword(email);
-        setShowResetPassword(false);
-        setError('');
-        // Show confirmation form after successful password reset request
+        // Show the confirmation form with password reset fields
         setShowConfirmation(true);
+        setShowResetPassword(true);
+        setError('');
         return;
       }
 
@@ -126,10 +134,10 @@ const LoginPage = () => {
 
   const renderResetPasswordForm = () => (
     <form className="login-form" onSubmit={handleSubmit}>
-      <p className="confirmation-text">Please enter your login name to receive a password reset code.</p>
+      <p className="confirmation-text">Please enter your email address to receive a password reset code.</p>
       <input
         type="email"
-        placeholder="Login name"
+        placeholder="Email address"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="login-form-input"
@@ -152,8 +160,12 @@ const LoginPage = () => {
 
   const renderConfirmationForm = () => (
     <form className="login-form" onSubmit={handleSubmit}>
-      <h2>Verify Your Email</h2>
-      <p className="confirmation-text">Please enter the verification code sent to your email.</p>
+      <h2>{showResetPassword ? 'Reset Your Password' : 'Verify Your Email'}</h2>
+      <p className="confirmation-text">
+        {showResetPassword 
+          ? 'Please enter the verification code sent to your email and your new password.'
+          : 'Please enter the verification code sent to your email.'}
+      </p>
       <input
         type="text"
         placeholder="Verification Code"
@@ -162,7 +174,43 @@ const LoginPage = () => {
         className="login-form-input"
         required
       />
-      <button type="submit" className="login-form-button">Verify Account</button>
+      {showResetPassword && (
+        <>
+          <input
+            type="password"
+            placeholder="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="login-form-input"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Confirm New Password"
+            value={confirmPassword}
+            onChange={handleConfirmPasswordChange}
+            className="login-form-input"
+            required
+          />
+        </>
+      )}
+      <button type="submit" className="login-form-button">
+        {showResetPassword ? 'Reset Password' : 'Verify Account'}
+      </button>
+      {showResetPassword && (
+        <div className="back-to-login">
+          <button
+            type="button"
+            onClick={() => {
+              setShowResetPassword(false);
+              setShowConfirmation(false);
+              setError('');
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </form>
   );
 
@@ -196,7 +244,7 @@ const LoginPage = () => {
       <div className="input-group">
         <input
           type="email"
-          placeholder="Login name"
+          placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="login-form-input"
@@ -323,7 +371,15 @@ const LoginPage = () => {
             </h1>
           </div>
           
-          {showResetPassword ? renderResetPasswordForm() : showConfirmation ? renderConfirmationForm() : renderForm()}
+          {error && <div className="error-message">{error}</div>}
+          
+          {showResetPassword && !showConfirmation ? (
+            renderResetPasswordForm()
+          ) : showConfirmation ? (
+            renderConfirmationForm()
+          ) : (
+            renderForm()
+          )}
         </div>
       </div>
     </div>
