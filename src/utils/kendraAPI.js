@@ -33,7 +33,8 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
     // Match the exact format the Lambda function expects based on the Lambda code
     const requestBody = {
       QueryText: trimmedQuery ? `*${trimmedQuery}*` : '*', // Add wildcards for partial matches
-      IndexId: INDEX_ID
+      IndexId: INDEX_ID,
+      PageSize: 100 // Request up to 100 results per page
     };
 
     // If we're fetching facets, add a flag for the lambda

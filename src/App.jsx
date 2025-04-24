@@ -7,6 +7,7 @@ import SearchBar from './components/SearchBar';
 import SearchResults from './components/SearchResults';
 import FolderPanel from './components/FolderPanel';
 import FoldersPage from './components/FoldersPage';
+import DynamicSearch from './components/DynamicSearch';
 import PiCoPilot from './components/PiCoPilot';
 import LoginPage from './components/LoginPage';
 import MobileLoginPage from './components/MobileLoginPage';
@@ -46,6 +47,7 @@ function MainContent() {
   const isHomePage = location.pathname === '/' || location.hash === '#/';
   const isFoldersPage = location.pathname === '/folders' || location.hash === '#/folders';
   const isPiCoPilotPage = location.pathname === '/copilot' || location.hash === '#/copilot';
+  const isDynamicSearchPage = location.pathname === '/dynamic' || location.hash === '#/dynamic';
 
   // Return mobile layout if on mobile device
   if (isMobile) {
@@ -82,6 +84,10 @@ function MainContent() {
 
           {isPiCoPilotPage && (
             <PiCoPilot />
+          )}
+          
+          {isDynamicSearchPage && (
+            <DynamicSearch />
           )}
         </main>
 

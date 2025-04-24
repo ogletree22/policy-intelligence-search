@@ -44,6 +44,9 @@ const reverseJurisdictionMapping = Object.fromEntries(
 );
 
 export const SearchPageProvider = ({ children }) => {
+  // Increase the maximum number of results to retrieve and display
+  const MAX_RESULTS = 100; // Set maximum results to 100
+  
   const [results, setResults] = useState([]);
   const [filters, setFilters] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
@@ -180,6 +183,7 @@ export const SearchPageProvider = ({ children }) => {
         if (currentRunId === searchRunId.current) {
           if (apiResults && apiResults.length > 0) {
             console.log('Setting results from empty query search:', apiResults.length, 'items');
+            // Don't limit results to just 10
             setResults(apiResults);
             setUsingMockData(false);
           } else {
@@ -218,6 +222,7 @@ export const SearchPageProvider = ({ children }) => {
           });
           
           console.log(`Setting ${uniqueResults.length} unique results from API`);
+          // Don't limit results here
           setResults(uniqueResults);
           setUsingMockData(false);
         } else {
@@ -295,6 +300,7 @@ export const SearchPageProvider = ({ children }) => {
             });
             
             console.log(`Filtered results: ${finalResults.length} items`);
+            // Don't limit results
             setResults(finalResults);
             setUsingMockData(false);
 

@@ -79,10 +79,10 @@ const MobileLoginPage = () => {
           setIsLogin(true);
           return;
         } else {
-          await confirmSignUp(email, confirmationCode);
-          setShowConfirmation(false);
-          setIsLogin(true);
-          return;
+        await confirmSignUp(email, confirmationCode);
+        setShowConfirmation(false);
+        setIsLogin(true);
+        return;
         }
       }
 
@@ -290,16 +290,16 @@ const MobileLoginPage = () => {
       </div>
       {!isLogin && (
         <>
-          <div className="input-group">
-            <input
+        <div className="input-group">
+          <input
               type={showPassword ? "text" : "password"}
-              placeholder="Confirm Password"
-              value={confirmPassword}
+            placeholder="Confirm Password"
+            value={confirmPassword}
               onChange={handleConfirmPasswordChange}
-              required
-            />
+            required
+          />
             <span className={`password-warning ${passwordMatchError ? 'visible' : ''}`}>⚠️</span>
-          </div>
+        </div>
         </>
       )}
       {isLogin && (
@@ -316,10 +316,10 @@ const MobileLoginPage = () => {
                 <span className="remember-me-text">Remember me</span>
               </label>
             </div>
-            <div className="forgot-password">
-              <button type="button" onClick={handleForgotPassword} className="forgot-password-link">
-                Forgot password?
-              </button>
+          <div className="forgot-password">
+            <button type="button" onClick={handleForgotPassword} className="forgot-password-link">
+              Forgot password?
+            </button>
             </div>
           </div>
           <button type="submit" className="login-button">

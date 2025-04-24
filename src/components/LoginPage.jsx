@@ -80,10 +80,10 @@ const LoginPage = () => {
           setIsLogin(true);
           return;
         } else {
-          await confirmSignUp(email, confirmationCode);
-          setShowConfirmation(false);
-          setIsLogin(true);
-          return;
+        await confirmSignUp(email, confirmationCode);
+        setShowConfirmation(false);
+        setIsLogin(true);
+        return;
         }
       }
 
@@ -291,17 +291,17 @@ const LoginPage = () => {
       </div>
       {!isLogin && (
         <>
-          <div className="input-group">
-            <input
+        <div className="input-group">
+          <input
               type={showPassword ? "text" : "password"}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="login-form-input"
-              required
-            />
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="login-form-input"
+            required
+          />
             <span className={`password-warning ${passwordMatchError ? 'visible' : ''}`}>⚠️</span>
-          </div>
+        </div>
         </>
       )}
       {isLogin && (
@@ -318,10 +318,10 @@ const LoginPage = () => {
                 <span className="remember-me-text">Remember me</span>
               </label>
             </div>
-            <div className="forgot-password">
-              <button type="button" onClick={handleForgotPassword} className="forgot-password-link">
-                Forgot password?
-              </button>
+          <div className="forgot-password">
+            <button type="button" onClick={handleForgotPassword} className="forgot-password-link">
+              Forgot password?
+            </button>
             </div>
           </div>
           <button type="submit" className="login-form-button">
