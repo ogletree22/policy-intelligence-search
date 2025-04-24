@@ -6,6 +6,7 @@ import searchIcon from '../assets/Search-Icon.png';
 import folderIcon from '../assets/Folders.png';
 import coPilotIcon from '../assets/AI-technology.png';
 import piLogo from '../assets/PI_Logo_2024.png';
+import dynamicSearchIcon from '../assets/dynamic search icon.svg';
 
 const TopNav = () => {
   const location = useLocation();
@@ -27,6 +28,11 @@ const TopNav = () => {
           <Link to="/folders" className={location.pathname === '/folders' ? 'active' : ''}>
             <img src={folderIcon} alt="Folders" className="nav-icon" />
             Folders
+          </Link>
+          <span className="nav-divider" />
+          <Link to="/dynamic" className={location.pathname === '/dynamic' ? 'active' : ''}>
+            <img src={dynamicSearchIcon} alt="Dynamic Search" className="nav-icon" />
+            Dynamic Search
           </Link>
           <span className="nav-divider" />
           <Link to="/copilot" className={location.pathname === '/copilot' ? 'active' : ''}>
