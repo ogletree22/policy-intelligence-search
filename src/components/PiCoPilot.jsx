@@ -1,7 +1,7 @@
 import React from 'react';
 import './PiCoPilot.css';
 import MessageHistory from './MessageHistory';
-import ChatArea from './ChatArea';
+import PiCoPilotChat from './PiCoPilotChat';
 import CitationsPanel from './CitationsPanel';
 import SidebarFilters from './SidebarFilters';
 
@@ -53,7 +53,7 @@ const PiCoPilot = () => {
         <div className="copilot-container">
           <div className="copilot-content">
             <MessageHistory />
-            <ChatArea />
+            <PiCoPilotChat />
             <CitationsPanel />
           </div>
         </div>
