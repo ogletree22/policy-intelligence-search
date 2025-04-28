@@ -4,11 +4,14 @@ import MessageHistory from './MessageHistory';
 import PiCoPilotChat from './PiCoPilotChat';
 import CitationsPanel from './CitationsPanel';
 import SidebarFilters from './SidebarFilters';
+import { useSearchPage } from '../context/SearchPageContext';
 
 // Import the AI avatar image
 import aiAvatar from '../assets/AI-technology.png';
 
 const PiCoPilot = () => {
+  const { results } = useSearchPage();
+
   // Example history items
   const historyItems = [
     'Tell me about PM2.5 regulations in...',

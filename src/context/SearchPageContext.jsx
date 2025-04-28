@@ -80,7 +80,10 @@ export const SearchPageProvider = ({ children }) => {
       }
     };
 
-    performInitialSearch();
+    // Only perform initial search if we don't have any results
+    if (results.length === 0) {
+      performInitialSearch();
+    }
   }, []);
 
   const clearSearch = () => {

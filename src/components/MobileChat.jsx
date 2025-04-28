@@ -1,92 +1,79 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useWorkingFolder } from '../context/WorkingFolderContext';
+import React, { useRef, useEffect } from 'react';
+import { useChat } from '../context/ChatContext';
 import piAILogo from '../assets/PI AI logo.svg';
 import './MobileChat.css';
 
 const MobileChat = () => {
-  const { workingFolderDocs } = useWorkingFolder();
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    question,
+    setQuestion,
+    answer,
+    citations,
+    isLoading,
+    error,
+    handleChatSubmit
+  } = useChat();
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [answer, error, isLoading, citations]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
-
-    const userMessage = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setIsLoading(true);
-
-    try {
-      // Simulate API call - replace with actual PiCoPilot API integration
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: userMessage,
-          context: workingFolderDocs.map(doc => ({
-            title: doc.title,
-            content: doc.description
-          }))
-        }),
-      });
-
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Sorry, I encountered an error. Please try again.' 
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
+    if (!question.trim()) return;
+    handleChatSubmit(question);
   };
 
   return (
     <div className="mobile-chat">
       <div className="chat-messages">
-        {messages.map((message, index) => (
-          <div key={index} className={`message ${message.role}`}>
-            {message.content}
-          </div>
-        ))}
-        {isLoading && (
-          <div className="message assistant">
-            <div className="typing-indicator">
+        <div className="message assistant" style={{ width: '100%' }}>
+          {error && (
+            <div style={{ color: 'red', background: '#ffebee', padding: 8, borderRadius: 8, marginBottom: 12 }}>{error}</div>
+          )}
+          {answer && (
+            <div style={{ whiteSpace: 'pre-wrap' }}>{answer}</div>
+          )}
+          {citations && citations.length > 0 && (
+            <div style={{ marginTop: '16px', borderTop: '1px solid #e0e0e0', paddingTop: '10px' }}>
+              <div style={{ fontWeight: 600, color: '#274C77', marginBottom: 6 }}>Sources:</div>
+              <ul style={{ paddingLeft: 16, margin: 0 }}>
+                {citations.map((citation, idx) => (
+                  <li key={idx} style={{ marginBottom: 8 }}>
+                    <a href={citation.pi_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0073bb', textDecoration: 'none', fontWeight: 500 }}>
+                      {citation.title}
+                    </a>
+                    <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
+                      {citation.jurisdiction && `Jurisdiction: ${citation.jurisdiction}`}
+                      {citation.source && <div>Source: {citation.source}</div>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {isLoading && (
+            <div className="typing-indicator" style={{ marginTop: 16 }}>
               <span></span>
               <span></span>
               <span></span>
             </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
-
       <div className="chat-input">
         <input
           type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSend()}
           placeholder="Ask about your documents..."
           disabled={isLoading}
         />
         <button 
           onClick={handleSend}
-          disabled={isLoading || !input.trim()}
+          disabled={isLoading || !question.trim()}
           aria-label="Send message"
         >
           <img src={piAILogo} alt="Send" className="send-icon" />

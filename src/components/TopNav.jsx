@@ -6,7 +6,7 @@ import searchIcon from '../assets/Search-Icon.png';
 import folderIcon from '../assets/Folders.png';
 import coPilotIcon from '../assets/AI-technology.png';
 import piLogo from '../assets/PI_Logo_2024.png';
-import dynamicSearchIcon from '../assets/dynamic search icon.svg';
+import dynamicSearchIcon from '../assets/dynamic search ii.svg';
 
 const TopNav = () => {
   const location = useLocation();

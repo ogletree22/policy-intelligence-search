@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchPage } from '../context/SearchPageContext';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { FaFolderPlus, FaFolderMinus, FaThLarge, FaList, FaGlobe, FaChevronDown, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import dynamicSearchIcon from '../assets/dynamic search icon.svg';
+import dynamicSearchIcon from '../assets/dynamic search ii.svg';
 import './DynamicSearch.css';
 
 const DynamicSearch = () => {

@@ -5,6 +5,12 @@ import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
 import awsConfig from './aws-config'
 import './index.css'
 import App from './App.jsx'
+import { AuthProvider } from './context/AuthContext';
+import { SearchPageProvider } from './context/SearchPageContext';
+import { FolderProvider } from './context/FolderContext';
+import { WorkingFolderProvider } from './context/WorkingFolderContext';
+import { FolderPageProvider } from './context/FolderPageContext';
+import { ChatProvider } from './context/ChatContext';
 
 // Configure AWS Amplify
 Amplify.configure(awsConfig);
@@ -14,6 +20,18 @@ cognitoUserPoolsTokenProvider.setKeyValueStorage(window.localStorage);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <AuthProvider>
+      <SearchPageProvider>
+        <FolderProvider>
+          <WorkingFolderProvider>
+            <FolderPageProvider>
+              <ChatProvider>
+                <App />
+              </ChatProvider>
+            </FolderPageProvider>
+          </WorkingFolderProvider>
+        </FolderProvider>
+      </SearchPageProvider>
+    </AuthProvider>
   </StrictMode>,
 )

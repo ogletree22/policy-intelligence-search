@@ -18,6 +18,7 @@ import { WorkingFolderProvider } from './context/WorkingFolderContext';
 import { FolderPageProvider } from './context/FolderPageContext';
 import { SearchPageProvider, useSearchPage } from './context/SearchPageContext';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { ChatProvider } from './context/ChatContext';
 import './aws-config';
 import mockDataCO2 from './mockDataCO2.js';
 import mockDataNM from './mockDataNM';
@@ -111,48 +112,13 @@ function App() {
 
   return (
     <Router>
-      <WorkingFolderProvider>
-        <FolderProvider>
-          <FolderPageProvider>
-            <SearchPageProvider>
-              <Routes>
-                <Route 
-                  path="/login" 
-                  element={
-                    !user ? (
-                      isMobile ? (
-                        <MobileLoginPage />
-                      ) : (
-                        <LoginPage />
-                      )
-                    ) : (
-                      <Navigate to="/" replace />
-                    )
-                  } 
-                />
-                <Route
-                  path="/*"
-                  element={
-                    user ? (
-                      <MainContent />
-                    ) : (
-                      <Navigate to="/login" replace />
-                    )
-                  }
-                />
-              </Routes>
-            </SearchPageProvider>
-          </FolderPageProvider>
-        </FolderProvider>
-      </WorkingFolderProvider>
+      {isMobile ? (
+        user ? <MobileLayout /> : <MobileLoginPage />
+      ) : (
+        user ? <MainContent /> : <LoginPage />
+      )}
     </Router>
   );
 }
 
-export default function AppWithAuth() {
-  return (
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  );
-}
+export default App;
