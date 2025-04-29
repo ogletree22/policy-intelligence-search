@@ -1,17 +1,9 @@
 import React from 'react';
 import './PiCoPilot.css';
+import { useChat } from '../context/ChatContext';
 
 const MessageHistory = () => {
-  // Example history items
-  const historyItems = [
-    'Tell me about PM2.5 regulations in...',
-    'How does California\'s oil and gas e...',
-    'Tell me about PM2.5 regulations in...',
-    'What bills related to electric vehicl...',
-    'How have states implemented co...',
-    'What state-level policies incentiv...',
-    'Which cities have adopted congest...',
-  ];
+  const { chatHistory, activeThreadIndex, setActiveThreadIndex } = useChat();
 
   return (
     <div className="message-history">
@@ -19,11 +11,20 @@ const MessageHistory = () => {
         <h3>Message History</h3>
       </div>
       <div className="history-list">
-        {historyItems.map((item, index) => (
-          <div key={index} className="history-item">
-            {item}
-          </div>
-        ))}
+        {chatHistory.length === 0 ? (
+          <div className="history-item">No chat history yet.</div>
+        ) : (
+          chatHistory.map((thread, idx) => (
+            <div
+              key={idx}
+              className={`history-item${activeThreadIndex === idx ? ' active' : ''}`}
+              onClick={() => setActiveThreadIndex(idx)}
+              style={{ cursor: 'pointer' }}
+            >
+              {thread.question}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

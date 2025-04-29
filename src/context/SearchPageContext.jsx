@@ -43,6 +43,8 @@ const reverseJurisdictionMapping = Object.fromEntries(
   Object.entries(jurisdictionMapping).map(([key, value]) => [value, key])
 );
 
+const LOCAL_STORAGE_KEY = 'searchHistory';
+
 export const SearchPageProvider = ({ children }) => {
   // Increase the maximum number of results to retrieve and display
   const MAX_RESULTS = 100; // Set maximum results to 100
@@ -166,6 +168,24 @@ export const SearchPageProvider = ({ children }) => {
     setSearchQuery(query);
     searchRunId.current++;
     const currentRunId = searchRunId.current;
+    
+    // Store search query in localStorage history
+    if (query && query.trim() !== '') {
+      let history = [];
+      try {
+        const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (stored) {
+          history = JSON.parse(stored);
+        }
+      } catch (e) {
+        history = [];
+      }
+      // Remove duplicates and add new query to the front
+      history = [query, ...history.filter(item => item !== query)];
+      // Limit to 20 most recent
+      if (history.length > 20) history = history.slice(0, 20);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(history));
+    }
     
     // Clear seen documents for new search
     seenDocuments.current.clear();

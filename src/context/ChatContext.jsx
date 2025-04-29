@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export const ChatContext = createContext();
+
+const LOCAL_STORAGE_KEY = 'copilotChatHistory';
 
 export const ChatProvider = ({ children }) => {
   const [question, setQuestion] = useState('');
@@ -9,6 +11,20 @@ export const ChatProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
+  const [activeThreadIndex, setActiveThreadIndex] = useState(null);
+
+  // Load chat history from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (stored) {
+      setChatHistory(JSON.parse(stored));
+    }
+  }, []);
+
+  // Persist chat history to localStorage
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(chatHistory));
+  }, [chatHistory]);
 
   const handleChatSubmit = async (newQuestion) => {
     if (!newQuestion.trim()) return;
@@ -52,12 +68,16 @@ export const ChatProvider = ({ children }) => {
       setCitations(uniqueCitations);
 
       // Add to chat history
-      setChatHistory(prev => [...prev, {
-        question: newQuestion,
-        answer: data.answer,
-        citations: uniqueCitations,
-        timestamp: new Date().toISOString()
-      }]);
+      setChatHistory(prev => {
+        const newHistory = [...prev, {
+          question: newQuestion,
+          answer: data.answer,
+          citations: uniqueCitations,
+          timestamp: new Date().toISOString()
+        }];
+        setActiveThreadIndex(newHistory.length - 1);
+        return newHistory;
+      });
 
     } catch (err) {
       setError(err.message || 'Failed to fetch response');
@@ -84,6 +104,9 @@ export const ChatProvider = ({ children }) => {
       isLoading,
       error,
       chatHistory,
+      setChatHistory,
+      activeThreadIndex,
+      setActiveThreadIndex,
       handleChatSubmit,
       clearChat
     }}>

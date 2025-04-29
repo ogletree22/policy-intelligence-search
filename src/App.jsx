@@ -48,7 +48,7 @@ function MainContent() {
   const isHomePage = location.pathname === '/' || location.hash === '#/';
   const isFoldersPage = location.pathname === '/folders' || location.hash === '#/folders';
   const isPiCoPilotPage = location.pathname === '/copilot' || location.hash === '#/copilot';
-  const isDynamicSearchPage = location.pathname === '/dynamic' || location.hash === '#/dynamic';
+  const isDynamicSearchPage = location.pathname === '/dynamic' || location.hash === '#/dynamic' || location.pathname === '/' || location.hash === '#/';
 
   // Return mobile layout if on mobile device
   if (isMobile) {
@@ -112,13 +112,60 @@ function App() {
 
   return (
     <Router>
-      {isMobile ? (
-        user ? <MobileLayout /> : <MobileLoginPage />
-      ) : (
-        user ? <MainContent /> : <LoginPage />
-      )}
+      <WorkingFolderProvider>
+        <FolderProvider>
+          <FolderPageProvider>
+            <SearchPageProvider>
+              <ChatProvider>
+                <Routes>
+                  <Route 
+                    path="/login" 
+                    element={
+                      !user ? (
+                        isMobile ? (
+                          <MobileLoginPage />
+                        ) : (
+                          <LoginPage />
+                        )
+                      ) : (
+                        <Navigate to="/dynamic" replace />
+                      )
+                    } 
+                  />
+                  <Route
+                    path="/"
+                    element={
+                      user ? (
+                        <Navigate to="/dynamic" replace />
+                      ) : (
+                        <Navigate to="/login" replace />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/*"
+                    element={
+                      user ? (
+                        <MainContent />
+                      ) : (
+                        <Navigate to="/login" replace />
+                      )
+                    }
+                  />
+                </Routes>
+              </ChatProvider>
+            </SearchPageProvider>
+          </FolderPageProvider>
+        </FolderProvider>
+      </WorkingFolderProvider>
     </Router>
   );
 }
 
-export default App;
+export default function AppWithAuth() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+}
