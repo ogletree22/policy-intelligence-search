@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './TopNav.css';
 import logo from '../assets/logo.png';
-import dynamicSearchIcon from '../assets/dynamic search ii.svg';
+import dynamicSearchIcon from '../assets/dynamic_search_ii.svg';
 import coPilotIcon from '../assets/AI-technology.png';
 import piLogo from '../assets/PI_Logo_2024.png';
 
