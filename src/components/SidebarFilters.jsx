@@ -115,10 +115,15 @@ const formatJurisdictionName = (jurisdiction) => {
 };
 
 // Helper function to get the jurisdiction count considering California districts
-const getJurisdictionCount = (jurisdiction, jurisdictionCounts) => {
+const getJurisdictionCount = (jurisdiction, jurisdictionCounts = {}) => {
   // First try to get the count directly from the most recent document counts
-  if (jurisdictionCounts[jurisdiction]) {
+  if (jurisdictionCounts && jurisdictionCounts[jurisdiction]) {
     return jurisdictionCounts[jurisdiction];
+  }
+  
+  // If jurisdictionCounts is undefined or null, return 0
+  if (!jurisdictionCounts) {
+    return 0;
   }
   
   // Convert our jurisdiction name to match Kendra's format
@@ -394,9 +399,12 @@ const SidebarFilters = ({
             <>
               {visibleJurisdictions.map((jurisdiction, index) => {
                 // Get raw count directly from the documentCounts
-                let rawCount = documentCounts?.jurisdictions?.[jurisdiction] || 0;
-                // Get processed count which handles various naming conventions
-                rawCount = getJurisdictionCount(jurisdiction, documentCounts.jurisdictions);
+                let rawCount = 0;
+                if (documentCounts && documentCounts.jurisdictions) {
+                  rawCount = documentCounts.jurisdictions[jurisdiction] || 0;
+                  // Get processed count which handles various naming conventions
+                  rawCount = getJurisdictionCount(jurisdiction, documentCounts.jurisdictions);
+                }
                 
                 const count = rawCount;
                 // Check both current filters and pending filters
