@@ -116,6 +116,11 @@ const formatJurisdictionName = (jurisdiction) => {
 
 // Helper function to get the jurisdiction count considering California districts
 const getJurisdictionCount = (jurisdiction, jurisdictionCounts) => {
+  // First try to get the count directly from the most recent document counts
+  if (jurisdictionCounts[jurisdiction]) {
+    return jurisdictionCounts[jurisdiction];
+  }
+  
   // Convert our jurisdiction name to match Kendra's format
   const kendraJurisdiction = jurisdiction.replace(/_/g, ' ');
   
@@ -126,7 +131,16 @@ const getJurisdictionCount = (jurisdiction, jurisdictionCounts) => {
     const kendraCount = jurisdictionCounts[kendraJurisdiction] || 0;
     const californiaKendraCount = jurisdictionCounts[`California (${kendraJurisdiction})`] || 0;
     const californiaPrefixCount = jurisdictionCounts[`California - ${kendraJurisdiction}`] || 0;
-    return directCount + californiaCount + kendraCount + californiaKendraCount + californiaPrefixCount;
+    
+    // Also check for alternative formats in s3 paths
+    const s3PathFormat = jurisdiction.replace(/_/g, '%20');
+    const s3PathCount = jurisdictionCounts[s3PathFormat] || 0;
+    
+    // Sum all possible formats
+    const totalCount = directCount + californiaCount + kendraCount + 
+                       californiaKendraCount + californiaPrefixCount + s3PathCount;
+    
+    return totalCount;
   }
   
   // For regular jurisdictions, check multiple formats
@@ -172,6 +186,24 @@ const SidebarFilters = ({
   const { workingFolderDocs, removeFromWorkingFolder } = useWorkingFolder();
   const [isWorkingFolderOpen, setIsWorkingFolderOpen] = useState(false);
   
+  // Add this near the top of the component function, after the state declarations
+  // This will force the component to refresh when document counts change
+  React.useEffect(() => {
+    if (documentCounts && documentCounts.jurisdictions) {
+      // Force refresh the filters to match new document counts
+      console.log("Updating filter counts from new document counts:", documentCounts);
+      
+      // Reset pending filters when counts change
+      setPendingFilters({
+        jurisdictions: {},
+        documentTypes: {}
+      });
+      
+      // Refresh the UI with accurate counts
+      const jurisdictionCounts = documentCounts.jurisdictions || {};
+    }
+  }, [documentCounts]);
+
   const handleFilterChange = useCallback((category, value) => {
     console.log('Filter change in SidebarFilters:', category, value);
     
@@ -250,13 +282,36 @@ const SidebarFilters = ({
   // Extract document counts from props
   const { documentTypes: docTypeCounts = {}, jurisdictions: jurisdictionCounts = {} } = documentCounts;
 
-  // Use the original JURISDICTIONS array order instead of sorting by count
-  const sortedJurisdictions = JURISDICTIONS;
+  // Inside the component, add a function to sort jurisdictions with California districts grouped together
 
   // Get the jurisdictions to display based on collapsed/expanded state
+  const sortedJurisdictions = React.useMemo(() => {
+    // First, separate California districts from states
+    const states = [];
+    const californiaDistricts = [];
+    
+    JURISDICTIONS.forEach(jurisdiction => {
+      if (jurisdiction.includes('APCD') || jurisdiction.includes('AQMD')) {
+        californiaDistricts.push(jurisdiction);
+      } else {
+        states.push(jurisdiction);
+      }
+    });
+    
+    // Sort states alphabetically
+    states.sort();
+    
+    // Sort California districts alphabetically
+    californiaDistricts.sort();
+    
+    // Show the main states first, then California districts
+    return [...states, ...californiaDistricts];
+  }, []);
+
+  // Inside the render function, update the visibleJurisdictions
   const visibleJurisdictions = showAllJurisdictions 
     ? sortedJurisdictions 
-    : sortedJurisdictions.slice(0, 6);
+    : sortedJurisdictions.slice(0, 10); // Show more jurisdictions by default
 
   const handleSignOut = async () => {
     try {
@@ -338,7 +393,12 @@ const SidebarFilters = ({
           {!isJurisdictionCollapsed && (
             <>
               {visibleJurisdictions.map((jurisdiction, index) => {
-                const count = getJurisdictionCount(jurisdiction, jurisdictionCounts);
+                // Get raw count directly from the documentCounts
+                let rawCount = documentCounts?.jurisdictions?.[jurisdiction] || 0;
+                // Get processed count which handles various naming conventions
+                rawCount = getJurisdictionCount(jurisdiction, documentCounts.jurisdictions);
+                
+                const count = rawCount;
                 // Check both current filters and pending filters
                 const isSelected = (
                   (filters.jurisdictions[jurisdiction] && pendingFilters.jurisdictions[jurisdiction] !== false) ||
@@ -363,7 +423,7 @@ const SidebarFilters = ({
                   </label>
                 );
               })}
-              {sortedJurisdictions.length > 6 && (
+              {sortedJurisdictions.length > 10 && (
                 <button 
                   className="show-more-button"
                   onClick={() => setShowAllJurisdictions(!showAllJurisdictions)}

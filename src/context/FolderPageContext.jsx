@@ -155,7 +155,7 @@ export const FolderPageProvider = ({ children }) => {
       
       try {
         console.log(`Attempt ${retries + 1} for search: ${query}, jurisdiction: ${kendraJurisdiction || 'all'}, docType: ${documentType || 'all'}`);
-        searchResponse = await searchKendra(query, kendraJurisdiction, documentType);
+        searchResponse = await searchKendra(query, kendraJurisdiction, documentType, true, true);
         success = true;
       } catch (error) {
         console.error(`Search attempt ${retries + 1} failed:`, error);
@@ -329,7 +329,7 @@ export const FolderPageProvider = ({ children }) => {
       - Jurisdictions: ${jurisdictionsToQuery.join(', ')}`);
       
       // First, get facet counts from a single API call
-      const facetResponse = await searchKendra(queryToUse, null, activeDocType, true);
+      const facetResponse = await searchKendra(queryToUse, null, activeDocType, true, true);
       if (facetResponse && facetResponse.facets) {
         console.log('Raw facet data:', JSON.stringify(facetResponse.facets, null, 2));
         // Update document counts with the facet data

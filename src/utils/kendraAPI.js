@@ -11,9 +11,10 @@ const INDEX_ID = 'ac2e614a-1a60-4788-921f-439355c5756d';
  * @param {string} [jurisdiction] - Optional jurisdiction to filter by
  * @param {string} [documentType] - Optional document type (_category) to filter by
  * @param {boolean} [fetchFacets] - Whether to fetch facet counts instead of search results
+ * @param {boolean} [suppressErrors] - Whether to suppress error messages (default: false)
  * @returns {Promise<Object>} - Search results or facet counts
  */
-export const searchKendra = async (query = '', jurisdiction = null, documentType = null, fetchFacets = false) => {
+export const searchKendra = async (query = '', jurisdiction = null, documentType = null, fetchFacets = false, suppressErrors = false) => {
   try {
     // Trim inputs but preserve the leading space in " Source Report"
     const trimmedQuery = query?.trim() || '';
@@ -30,40 +31,50 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       processedDocType = documentType?.trim() || null;
     }
     
-    // Match the exact format the Lambda function expects based on the Lambda code
+    // Create the base request using proper Kendra API structure
     const requestBody = {
-      QueryText: trimmedQuery ? `*${trimmedQuery}*` : '*', // Add wildcards for partial matches
+      // Return to previous wildcard format since that works with the Lambda
+      QueryText: trimmedQuery ? `*${trimmedQuery}*` : '*',
       IndexId: INDEX_ID,
-      PageSize: 100 // Request up to 100 results per page
+      PageSize: 100
     };
 
-    // If we're fetching facets, add a flag for the lambda
+    // Handle facet retrieval with proper Facets structure
     if (fetchFacets) {
-      requestBody.facetSummary = true;
-      console.log("Requesting facet summary for document counts");
+      console.log("Requesting facet summary");
       
-      // Add document type filter to facet requests if specified
+      // Add facetSummary flag - this is what the Lambda expects
+      requestBody.facetSummary = true;
+      
+      // Add jurisdiction filter if specified - use Lambda parameter style
+      if (trimmedJurisdiction) {
+        requestBody.jurisdiction = trimmedJurisdiction;
+        console.log(`Adding jurisdiction filter to facet request: "${trimmedJurisdiction}"`);
+      }
+
+      // Add document type filter if specified - use Lambda parameter style
       if (processedDocType) {
         requestBody._category = processedDocType;
         console.log(`Adding document type filter to facet request: "${processedDocType}"`);
       }
     } else {
-      // Add jurisdiction filter if specified - match the Lambda's expected format
+      // For regular search results (not facets), we use the Lambda-friendly format
+      
+      // Add jurisdiction filter if specified
       if (trimmedJurisdiction) {
         requestBody.jurisdiction = trimmedJurisdiction;
         console.log(`Adding jurisdiction filter: "${trimmedJurisdiction}"`);
       }
 
-      // Add document type filter if specified - Lambda expects _category parameter
+      // Add document type filter if specified
       if (processedDocType) {
-        // The Lambda uses _category for document type filtering
         requestBody._category = processedDocType;
         console.log(`Adding document type filter (_category): "${processedDocType}"`);
       }
     }
 
-    // Log request for debugging
-    console.log('Making Kendra request with body:', JSON.stringify(requestBody, null, 2));
+    // Log complete request for monitoring
+    console.log('Making Kendra request:', JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(API_ENDPOINT, {
       method: 'POST',
@@ -78,6 +89,23 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
     if (!response.ok) {
       const errorText = await response.text();
       console.error('API Error Response:', errorText);
+      // If suppressErrors is true, don't throw and just return empty results
+      if (suppressErrors) {
+        console.log('Suppressing API error and returning empty results');
+        if (fetchFacets) {
+          return { 
+            facets: {
+              documentTypes: {},
+              jurisdictions: {}
+            }
+          };
+        } else {
+          return {
+            results: [],
+            totalAvailable: 0
+          };
+        }
+      }
       throw new Error(`Error from Kendra API: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
@@ -88,7 +116,8 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
     
     // If we requested facets, return them
     if (fetchFacets) {
-      console.log("Received facet data:", JSON.stringify(data, null, 2));
+      console.log("Received facet data response");
+      
       // Transform facets into a more usable format
       const docTypeCounts = {};
       const jurisdictionCounts = {};
@@ -122,6 +151,7 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       
       // Check if facets are in an expected format
       if (Array.isArray(data)) {
+        console.log("Processing facet data from array format");
         data.forEach(facet => {
           // Process document type counts
           if (facet.DocumentAttributeKey === '_category' && 
@@ -171,7 +201,15 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
             });
           }
         });
+      } else {
+        console.warn("Facet data isn't in expected array format:", data);
       }
+      
+      // Return the processed facet data
+      console.log("Returning processed facet data with counts:", {
+        documentTypes: Object.keys(docTypeCounts).length,
+        jurisdictions: Object.keys(jurisdictionCounts).length
+      });
       
       return { 
         facets: {
@@ -204,6 +242,23 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
     };
   } catch (error) {
     console.error('Error searching Kendra:', error.message);
+    // If suppressErrors is true, return empty results instead of throwing
+    if (suppressErrors) {
+      console.log('Suppressing error and returning empty results');
+      if (fetchFacets) {
+        return { 
+          facets: {
+            documentTypes: {},
+            jurisdictions: {}
+          }
+        };
+      } else {
+        return {
+          results: [],
+          totalAvailable: 0
+        };
+      }
+    }
     throw error;
   }
 };
@@ -455,19 +510,102 @@ function getJurisdictionFromResponse(item) {
 
   const title = item.DocumentTitle || '';
   const uri = item.SourceUri || '';
+  const documentId = item.DocumentId || '';
   
-  // Check for California APCDs/AQMDs first
+  // Many California districts have their name in the document title with pattern:
+  // [District Name] - [Section]: [Title] - [SubSection]: [Details]
+  if (title.includes(' - ')) {
+    const districtPart = title.split(' - ')[0].trim();
+    
+    // Check for California air districts in the title
+    const californiaAirDistricts = [
+      'Amador APCD',
+      'Antelope Valley AQMD',
+      'Bay Area AQMD',
+      'Butte County AQMD',
+      'Calaveras County APCD',
+      'Colusa County APCD',
+      'Eastern Kern APCD',
+      'El Dorado County AQMD',
+      'Feather River AQMD',
+      'Glenn County APCD',
+      'Great Basin Unified APCD',
+      'Imperial County APCD',
+      'Lake County AQMD',
+      'Lassen County APCD',
+      'Mariposa County APCD',
+      'Mendocino County AQMD',
+      'Modoc County APCD',
+      'Mojave Desert AQMD',
+      'Monterey Bay Unified APCD',
+      'North Coast Unified AQMD',
+      'Northern Sierra AQMD',
+      'Northern Sonoma County APCD',
+      'Placer County APCD',
+      'Sacramento Metropolitan AQMD',
+      'San Diego County APCD',
+      'San Joaquin Valley APCD',
+      'San Luis Obispo County APCD',
+      'Santa Barbara County APCD',
+      'Shasta County AQMD',
+      'Siskiyou County APCD',
+      'South Coast AQMD',
+      'Tehama County APCD',
+      'Tuolumne County APCD',
+      'Ventura County AQMD',
+      'Yolo-Solano AQMD'
+    ];
+    
+    // Check if the district part is a known California air district
+    for (const district of californiaAirDistricts) {
+      if (districtPart === district) {
+        return district.replace(/ /g, '_'); // Convert spaces to underscores for UI
+      }
+    }
+  }
+  
+  // Also check the DocumentId path - many documents have the jurisdiction in the S3 path
+  if (documentId.includes('s3://') && documentId.includes('/California/')) {
+    const parts = documentId.split('/');
+    const californiaIndex = parts.findIndex(part => part === 'California');
+    
+    if (californiaIndex >= 0 && californiaIndex + 1 < parts.length) {
+      const districtPart = parts[californiaIndex + 1];
+      // Check if this is an air district path
+      if (districtPart.includes('APCD') || districtPart.includes('AQMD')) {
+        // Convert the S3 path format to our internal format
+        return districtPart.replace(/%20/g, '_');
+      }
+    }
+  }
+  
+  // Check for specific California APCDs/AQMDs
   if (title.includes('Santa Barbara County APCD') || uri.includes('santabarbara') || uri.includes('sbcapcd')) {
-    return 'Santa Barbara County APCD';
+    return 'Santa_Barbara_County_APCD';
   }
   if (title.includes('San Joaquin Valley APCD') || uri.includes('valleyair')) {
-    return 'San Joaquin Valley APCD';
+    return 'San_Joaquin_Valley_APCD';
   }
   if (title.includes('South Coast AQMD') || title.includes('SCAQMD') || uri.includes('aqmd.gov')) {
-    return 'South Coast AQMD';
+    return 'South_Coast_AQMD';
   }
   if (title.includes('Bay Area AQMD') || title.includes('BAAQMD') || uri.includes('baaqmd')) {
-    return 'Bay Area AQMD';
+    return 'Bay_Area_AQMD';
+  }
+  if (title.includes('Tehama County APCD')) {
+    return 'Tehama_County_APCD';
+  }
+  if (title.includes('Great Basin Unified APCD')) {
+    return 'Great_Basin_Unified_APCD';
+  }
+  if (title.includes('Shasta County AQMD')) {
+    return 'Shasta_County_AQMD';
+  }
+  if (title.includes('Colusa County APCD')) {
+    return 'Colusa_County_APCD';
+  }
+  if (title.includes('Eastern Kern APCD')) {
+    return 'Eastern_Kern_APCD';
   }
 
   // Check for state jurisdictions
@@ -481,7 +619,7 @@ function getJurisdictionFromResponse(item) {
     return 'Texas';
   }
   if (title.startsWith('New Mexico') || uri.includes('newmexico.gov') || uri.includes('/nm/')) {
-    return 'New Mexico';
+    return 'New_Mexico';
   }
   if (title.startsWith('Washington') || uri.includes('washington.gov') || uri.includes('/wa/')) {
     return 'Washington';
@@ -494,7 +632,7 @@ function getJurisdictionFromResponse(item) {
       'KY': 'Kentucky',
       'CO': 'Colorado',
       'TX': 'Texas',
-      'NM': 'New Mexico',
+      'NM': 'New_Mexico',
       'WA': 'Washington'
     };
     if (stateMapping[stateCode]) {
@@ -507,7 +645,7 @@ function getJurisdictionFromResponse(item) {
   if (content.includes('kentucky')) return 'Kentucky';
   if (content.includes('colorado')) return 'Colorado';
   if (content.includes('texas')) return 'Texas';
-  if (content.includes('new mexico')) return 'New Mexico';
+  if (content.includes('new mexico')) return 'New_Mexico';
   if (content.includes('washington')) return 'Washington';
 
   // If still no match, return Unknown instead of defaulting to Colorado

@@ -68,22 +68,21 @@ export const SearchPageProvider = ({ children }) => {
     const performInitialSearch = async () => {
       try {
         setLoading(true);
-        const response = await searchKendra('', null, null, true);
-        if (response && response.results) {
-          const transformedResults = transformKendraResults(response.results);
-          setResults(transformedResults);
-          setUsingMockData(false);
+        // Suppress errors during initial load
+        const response = await searchKendra('', null, null, true, true);
+        if (response && response.facets) {
+          setDocumentCounts(response.facets);
         }
       } catch (error) {
         console.error('Error in initial search:', error);
-        setError(error);
+        // Don't set error state to avoid showing error message on load
       } finally {
         setLoading(false);
       }
     };
 
-    // Only perform initial search if we don't have any results
-    if (results.length === 0) {
+    // Only perform initial search for facets if we don't have any counts
+    if (Object.keys(documentCounts.jurisdictions).length === 0) {
       performInitialSearch();
     }
   }, []);
@@ -196,7 +195,8 @@ export const SearchPageProvider = ({ children }) => {
         console.log('Empty query, fetching all documents and facet counts...');
         const [apiResults, facetResponse] = await Promise.all([
           queryWithRetry('', null, null, currentRunId),
-          searchKendra('', null, null, true)
+          // Suppress errors for empty queries
+          searchKendra('', null, null, true, true)
         ]);
         
         if (facetResponse && facetResponse.facets) {
@@ -216,7 +216,7 @@ export const SearchPageProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error fetching all documents:', error);
-        setError(error);
+        // Don't show error for empty queries
         setResults([]);
       }
       return;
@@ -336,6 +336,7 @@ export const SearchPageProvider = ({ children }) => {
               })
               .catch(error => {
                 console.error('Error fetching facet counts:', error);
+                // Don't set error for facet counts
               });
           }
         })
