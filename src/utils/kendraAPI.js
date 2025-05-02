@@ -3,6 +3,7 @@
  */
 
 const API_ENDPOINT = 'https://gbgi989gbe.execute-api.us-west-2.amazonaws.com/sbx/search';
+const FACET_COUNTS_ENDPOINT = 'https://gbgi989gbe.execute-api.us-west-2.amazonaws.com/sbx/facet-counts';
 const INDEX_ID = 'ac2e614a-1a60-4788-921f-439355c5756d';
 
 /**
@@ -41,22 +42,107 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
 
     // Handle facet retrieval with proper Facets structure
     if (fetchFacets) {
-      console.log("Requesting facet summary");
+      console.log("Requesting facets data");
       
-      // Add facetSummary flag - this is what the Lambda expects
+      // Get comprehensive jurisdiction counts from dedicated endpoint
+      let jurisdictionCounts = {};
+      
+      // Only fetch jurisdiction counts when there's a meaningful search query
+      // Not during initial load or with empty query
+      if (trimmedQuery && trimmedQuery !== '*') {
+        try {
+          // Use the original raw query exactly as entered by the user - NO WILDCARDS
+          // This is critical for the dedicated jurisdiction counts endpoint
+          console.log("Fetching jurisdiction counts for raw search query:", query);
+          jurisdictionCounts = await fetchFacetCounts(query);
+          console.log(`Received ${Object.keys(jurisdictionCounts).length} jurisdiction counts from dedicated endpoint`);
+        } catch (facetError) {
+          console.error("Error fetching jurisdiction counts:", facetError);
+          jurisdictionCounts = {};
+        }
+      } else {
+        console.log("Skipping jurisdiction counts for empty/default query");
+      }
+      
+      // Still get document type counts from the main Kendra endpoint
       requestBody.facetSummary = true;
       
-      // Add jurisdiction filter if specified - use Lambda parameter style
+      // We're only using the main Kendra endpoint for document type counts now
+      // But still add these filters if specified for consistency
       if (trimmedJurisdiction) {
         requestBody.jurisdiction = trimmedJurisdiction;
         console.log(`Adding jurisdiction filter to facet request: "${trimmedJurisdiction}"`);
       }
 
-      // Add document type filter if specified - use Lambda parameter style
       if (processedDocType) {
         requestBody._category = processedDocType;
         console.log(`Adding document type filter to facet request: "${processedDocType}"`);
       }
+      
+      // Make the main Kendra API request for document type counts
+      console.log('Making Kendra request for document type counts:', JSON.stringify(requestBody, null, 2));
+      
+      const response = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        if (suppressErrors) {
+          console.log('Suppressing API error and returning empty results');
+          return { 
+            facets: {
+              documentTypes: {},
+              jurisdictions: jurisdictionCounts // Use the already fetched jurisdiction counts
+            }
+          };
+        }
+        throw new Error(`Error from Kendra API: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Log the raw response for debugging
+      console.log('Raw Kendra response for document types:', JSON.stringify(data, null, 2).substring(0, 1000) + '...');
+      
+      // Process document type counts from Kendra response
+      const docTypeCounts = {};
+      
+      if (Array.isArray(data)) {
+        console.log("Processing document type data from array format");
+        data.forEach(facet => {
+          // Process document type counts
+          if (facet.DocumentAttributeKey === '_category' && 
+              Array.isArray(facet.DocumentAttributeValueCountPairs)) {
+            facet.DocumentAttributeValueCountPairs.forEach(pair => {
+              if (pair.DocumentAttributeValue && pair.DocumentAttributeValue.StringValue) {
+                docTypeCounts[pair.DocumentAttributeValue.StringValue] = pair.Count;
+              }
+            });
+            console.log("Document type counts:", docTypeCounts);
+          }
+        });
+      } else {
+        console.warn("Facet data for document types isn't in expected array format:", data);
+      }
+      
+      // Return combined facet data from both sources
+      console.log("Returning combined facet data with counts:", {
+        documentTypes: Object.keys(docTypeCounts).length,
+        jurisdictions: Object.keys(jurisdictionCounts).length
+      });
+      
+      return { 
+        facets: {
+          documentTypes: docTypeCounts,
+          jurisdictions: jurisdictionCounts
+        }
+      };
     } else {
       // For regular search results (not facets), we use the Lambda-friendly format
       
@@ -71,175 +157,61 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
         requestBody._category = processedDocType;
         console.log(`Adding document type filter (_category): "${processedDocType}"`);
       }
-    }
+      
+      // Log complete request for monitoring
+      console.log('Making Kendra request for search results:', JSON.stringify(requestBody, null, 2));
 
-    // Log complete request for monitoring
-    console.log('Making Kendra request:', JSON.stringify(requestBody, null, 2));
+      const response = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
 
-    const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
+      console.log('Response status:', response.status, response.statusText);
 
-    console.log('Response status:', response.status, response.statusText);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API Error Response:', errorText);
-      // If suppressErrors is true, don't throw and just return empty results
-      if (suppressErrors) {
-        console.log('Suppressing API error and returning empty results');
-        if (fetchFacets) {
-          return { 
-            facets: {
-              documentTypes: {},
-              jurisdictions: {}
-            }
-          };
-        } else {
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        // If suppressErrors is true, don't throw and just return empty results
+        if (suppressErrors) {
+          console.log('Suppressing API error and returning empty results');
           return {
             results: [],
             totalAvailable: 0
           };
         }
+        throw new Error(`Error from Kendra API: ${response.status} ${response.statusText} - ${errorText}`);
       }
-      throw new Error(`Error from Kendra API: ${response.status} ${response.statusText} - ${errorText}`);
-    }
 
-    const data = await response.json();
-    
-    // Log the raw response for debugging
-    console.log('Raw Kendra response:', JSON.stringify(data, null, 2).substring(0, 1000) + '...');
-    
-    // If we requested facets, return them
-    if (fetchFacets) {
-      console.log("Received facet data response");
+      const data = await response.json();
       
-      // Transform facets into a more usable format
-      const docTypeCounts = {};
-      const jurisdictionCounts = {};
+      // Log the raw response for debugging
+      console.log('Raw Kendra response:', JSON.stringify(data, null, 2).substring(0, 1000) + '...');
       
-      // Jurisdiction mapping from API values to UI values
-      const jurisdictionMapping = {
-        'New Mexico': 'New_Mexico',
-        'South Coast AQMD': 'South_Coast_AQMD',
-        'Bay Area AQMD': 'Bay_Area_AQMD',
-        'Sacramento AQMD': 'Sacramento_AQMD',
-        // Add direct mappings for non-spaced jurisdictions
-        'Colorado': 'Colorado',
-        'Texas': 'Texas',
-        'Washington': 'Washington',
-        'Arizona': 'Arizona',
-        'New York': 'New_York'
-      };
-      
-      // Define our primary jurisdictions (UI values)
-      const primaryJurisdictions = [
-        'Colorado',
-        'Texas',
-        'New Mexico',
-        'Washington',
-        'South Coast AQMD',
-        'Bay Area AQMD',
-        'Arizona',
-        'New York',
-        'Sacramento AQMD'
-      ];
-      
-      // Check if facets are in an expected format
+      // For search results, ensure we have an array of results
+      let resultsArray;
       if (Array.isArray(data)) {
-        console.log("Processing facet data from array format");
-        data.forEach(facet => {
-          // Process document type counts
-          if (facet.DocumentAttributeKey === '_category' && 
-              Array.isArray(facet.DocumentAttributeValueCountPairs)) {
-            facet.DocumentAttributeValueCountPairs.forEach(pair => {
-              if (pair.DocumentAttributeValue && pair.DocumentAttributeValue.StringValue) {
-                docTypeCounts[pair.DocumentAttributeValue.StringValue] = pair.Count;
-              }
-            });
-            console.log("Document type counts:", docTypeCounts);
-          } 
-          // Process jurisdiction counts
-          else if (facet.DocumentAttributeKey === 'jurisdiction' && 
-                   Array.isArray(facet.DocumentAttributeValueCountPairs)) {
-            // Log the raw values for debugging
-            console.log("Raw jurisdiction values:", 
-              facet.DocumentAttributeValueCountPairs.map(p => ({
-                name: p.DocumentAttributeValue?.StringValue,
-                count: p.Count
-              }))
-            );
-            
-            // Map API jurisdiction values to UI jurisdiction values
-            facet.DocumentAttributeValueCountPairs.forEach(pair => {
-              if (pair.DocumentAttributeValue && 
-                  pair.DocumentAttributeValue.StringValue) {
-                const apiJurisdiction = pair.DocumentAttributeValue.StringValue;
-                const count = pair.Count;
-                
-                // Map the API jurisdiction value to our UI label
-                const uiJurisdiction = jurisdictionMapping[apiJurisdiction] || apiJurisdiction;
-                
-                // If already have a count for this jurisdiction, add to it
-                jurisdictionCounts[uiJurisdiction] = (jurisdictionCounts[uiJurisdiction] || 0) + count;
-              }
-            });
-            
-            // Log the final jurisdiction counts
-            console.log("Processed jurisdiction counts:", jurisdictionCounts);
-            
-            // Set zero counts for jurisdictions with no results instead of warning
-            primaryJurisdictions.forEach(jurisdiction => {
-              if (!jurisdictionCounts[jurisdiction]) {
-                jurisdictionCounts[jurisdiction] = 0;
-              }
-              console.log(`${jurisdiction}: ${jurisdictionCounts[jurisdiction]}`);
-            });
-          }
-        });
+        resultsArray = data;
+      } else if (data.ResultItems && Array.isArray(data.ResultItems)) {
+        resultsArray = data.ResultItems;
+      } else if (data.results && Array.isArray(data.results)) {
+        resultsArray = data.results;
       } else {
-        console.warn("Facet data isn't in expected array format:", data);
+        console.error('Unexpected response format:', data);
+        resultsArray = [];
       }
       
-      // Return the processed facet data
-      console.log("Returning processed facet data with counts:", {
-        documentTypes: Object.keys(docTypeCounts).length,
-        jurisdictions: Object.keys(jurisdictionCounts).length
-      });
+      const totalAvailable = data.TotalNumberOfResults || data.TotalResultCount || resultsArray.length || 0;
       
-      return { 
-        facets: {
-          documentTypes: docTypeCounts,
-          jurisdictions: jurisdictionCounts
-        }
+      console.log(`Received ${resultsArray.length} results${trimmedJurisdiction ? ' for ' + trimmedJurisdiction : ''}${processedDocType ? ' with document type "' + processedDocType + '"' : ''}, Total available: ${totalAvailable}`);
+      
+      return {
+        results: resultsArray,
+        totalAvailable: totalAvailable
       };
     }
-    
-    // For search results, ensure we have an array of results
-    let resultsArray;
-    if (Array.isArray(data)) {
-      resultsArray = data;
-    } else if (data.ResultItems && Array.isArray(data.ResultItems)) {
-      resultsArray = data.ResultItems;
-    } else if (data.results && Array.isArray(data.results)) {
-      resultsArray = data.results;
-    } else {
-      console.error('Unexpected response format:', data);
-      resultsArray = [];
-    }
-    
-    const totalAvailable = data.TotalNumberOfResults || data.TotalResultCount || resultsArray.length || 0;
-    
-    console.log(`Received ${resultsArray.length} results${trimmedJurisdiction ? ' for ' + trimmedJurisdiction : ''}${processedDocType ? ' with document type "' + processedDocType + '"' : ''}, Total available: ${totalAvailable}`);
-    
-    return {
-      results: resultsArray,
-      totalAvailable: totalAvailable
-    };
   } catch (error) {
     console.error('Error searching Kendra:', error.message);
     // If suppressErrors is true, return empty results instead of throwing
@@ -650,4 +622,61 @@ function getJurisdictionFromResponse(item) {
 
   // If still no match, return Unknown instead of defaulting to Colorado
   return 'Unknown';
-} 
+}
+
+/**
+ * Fetch comprehensive jurisdiction counts from a dedicated Lambda endpoint
+ * @param {string} query - Raw search query exactly as entered by the user (no wildcards or trimming)
+ * @returns {Promise<Object>} - Object with jurisdiction counts
+ */
+export const fetchFacetCounts = async (query = '') => {
+  try {
+    // Don't trim the query - pass it exactly as provided by the user
+    // Only check if it's completely empty
+    if (!query) {
+      console.log('Skipping facet counts request for empty query');
+      return {};
+    }
+    
+    // Create request body with the exact raw query (no wildcards, no trimming)
+    const requestBody = {
+      query: query
+    };
+    
+    console.log('Fetching jurisdiction counts with exact raw query:', JSON.stringify(requestBody));
+    
+    const response = await fetch(FACET_COUNTS_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Facet counts API error:', errorText);
+      throw new Error(`Error fetching facet counts: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    // The response has a body field that contains stringified JSON
+    if (data.body) {
+      try {
+        const parsedBody = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
+        console.log(`Received counts for ${Object.keys(parsedBody.jurisdictionCounts || {}).length} jurisdictions`);
+        return parsedBody.jurisdictionCounts || {};
+      } catch (parseError) {
+        console.error('Error parsing facet counts response body:', parseError);
+        return {};
+      }
+    } else {
+      console.log('Received facet counts:', data);
+      return data.jurisdictionCounts || {};
+    }
+  } catch (error) {
+    console.error('Error fetching facet counts:', error.message);
+    return {};
+  }
+}; 

@@ -3,6 +3,7 @@ import { FaUser, FaFolder, FaTrash, FaEye, FaTimes, FaChevronDown, FaChevronUp }
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { JurisdictionIcon, DocumentTypeIcon } from './icons/FilterIcons';
 import { AuthContext } from '../context/AuthContext';
+import { useSearchPage } from '../context/SearchPageContext';
 import './SidebarFilters.css';
 import WorkingFolderView from './WorkingFolderView';
 
@@ -169,6 +170,8 @@ const SidebarFilters = ({
   documentCounts = {}
 }) => {
   const { signOut, user } = useContext(AuthContext);
+  // Get the sorted jurisdictions from SearchPageContext
+  const { sortedJurisdictions: contextSortedJurisdictions } = useSearchPage();
   const [showUserMenu, setShowUserMenu] = useState(false);
   // Add state to track all filters
   const [filters, setFilters] = useState({
@@ -287,10 +290,16 @@ const SidebarFilters = ({
   // Extract document counts from props
   const { documentTypes: docTypeCounts = {}, jurisdictions: jurisdictionCounts = {} } = documentCounts;
 
-  // Inside the component, add a function to sort jurisdictions with California districts grouped together
-
-  // Get the jurisdictions to display based on collapsed/expanded state
+  // Use the sorted jurisdictions from the search context if available, or fall back to local sorting
   const sortedJurisdictions = React.useMemo(() => {
+    // If we have sorted jurisdictions from the context with counts, use those
+    if (contextSortedJurisdictions && contextSortedJurisdictions.length > 0) {
+      console.log('Using sorted jurisdictions from context:', contextSortedJurisdictions.length);
+      return contextSortedJurisdictions;
+    }
+
+    // Otherwise, fall back to the original sorting logic
+    console.log('Falling back to alphabetical jurisdiction sorting');
     // First, separate California districts from states
     const states = [];
     const californiaDistricts = [];
@@ -311,12 +320,23 @@ const SidebarFilters = ({
     
     // Show the main states first, then California districts
     return [...states, ...californiaDistricts];
-  }, []);
+  }, [contextSortedJurisdictions]);
 
   // Inside the render function, update the visibleJurisdictions
-  const visibleJurisdictions = showAllJurisdictions 
-    ? sortedJurisdictions 
-    : sortedJurisdictions.slice(0, 10); // Show more jurisdictions by default
+  const visibleJurisdictions = React.useMemo(() => {
+    // If showing all, return the entire sorted list
+    if (showAllJurisdictions) {
+      return sortedJurisdictions;
+    }
+    
+    // If sorted by count (from context), show the top 10 by default
+    if (contextSortedJurisdictions && contextSortedJurisdictions.length > 0) {
+      return sortedJurisdictions.slice(0, 10);
+    }
+    
+    // Otherwise use the original logic for alphabetical sorting
+    return sortedJurisdictions.slice(0, 10); 
+  }, [showAllJurisdictions, sortedJurisdictions, contextSortedJurisdictions]);
 
   const handleSignOut = async () => {
     try {

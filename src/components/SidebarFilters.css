@@ -585,3 +585,10 @@
 [data-theme="dark"] .user-dropdown button:hover {
   background-color: rgba(74, 158, 255, 0.15);
 }
+
+.sort-indicator {
+  font-size: 0.8em;
+  font-style: italic;
+  color: #666;
+  margin-left: 5px;
+}

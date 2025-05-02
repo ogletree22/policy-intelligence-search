@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { searchKendra, transformKendraResults } from '../utils/kendraAPI';
 import { JURISDICTIONS, DOCUMENT_TYPES } from '../utils/constants';
 
@@ -60,32 +60,74 @@ export const SearchPageProvider = ({ children }) => {
     jurisdictions: {}
   });
   
+  // Add state for sorted jurisdictions
+  const [sortedJurisdictions, setSortedJurisdictions] = useState([]);
+  
+  // Track if initial search has been performed
+  const initialSearchPerformed = useRef(false);
   const searchRunId = useRef(0);
   const seenDocuments = useRef(new Set());
 
-  // Function to perform initial search when component mounts
-  useEffect(() => {
-    const performInitialSearch = async () => {
-      try {
-        setLoading(true);
-        // Suppress errors during initial load
-        const response = await searchKendra('', null, null, true, true);
-        if (response && response.facets) {
-          setDocumentCounts(response.facets);
-        }
-      } catch (error) {
-        console.error('Error in initial search:', error);
-        // Don't set error state to avoid showing error message on load
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Only perform initial search for facets if we don't have any counts
-    if (Object.keys(documentCounts.jurisdictions).length === 0) {
-      performInitialSearch();
+  // Function to sort jurisdictions by count
+  const sortJurisdictionsByCount = useCallback((jurisdictionCounts) => {
+    console.log('Sorting jurisdictions by count');
+    if (!jurisdictionCounts || typeof jurisdictionCounts !== 'object') {
+      return [];
     }
+    
+    // Convert to array of [jurisdiction, count] pairs
+    const pairs = Object.entries(jurisdictionCounts);
+    
+    // Sort by count in descending order
+    const sorted = pairs.sort((a, b) => b[1] - a[1]);
+    
+    // Return just the jurisdiction names
+    return sorted.map(([jurisdiction]) => jurisdiction);
   }, []);
+  
+  // Update sorted jurisdictions whenever document counts change
+  useEffect(() => {
+    if (documentCounts && documentCounts.jurisdictions) {
+      const jurisdictionCounts = documentCounts.jurisdictions;
+      console.log('Jurisdiction counts updated, sorting jurisdictions');
+      
+      // Log the top jurisdictions by count before sorting
+      const pairs = Object.entries(jurisdictionCounts);
+      if (pairs.length > 0) {
+        // Sort by count and get top 5 for logging
+        const topJurisdictions = [...pairs]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([jur, count]) => `${jur}: ${count}`);
+          
+        console.log(`Top jurisdictions by count: ${topJurisdictions.join(', ')}`);
+      }
+      
+      const sorted = sortJurisdictionsByCount(jurisdictionCounts);
+      setSortedJurisdictions(sorted);
+      
+      // Log the number of jurisdictions sorted
+      console.log(`Sorted ${sorted.length} jurisdictions by count`);
+    }
+  }, [documentCounts, sortJurisdictionsByCount]);
+
+  // Function to perform initial setup when component mounts
+  useEffect(() => {
+    // No initial search or API calls on page load
+    console.log('Search page initialized, waiting for user input');
+    
+    // Set initial empty state
+    setResults([]);
+    setLoading(false);
+    setError(null);
+    
+    // No API calls happen until user initiates a search
+    
+    return () => {
+      // Cleanup function
+      initialSearchPerformed.current = false;
+    };
+  }, []); // Empty dependency array to run only once on mount
 
   const clearSearch = () => {
     setResults([]);
@@ -96,7 +138,9 @@ export const SearchPageProvider = ({ children }) => {
   };
 
   const queryWithRetry = async (query, jurisdiction = null, documentType = null, runId) => {
+    // Skip if the search ID has changed
     if (runId !== searchRunId.current) {
+      console.log('Search run ID changed, skipping stale request');
       return null;
     }
     
@@ -109,17 +153,20 @@ export const SearchPageProvider = ({ children }) => {
     let searchResponse;
 
     while (retries < MAX_RETRIES && !success) {
+      // Check again if search was replaced
       if (runId !== searchRunId.current) {
+        console.log('Search run ID changed during retry, aborting request');
         setLoading(false);
         return null;
       }
       
       try {
         console.log(`Attempting Kendra search: query="${query}", jurisdiction="${jurisdiction || 'all'}", docType="${documentType || 'all'}"`);
+        // OPTIMIZED: This is the only actual data fetching call for search results
         searchResponse = await searchKendra(query, jurisdiction, documentType);
         
         // Log the response for debugging
-        console.log('Search response:', searchResponse);
+        console.log('Search response received');
         
         // Verify we got a valid response with results
         if (searchResponse && Array.isArray(searchResponse.results)) {
@@ -152,12 +199,14 @@ export const SearchPageProvider = ({ children }) => {
       return null;
     }
 
+    // Final check if search was replaced
     if (runId !== searchRunId.current) {
+      console.log('Search run ID changed after successful search, discarding results');
       return null;
     }
 
     const transformedResults = transformKendraResults(searchResponse.results);
-    console.log(`Processed ${transformedResults.length} documents from Kendra:`, transformedResults);
+    console.log(`Processed ${transformedResults.length} documents from Kendra`);
     
     return transformedResults;
   };
@@ -167,6 +216,9 @@ export const SearchPageProvider = ({ children }) => {
     setSearchQuery(query);
     searchRunId.current++;
     const currentRunId = searchRunId.current;
+    
+    // Track that a search has been performed
+    initialSearchPerformed.current = true;
     
     // Store search query in localStorage history
     if (query && query.trim() !== '') {
@@ -190,46 +242,45 @@ export const SearchPageProvider = ({ children }) => {
     seenDocuments.current.clear();
     
     if (!query || query.trim() === '') {
-      // For empty queries, fetch all documents and facet counts
-      try {
-        console.log('Empty query, fetching all documents and facet counts...');
-        const [apiResults, facetResponse] = await Promise.all([
-          queryWithRetry('', null, null, currentRunId),
-          // Suppress errors for empty queries
-          searchKendra('', null, null, true, true)
-        ]);
-        
-        if (facetResponse && facetResponse.facets) {
-          setDocumentCounts(facetResponse.facets);
-        }
-        
-        if (currentRunId === searchRunId.current) {
-          if (apiResults && apiResults.length > 0) {
-            console.log('Setting results from empty query search:', apiResults.length, 'items');
-            // Don't limit results to just 10
-            setResults(apiResults);
-            setUsingMockData(false);
-          } else {
-            console.log('No results from empty query search');
-            setResults([]);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching all documents:', error);
-        // Don't show error for empty queries
-        setResults([]);
-      }
+      // For empty queries, just clear results without making API calls
+      console.log('Empty query, showing empty state');
+      setResults([]);
+      // Don't update facet counts for empty queries
       return;
     }
 
     try {
       console.log('Searching with query:', query);
+      setLoading(true);
+      
+      // Always fetch both search results and facet counts on first search
+      // Otherwise, be smarter about reusing existing facet data
+      let facetPromise;
+      const isFirstSearch = Object.keys(documentCounts.jurisdictions).length === 0;
+      
+      if (isFirstSearch || query !== searchQuery) {
+        console.log(`Fetching facet counts for ${isFirstSearch ? 'first' : 'new'} query: "${query}"`);
+        facetPromise = searchKendra(query, null, null, true);
+      } else {
+        console.log('Search query unchanged, reusing existing facet counts');
+        facetPromise = Promise.resolve({ facets: documentCounts });
+      }
+      
+      // Always fetch search results
+      const resultsPromise = queryWithRetry(query, null, null, currentRunId);
+      
+      // Run these promises in parallel
       const [apiResults, facetResponse] = await Promise.all([
-        queryWithRetry(query, null, null, currentRunId),
-        searchKendra(query, null, null, true)
+        resultsPromise,
+        facetPromise
       ]);
       
+      // Update facet counts if we got new ones
       if (facetResponse && facetResponse.facets) {
+        console.log(`Received facet counts for query "${query}":`, {
+          documentTypes: Object.keys(facetResponse.facets.documentTypes || {}).length,
+          jurisdictions: Object.keys(facetResponse.facets.jurisdictions || {}).length
+        });
         setDocumentCounts(facetResponse.facets);
       }
       
@@ -302,35 +353,56 @@ export const SearchPageProvider = ({ children }) => {
       const currentQuery = searchQuery || '';
       console.log(`Searching with query "${currentQuery}" and filters:`, { jurisdiction, documentType });
 
-      // First, get the filtered results
+      // CONSOLIDATED: Get the filtered results first
       queryWithRetry(currentQuery, jurisdiction, documentType, currentRunId)
         .then(filteredResults => {
-          if (filteredResults) {
-            console.log('Received filtered results:', filteredResults);
+          if (!filteredResults || currentRunId !== searchRunId.current) {
+            // Don't proceed if the search was canceled or no results
+            return;
+          }
+          
+          console.log('Received filtered results:', filteredResults.length);
             
-            // Apply additional filtering for multiple filters
-            const finalResults = filteredResults.filter(doc => {
-              // Check jurisdiction filter - safely handle undefined jurisdictions
-              const docJurisdiction = doc.jurisdiction ? doc.jurisdiction.replace(/ /g, '_') : null;
-              const jurisdictionMatch = jurisdictionFilters.length === 0 || 
-                (docJurisdiction && jurisdictionFilters.includes(docJurisdiction));
-              
-              // Check document type filter
-              const typeMatch = documentTypeFilters.length === 0 || 
-                documentTypeFilters.includes(doc.type);
-              
-              return jurisdictionMatch && typeMatch;
-            });
+          // Apply additional filtering for multiple filters
+          const finalResults = filteredResults.filter(doc => {
+            // Check jurisdiction filter - safely handle undefined jurisdictions
+            const docJurisdiction = doc.jurisdiction ? doc.jurisdiction.replace(/ /g, '_') : null;
+            const jurisdictionMatch = jurisdictionFilters.length === 0 || 
+              (docJurisdiction && jurisdictionFilters.includes(docJurisdiction));
             
-            console.log(`Filtered results: ${finalResults.length} items`);
-            // Don't limit results
-            setResults(finalResults);
-            setUsingMockData(false);
+            // Check document type filter
+            const typeMatch = documentTypeFilters.length === 0 || 
+              documentTypeFilters.includes(doc.type);
+            
+            return jurisdictionMatch && typeMatch;
+          });
+          
+          console.log(`Filtered results: ${finalResults.length} items`);
+          // Update UI with filtered results
+          setResults(finalResults);
+          setUsingMockData(false);
 
-            // Then, update the facet counts for the new filter state
-            searchKendra(currentQuery, jurisdiction, documentType, true)
+          // OPTIMIZED: Only fetch new facet counts if we need them
+          // Use the current query (or default to "" if empty) for facet counts
+          const facetQuery = currentQuery.trim() ? currentQuery : "";
+          
+          // Check if we have a new combination of query + filters that requires new facet counts
+          // or if we never fetched facet counts before
+          const needsFacetData = Object.keys(documentCounts.jurisdictions).length === 0;
+          const facetQueryChanged = facetQuery !== searchQuery;
+          const filtersChanged = jurisdiction !== null || documentType !== null;
+          
+          if (needsFacetData || facetQueryChanged || filtersChanged) {
+            console.log(`Fetching facet counts with query "${facetQuery}" and filters:`, { jurisdiction, documentType });
+            
+            // Only make this API call when necessary
+            searchKendra(facetQuery, jurisdiction, documentType, true)
               .then(facetResponse => {
-                if (facetResponse && facetResponse.facets) {
+                if (facetResponse?.facets && currentRunId === searchRunId.current) {
+                  console.log(`Received facet counts for filtered query "${facetQuery}":`, {
+                    documentTypes: Object.keys(facetResponse.facets.documentTypes || {}).length,
+                    jurisdictions: Object.keys(facetResponse.facets.jurisdictions || {}).length
+                  });
                   setDocumentCounts(facetResponse.facets);
                 }
               })
@@ -338,6 +410,8 @@ export const SearchPageProvider = ({ children }) => {
                 console.error('Error fetching facet counts:', error);
                 // Don't set error for facet counts
               });
+          } else {
+            console.log('Using existing facet counts since filters/query have not changed');
           }
         })
         .catch(error => {
@@ -362,7 +436,8 @@ export const SearchPageProvider = ({ children }) => {
       clearSearch,
       setResults,
       searchQuery,
-      documentCounts
+      documentCounts,
+      sortedJurisdictions
     }}>
       {children}
     </SearchPageContext.Provider>
