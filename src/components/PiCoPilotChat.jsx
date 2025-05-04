@@ -3,6 +3,8 @@ import './PiCoPilot.css';
 import { useChat } from '../context/ChatContext';
 import aiTechnology from '../assets/AI-technology.png';
 import searchIcon from '../assets/Search-Icon.png';
+import LoadingSpinner from './LoadingSpinner';
+import { FaUser } from 'react-icons/fa';
 
 const PiCoPilotChat = () => {
   const {
@@ -41,13 +43,23 @@ const PiCoPilotChat = () => {
           </div>
         )}
 
-        {thread && (
+        {isLoading && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '120px' }}>
+            <LoadingSpinner />
+          </div>
+        )}
+
+        {!isLoading && thread && (
           <>
             {/* User message */}
-            <div className="message user">
-              <div className="message-content" style={{ whiteSpace: 'pre-wrap' }}>
+            <div className="message user" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+              <div className="message-content" style={{ whiteSpace: 'pre-wrap', marginRight: '12px' }}>
                 {thread.question}
               </div>
+              {/* User avatar (FaUser icon) */}
+              <span className="user-icon" style={{ marginLeft: 0 }}>
+                <FaUser />
+              </span>
             </div>
             {/* Co-pilot (AI) message */}
             <div className="message">

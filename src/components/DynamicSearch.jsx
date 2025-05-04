@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchPage } from '../context/SearchPageContext';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
-import { FaFolderPlus, FaFolderMinus, FaThLarge, FaList, FaGlobe, FaChevronDown, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaFolderPlus, FaFolderMinus, FaThLarge, FaList, FaGlobe, FaChevronDown, FaChevronLeft, FaChevronRight, FaChevronUp } from 'react-icons/fa';
 import dynamicSearchIcon from '../assets/dynamic_search_ii.svg';
 import './DynamicSearch.css';
 
 const DynamicSearch = () => {
-  const { handleSearch, results, loading, error } = useSearchPage();
+  const { handleSearch, results, loading, error, searchQuery, setSearchQuery } = useSearchPage();
   const { workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder } = useWorkingFolder();
-  const [query, setQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'folder' or 'jurisdiction'
   const [searchInitiated, setSearchInitiated] = useState(false);
@@ -31,11 +30,11 @@ const DynamicSearch = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setSearchInitiated(true);
-    handleSearch(query);
+    handleSearch(searchQuery);
   };
   
   const handleSuggestedSearch = (suggestion) => {
-    setQuery(suggestion);
+    setSearchQuery(suggestion);
     setSearchInitiated(true);
     handleSearch(suggestion);
   };
@@ -175,18 +174,20 @@ const DynamicSearch = () => {
   
   return (
     <div className={`dynamic-search-container ${!results.length && !loading ? 'empty-state' : ''}`}>
-      <div className="dynamic-search-header">
-        <h1>Dynamic Search</h1>
-        <p>An advanced search experience with real-time filtering and visualization</p>
-      </div>
+      {(!results.length && !loading) && (
+        <div className="dynamic-search-header">
+          <h1>Dynamic Search</h1>
+          <p>An advanced search experience with real-time filtering and visualization</p>
+        </div>
+      )}
       
       <div className="search-input-container">
         <form onSubmit={handleSubmit}>
           <img src={dynamicSearchIcon} alt="Dynamic Search" className="search-input-icon" />
           <input 
             type="text" 
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Enter your search query..."
             className="dynamic-search-input"
           />
@@ -275,23 +276,24 @@ const DynamicSearch = () => {
                         className="jurisdiction-header"
                         onClick={() => toggleJurisdiction(jurisdiction)}
                       >
-                        <div className="jurisdiction-title-container">
-                          <h3 className="jurisdiction-title">{jurisdiction}</h3>
-                          <div className="jurisdiction-meta">
-                            <span className="jurisdiction-count">
-                              {totalDocs} documents
-                            </span>
-                          </div>
+                        <div className="jurisdiction-title-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                          <h3 className="jurisdiction-title" style={{ margin: 0 }}>
+                            {jurisdiction.replace(/_/g, ' ')}
+                          </h3>
+                          <span className="jurisdiction-count">
+                            {totalDocs}
+                          </span>
+                          <button 
+                            className="expand-button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleJurisdiction(jurisdiction);
+                            }}
+                            aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                          >
+                            {isExpanded ? <FaChevronUp /> : <FaChevronDown />}
+                          </button>
                         </div>
-                        <button 
-                          className="expand-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleJurisdiction(jurisdiction);
-                          }}
-                        >
-                          <FaChevronDown />
-                        </button>
                       </div>
 
                       {!isExpanded && (
@@ -306,7 +308,7 @@ const DynamicSearch = () => {
                               className="show-all-button"
                               onClick={() => toggleJurisdiction(jurisdiction)}
                             >
-                              Show all {totalDocs} documents <FaChevronDown />
+                              Show all {totalDocs} <FaChevronDown />
                             </button>
                           )}
                         </>

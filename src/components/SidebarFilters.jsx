@@ -374,7 +374,11 @@ const SidebarFilters = ({
         {showUserMenu && (
           <div className="user-dropdown">
             <div className="user-dropdown-content">
-              <div className="user-email">{user?.username}</div>
+              <div className="user-email">
+                {user?.attributes?.given_name || user?.attributes?.family_name
+                  ? `${user?.attributes?.given_name || ''} ${user?.attributes?.family_name || ''}`.trim()
+                  : user?.attributes?.email || user?.username}
+              </div>
               <button onClick={handleSignOut}>Sign Out</button>
             </div>
           </div>

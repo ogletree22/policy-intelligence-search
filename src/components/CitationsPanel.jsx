@@ -3,7 +3,13 @@ import './PiCoPilot.css';
 import { useChat } from '../context/ChatContext';
 
 const CitationsPanel = () => {
-  const { citations } = useChat();
+  const { chatHistory, activeThreadIndex } = useChat();
+
+  // Get citations from the active thread
+  const activeThread = typeof activeThreadIndex === 'number' && chatHistory[activeThreadIndex]
+    ? chatHistory[activeThreadIndex]
+    : null;
+  const threadCitations = activeThread ? activeThread.citations : [];
 
   return (
     <div className="citations-panel">
@@ -11,8 +17,8 @@ const CitationsPanel = () => {
         Citations
       </div>
       <div className="citations-list">
-        {citations && citations.length > 0 ? (
-          citations.map((citation, index) => (
+        {threadCitations && threadCitations.length > 0 ? (
+          threadCitations.map((citation, index) => (
             <div key={index} className="citation-item">
               <a
                 href={citation.pi_url || citation.url || '#'}
