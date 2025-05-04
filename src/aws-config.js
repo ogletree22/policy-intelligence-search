@@ -2,13 +2,13 @@ const awsConfig = {
     Auth: {
         Cognito: {
             // REQUIRED - Amazon Cognito Region
-            region: 'us-east-1',
+            region: 'us-west-2',
             
             // OPTIONAL - Amazon Cognito User Pool ID
-            userPoolId: 'us-east-1_PNIRzFCHi',
+            userPoolId: 'us-west-2_9ENBuRoX7',
             
             // OPTIONAL - Amazon Cognito Web Client ID (26-char alphanumeric string)
-            userPoolClientId: '27hr4ocssi4adsr98ms5938sdn',
+            userPoolClientId: '3osoh5j4kcgut5vhb207646r4n',
             
             // OPTIONAL - Enforce user authentication prior to accessing AWS resources or not
             mandatorySignIn: true,

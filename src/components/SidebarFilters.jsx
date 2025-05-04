@@ -167,7 +167,9 @@ const SidebarFilters = ({
   onFilterChange, 
   isDisabled, 
   instanceId = 'default', 
-  documentCounts = {}
+  documentCounts = {},
+  jurisdictionsInactive = false,
+  documentTypesInactive = false
 }) => {
   const { signOut, user } = useContext(AuthContext);
   // Get the sorted jurisdictions from SearchPageContext
@@ -185,9 +187,9 @@ const SidebarFilters = ({
     documentTypes: {}
   });
 
-  // Set default state to open
-  const [isJurisdictionCollapsed, setIsJurisdictionCollapsed] = useState(false);
-  const [isDocumentTypeCollapsed, setIsDocumentTypeCollapsed] = useState(false);
+  // Set default state to open or collapsed based on jurisdictionsInactive
+  const [isJurisdictionCollapsed, setIsJurisdictionCollapsed] = useState(jurisdictionsInactive);
+  const [isDocumentTypeCollapsed, setIsDocumentTypeCollapsed] = useState(documentTypesInactive);
   const [showAllJurisdictions, setShowAllJurisdictions] = useState(false);
 
   // Get working folder functionality from context
@@ -413,13 +415,17 @@ const SidebarFilters = ({
             <span>Jurisdiction</span>
             <button 
               className="collapse-button"
-              onClick={() => setIsJurisdictionCollapsed(!isJurisdictionCollapsed)}
+              onClick={() => {
+                if (!jurisdictionsInactive) setIsJurisdictionCollapsed(!isJurisdictionCollapsed);
+              }}
               aria-label={isJurisdictionCollapsed ? "Expand jurisdiction filters" : "Collapse jurisdiction filters"}
+              disabled={jurisdictionsInactive}
+              style={jurisdictionsInactive ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
             >
               {isJurisdictionCollapsed ? <FaChevronDown /> : <FaChevronUp />}
             </button>
           </div>
-          {!isJurisdictionCollapsed && (
+          {!isJurisdictionCollapsed && !jurisdictionsInactive && (
             <>
               {visibleJurisdictions.map((jurisdiction, index) => {
                 // Get raw count directly from the documentCounts
@@ -473,13 +479,17 @@ const SidebarFilters = ({
             <span>Document Type</span>
             <button 
               className="collapse-button"
-              onClick={() => setIsDocumentTypeCollapsed(!isDocumentTypeCollapsed)}
+              onClick={() => {
+                if (!documentTypesInactive) setIsDocumentTypeCollapsed(!isDocumentTypeCollapsed);
+              }}
               aria-label={isDocumentTypeCollapsed ? "Expand document type filters" : "Collapse document type filters"}
+              disabled={documentTypesInactive}
+              style={documentTypesInactive ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
             >
               {isDocumentTypeCollapsed ? <FaChevronDown /> : <FaChevronUp />}
             </button>
           </div>
-          {!isDocumentTypeCollapsed && DOCUMENT_TYPES.map((type, index) => {
+          {!isDocumentTypeCollapsed && !documentTypesInactive && DOCUMENT_TYPES.map((type, index) => {
             const displayType = type.trim();
             const count = docTypeCounts[type] || 0;
             // Check both current filters and pending filters

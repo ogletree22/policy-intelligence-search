@@ -316,7 +316,7 @@
 }
 
 .empty-folder-message {
-  padding: 5px 40px !important;
+  padding: 5px 12px !important;
   color: #343434;
   font-size: 13px;
   text-align: center;
@@ -326,12 +326,17 @@
   margin: 4px 0;
   border-color: #34343430 !important;
   font-family: 'Roboto', sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+  display: block;
 }
 
 .empty-text {
   display: block;
   line-height: 1;
   opacity: 0.8;
+  width: 100%;
+  text-align: center;
 }
 
 .empty-folder-message .folder-icon {

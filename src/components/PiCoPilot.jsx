@@ -51,6 +51,8 @@ const PiCoPilot = () => {
           <SidebarFilters 
             onFilterChange={handleFilterChange}
             instanceId="copilot-page"
+            jurisdictionsInactive={true}
+            documentTypesInactive={true}
           />
         </aside>
         <div className="copilot-container">

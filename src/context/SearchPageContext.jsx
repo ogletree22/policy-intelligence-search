@@ -436,6 +436,7 @@ export const SearchPageProvider = ({ children }) => {
       clearSearch,
       setResults,
       searchQuery,
+      setSearchQuery,
       documentCounts,
       sortedJurisdictions
     }}>
