@@ -280,10 +280,10 @@
 }
 
 .result-card h3 {
-  margin: 0 0 12px;
+  margin: 0 0 0 0;
   font-size: 16px;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.0;
 }
 
 .result-card h3 a {
@@ -515,14 +515,14 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 0px;
 }
 
 .folder-view .result-description {
   font-size: 14px;
   line-height: 1.5;
   color: #555;
-  margin: 10px 0;
+  margin: 0px 0;
 }
 
 .folder-view .result-meta {
