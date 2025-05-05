@@ -266,6 +266,14 @@ const SidebarFilters = ({
     // Debug log to verify which filters are being sent
     console.log(`Applying filters with ${Object.keys(activeFilters).length} active filters:`, activeFilters);
     
+    // Enhanced debugging for active filters
+    console.log('Active filter details:');
+    Object.keys(activeFilters).forEach(key => {
+      console.log(`- Key: "${key}", Value: ${activeFilters[key]}`);
+      console.log(`  - Is in JURISDICTIONS: ${JURISDICTIONS.includes(key)}`);
+      console.log(`  - Is in DOCUMENT_TYPES: ${DOCUMENT_TYPES.includes(key)}`);
+    });
+    
     // Call parent component's filter handler
     onFilterChange(activeFilters);
     
