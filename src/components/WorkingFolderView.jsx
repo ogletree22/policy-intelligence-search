@@ -3,6 +3,7 @@ import { FaTimes, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import aiTechnologyIcon from '../assets/AI-technology.png';
+import betaIcon from '../assets/Pi-CoPilot_Beta.svg';
 import './WorkingFolderView.css';
 
 const WorkingFolderView = ({ isOpen, onClose, documents }) => {
@@ -31,7 +32,7 @@ const WorkingFolderView = ({ isOpen, onClose, documents }) => {
               }}
               title="Open in PI-Copilot"
             >
-              <img src={aiTechnologyIcon} alt="PI-Copilot" className="copilot-icon" />
+              <img src={betaIcon} alt="Beta" className="copilot-icon" />
               <span className="copilot-text">PI Co-Pilot</span>
             </button>
             <button className="close-button" onClick={onClose}>

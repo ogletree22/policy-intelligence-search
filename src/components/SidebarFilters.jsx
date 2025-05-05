@@ -188,8 +188,8 @@ const SidebarFilters = ({
   });
 
   // Set default state to open or collapsed based on jurisdictionsInactive
-  const [isJurisdictionCollapsed, setIsJurisdictionCollapsed] = useState(jurisdictionsInactive);
-  const [isDocumentTypeCollapsed, setIsDocumentTypeCollapsed] = useState(documentTypesInactive);
+  const [isJurisdictionCollapsed, setIsJurisdictionCollapsed] = useState(true);
+  const [isDocumentTypeCollapsed, setIsDocumentTypeCollapsed] = useState(true);
   const [showAllJurisdictions, setShowAllJurisdictions] = useState(false);
 
   // Get working folder functionality from context

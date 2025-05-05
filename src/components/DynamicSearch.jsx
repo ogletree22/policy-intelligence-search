@@ -305,6 +305,7 @@ const DynamicSearch = () => {
                             }}
                             aria-label={isExpanded ? 'Collapse' : 'Expand'}
                           >
+                            {console.log('Jurisdiction:', jurisdiction, 'isExpanded:', isExpanded)}
                             {isExpanded ? <FaChevronUp /> : <FaChevronDown />}
                           </button>
                         </div>
