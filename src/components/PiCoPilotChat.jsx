@@ -34,17 +34,13 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
   return (
     <div className="chat-container" style={{ position: 'relative', zIndex: 10 }}>
       <div className="chat-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <h3 style={{ margin: 0, display: 'inline-flex', alignItems: 'center', fontWeight: 600 }}>
+        <span style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
+          <h3 style={{ margin: 0, fontWeight: 600 }}>
             Policy Intelligence Co-Pilot
-            <sub style={{ 
-              fontStyle: 'italic !important', 
-              fontSize: '0.6em !important', 
-              marginLeft: '4px !important', 
-              color: '#6096ba !important',
-              lineHeight: '0 !important'
-            }}>Beta</sub>
           </h3>
+          <sub style={{ fontStyle: 'italic', fontSize: '0.7em', color: '#6096ba', marginLeft: 0, fontWeight: 550 }}>
+            Beta
+          </sub>
         </span>
         {showToggleButton && (
           <button
