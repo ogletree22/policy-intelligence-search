@@ -9,7 +9,7 @@ const DynamicSearch = () => {
   const { handleSearch, results, loading, error, searchQuery, setSearchQuery } = useSearchPage();
   const { workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder } = useWorkingFolder();
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'folder' or 'jurisdiction'
+  const [viewMode, setViewMode] = useState('folder'); // 'folder' (list), 'grid', or 'jurisdiction'
   const [searchInitiated, setSearchInitiated] = useState(false);
   const [expandedJurisdictions, setExpandedJurisdictions] = useState(new Set());
   const resultsPerPage = 25; // Show 25 results per page, for a smoother experience
@@ -211,18 +211,18 @@ const DynamicSearch = () => {
         </form>
         <div className="layout-toggle">
           <button 
-            className={viewMode === 'grid' ? 'active' : ''} 
-            onClick={() => setViewMode('grid')}
-            title="Grid View"
-          >
-            <FaThLarge />
-          </button>
-          <button 
             className={viewMode === 'folder' ? 'active' : ''} 
             onClick={() => setViewMode('folder')}
             title="List View"
           >
             <FaList />
+          </button>
+          <button 
+            className={viewMode === 'grid' ? 'active' : ''} 
+            onClick={() => setViewMode('grid')}
+            title="Grid View"
+          >
+            <FaThLarge />
           </button>
           <button 
             className={viewMode === 'jurisdiction' ? 'active' : ''} 

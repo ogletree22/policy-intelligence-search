@@ -2,23 +2,23 @@ import React from 'react';
 import './PiCoPilot.css';
 import { useChat } from '../context/ChatContext';
 
-const CitationsPanel = () => {
+const SourcesPanel = () => {
   const { chatHistory, activeThreadIndex } = useChat();
 
-  // Get citations from the active thread
+  // Get sources from the active thread
   const activeThread = typeof activeThreadIndex === 'number' && chatHistory[activeThreadIndex]
     ? chatHistory[activeThreadIndex]
     : null;
-  const threadCitations = activeThread ? activeThread.citations : [];
+  const threadSources = activeThread ? activeThread.citations : [];
 
   return (
     <div className="citations-panel">
       <div className="citations-header">
-        Citations
+        Sources
       </div>
       <div className="citations-list">
-        {threadCitations && threadCitations.length > 0 ? (
-          threadCitations.map((citation, index) => (
+        {threadSources && threadSources.length > 0 ? (
+          threadSources.map((citation, index) => (
             <div key={index} className="citation-item">
               <a
                 href={citation.pi_url || citation.url || '#'}
@@ -36,11 +36,11 @@ const CitationsPanel = () => {
             </div>
           ))
         ) : (
-          <div style={{ color: '#888', fontStyle: 'italic', padding: '8px' }}>No citations for this answer.</div>
+          <div style={{ color: '#888', fontStyle: 'italic', padding: '8px' }}>No sources for this answer.</div>
         )}
       </div>
     </div>
   );
 };
 
-export default CitationsPanel; 
+export default SourcesPanel; 

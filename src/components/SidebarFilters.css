@@ -513,8 +513,8 @@
 }
 
 .user-icon {
-  width: 32px;
-  height: 32px;
+  width: 26px !important;
+  height: 26px !important;
   border-radius: 50%;
   background-color: #274C77;
   color: white;
@@ -522,7 +522,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px !important;
   border: none;
   padding: 0;
   transition: background-color 0.2s ease;

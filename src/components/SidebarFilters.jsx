@@ -525,26 +525,30 @@ const SidebarFilters = ({
           <div className="working-folder-header">
             <span>Working Folder ({workingFolderDocs.length})</span>
             <div className="working-folder-actions">
-              <button 
-                className="view-folder-button" 
-                onClick={() => setIsWorkingFolderOpen(true)}
-                title="View working folder contents"
-              >
-                <FaEye />
-              </button>
-              <button 
-                className="clear-all-button"
-                onClick={() => {
-                  // Clear all documents from working folder
-                  workingFolderDocs.forEach(doc => {
-                    removeFromWorkingFolder(doc.id);
-                  });
-                }}
-                title="Clear all documents"
-                disabled={workingFolderDocs.length === 0}
-              >
-                <FaTimes />
-              </button>
+              {instanceId !== 'copilot-page' && (
+                <>
+                  <button 
+                    className="view-folder-button" 
+                    onClick={() => setIsWorkingFolderOpen(true)}
+                    title="View working folder contents"
+                  >
+                    <FaEye />
+                  </button>
+                  <button 
+                    className="clear-all-button"
+                    onClick={() => {
+                      // Clear all documents from working folder
+                      workingFolderDocs.forEach(doc => {
+                        removeFromWorkingFolder(doc.id);
+                      });
+                    }}
+                    title="Clear all documents"
+                    disabled={workingFolderDocs.length === 0}
+                  >
+                    <FaTimes />
+                  </button>
+                </>
+              )}
             </div>
           </div>
           <div className="working-folder-list">
@@ -570,11 +574,13 @@ const SidebarFilters = ({
         </div>
       </div>
 
-      <WorkingFolderView 
-        isOpen={isWorkingFolderOpen}
-        onClose={() => setIsWorkingFolderOpen(false)}
-        documents={workingFolderDocs}
-      />
+      {instanceId !== 'copilot-page' && (
+        <WorkingFolderView 
+          isOpen={isWorkingFolderOpen}
+          onClose={() => setIsWorkingFolderOpen(false)}
+          documents={workingFolderDocs}
+        />
+      )}
     </div>
   );
 };

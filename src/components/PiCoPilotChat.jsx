@@ -6,7 +6,7 @@ import searchIcon from '../assets/Search-Icon.png';
 import LoadingSpinner from './LoadingSpinner';
 import { FaUser } from 'react-icons/fa';
 
-const PiCoPilotChat = () => {
+const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
   const {
     question,
     setQuestion,
@@ -33,8 +33,37 @@ const PiCoPilotChat = () => {
 
   return (
     <div className="chat-container" style={{ position: 'relative', zIndex: 10 }}>
-      <div className="chat-header">
-        <h3>Policy Intelligence CoPilot</h3>
+      <div className="chat-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h3 style={{ margin: 0, display: 'inline-flex', alignItems: 'center', fontWeight: 600 }}>
+            Policy Intelligence Co-Pilot
+            <sub style={{ fontStyle: 'italic', fontSize: '0.6em', marginLeft: 4, color: '#6096ba' }}>Beta</sub>
+          </h3>
+        </span>
+        {showToggleButton && (
+          <button
+            style={{
+              background: '#457B9D',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '2px 10px',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+              outline: 'none',
+              marginLeft: 12,
+              whiteSpace: 'nowrap',
+            }}
+            onMouseOver={e => e.currentTarget.style.background = '#274C77'}
+            onMouseOut={e => e.currentTarget.style.background = '#457B9D'}
+            onFocus={e => e.currentTarget.style.outline = 'none'}
+            onClick={() => setShowHistory(true)}
+          >
+            Show History
+          </button>
+        )}
       </div>
       <div className="chat-messages">
         {error && (

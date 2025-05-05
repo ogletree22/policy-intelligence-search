@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './PiCoPilot.css';
 import MessageHistory from './MessageHistory';
 import PiCoPilotChat from './PiCoPilotChat';
-import CitationsPanel from './CitationsPanel';
+import SourcesPanel from './CitationsPanel';
 import SidebarFilters from './SidebarFilters';
 import { useSearchPage } from '../context/SearchPageContext';
 
@@ -11,6 +11,7 @@ import aiAvatar from '../assets/AI-technology.png';
 
 const PiCoPilot = () => {
   const { results } = useSearchPage();
+  const [showHistory, setShowHistory] = useState(true);
 
   // Example history items
   const historyItems = [
@@ -57,9 +58,9 @@ const PiCoPilot = () => {
         </aside>
         <div className="copilot-container">
           <div className="copilot-content">
-            <MessageHistory />
-            <PiCoPilotChat />
-            <CitationsPanel />
+            {showHistory && <MessageHistory onClose={() => setShowHistory(false)} />}
+            <PiCoPilotChat showHistory={showHistory} setShowHistory={setShowHistory} showToggleButton={!showHistory} />
+            <SourcesPanel />
           </div>
         </div>
       </div>
