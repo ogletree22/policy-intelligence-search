@@ -1,11 +1,15 @@
 .dynamic-search-container {
   min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background-color: #f8f9fa;
   width: 100%;
   transition: none;
-  padding-bottom: 20px;
+  padding-bottom: 0px;
+  padding-bottom: 80px;
+  margin-top: 0px;
+
 }
 
 .dynamic-search-container.empty-state {
@@ -171,9 +175,9 @@
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.3s ease;
-  margin-bottom: 20px;
+  margin-bottom: 0;
   overflow-y: auto;
-  max-height: calc(100vh - 200px);
+  max-height: none;
 }
 
 .dynamic-search-container:not(.empty-state) .dynamic-search-results {
