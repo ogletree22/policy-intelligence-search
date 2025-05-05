@@ -52,6 +52,32 @@
   overflow-y: auto;
   padding-bottom: 20px;
   padding-right: 0px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(39, 76, 119, 0.5) rgba(255, 255, 255, 0.15);
+}
+
+.filter-groups-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.filter-groups-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.filter-groups-container::-webkit-scrollbar-thumb {
+  background: rgba(39, 76, 119, 0.5);
+  border-radius: 4px;
+}
+
+.filter-groups-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(39, 76, 119, 0.7);
+}
+
+.filter-groups-container::-webkit-scrollbar-button:start:decrement,
+.filter-groups-container::-webkit-scrollbar-button:end:increment {
+  display: none;
+  height: 0;
+  width: 0;
 }
 
 .filter-group {
