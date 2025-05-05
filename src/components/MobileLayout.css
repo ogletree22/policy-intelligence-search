@@ -80,7 +80,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   background-color: #f8f9fa;
-  padding-bottom: 60px;
+  padding-bottom: 0px;
 }
 
 .mobile-layout .search-bar-container {

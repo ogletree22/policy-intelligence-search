@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import './TopNav.css';
 import logo from '../assets/logo.png';
 import dynamicSearchIcon from '../assets/dynamic_search_ii.svg';
-import coPilotIcon from '../assets/AI-technology.png';
+import coPilotIcon from '../assets/Pi-CoPilot_Beta.svg';
 import piLogo from '../assets/PI_Logo_2024.png';
 
 const TopNav = () => {
@@ -19,7 +19,7 @@ const TopNav = () => {
       <div className="topnav-right">
         <nav className="topnav-links">
           <Link to="/dynamic" className={location.pathname === '/dynamic' || location.pathname === '/' ? 'active' : ''}>
-            <img src={dynamicSearchIcon} alt="Dynamic Search" className="nav-icon" />
+            <img src={dynamicSearchIcon} alt="Dynamic Search" className="nav-icon dynamic-search-icon" />
             Dynamic Search
           </Link>
           <span className="nav-divider" />

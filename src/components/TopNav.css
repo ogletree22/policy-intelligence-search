@@ -60,13 +60,18 @@
   }
   
   .nav-icon {
-    height: 20px;
-    width: 22px;
+    height: 26px;
+    width: 28px;
     margin-right: 6px;
     vertical-align: bottom;
     object-fit: contain;
     display: inline-block;
     margin-bottom: 2px;
+  }
+  
+  .dynamic-search-icon {
+    height: 20px;
+    width: 22px;
   }
   
   .topnav-icon {

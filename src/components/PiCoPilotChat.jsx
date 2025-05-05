@@ -1,7 +1,7 @@
 import React from 'react';
 import './PiCoPilot.css';
 import { useChat } from '../context/ChatContext';
-import aiTechnology from '../assets/AI-technology.png';
+import aiTechnology from '../assets/Pi-CoPilot_Beta.svg';
 import searchIcon from '../assets/Search-Icon.png';
 import LoadingSpinner from './LoadingSpinner';
 import { FaUser } from 'react-icons/fa';

@@ -33,6 +33,20 @@ const DynamicSearch = () => {
     handleSearch(searchQuery);
   };
   
+  // Add effect to handle loading state
+  useEffect(() => {
+    if (loading) {
+      setSearchInitiated(true);
+    }
+  }, [loading]);
+
+  // Add effect to handle results
+  useEffect(() => {
+    if (results.length > 0) {
+      setSearchInitiated(true);
+    }
+  }, [results]);
+  
   const handleSuggestedSearch = (suggestion) => {
     setSearchQuery(suggestion);
     setSearchInitiated(true);
@@ -248,7 +262,7 @@ const DynamicSearch = () => {
       )}
       
       <div className="dynamic-search-results">
-        {results.length > 0 && (
+        {results.length > 0 && !loading && (
           <>
             <div className="results-summary">
               <p>

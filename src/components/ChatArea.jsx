@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './PiCoPilot.css';
-import aiAvatar from '../assets/AI-technology.png';
+import aiAvatar from '../assets/Pi-CoPilot_Beta.svg';
 
 const ChatArea = () => {
   const [message, setMessage] = useState('');

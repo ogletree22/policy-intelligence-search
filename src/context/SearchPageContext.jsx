@@ -46,13 +46,13 @@ const reverseJurisdictionMapping = Object.fromEntries(
 const LOCAL_STORAGE_KEY = 'searchHistory';
 
 export const SearchPageProvider = ({ children }) => {
-  // Increase the maximum number of results to retrieve and display
-  const MAX_RESULTS = 100; // Set maximum results to 100
+  const MAX_RESULTS = 100;
   
   const [results, setResults] = useState([]);
   const [filters, setFilters] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [facetLoading, setFacetLoading] = useState(false);
   const [error, setError] = useState(null);
   const [usingMockData, setUsingMockData] = useState(false);
   const [documentCounts, setDocumentCounts] = useState({
@@ -60,10 +60,7 @@ export const SearchPageProvider = ({ children }) => {
     jurisdictions: {}
   });
   
-  // Add state for sorted jurisdictions
   const [sortedJurisdictions, setSortedJurisdictions] = useState([]);
-  
-  // Track if initial search has been performed
   const initialSearchPerformed = useRef(false);
   const searchRunId = useRef(0);
   const seenDocuments = useRef(new Set());
@@ -217,10 +214,8 @@ export const SearchPageProvider = ({ children }) => {
     searchRunId.current++;
     const currentRunId = searchRunId.current;
     
-    // Track that a search has been performed
     initialSearchPerformed.current = true;
     
-    // Store search query in localStorage history
     if (query && query.trim() !== '') {
       let history = [];
       try {
@@ -231,21 +226,16 @@ export const SearchPageProvider = ({ children }) => {
       } catch (e) {
         history = [];
       }
-      // Remove duplicates and add new query to the front
       history = [query, ...history.filter(item => item !== query)];
-      // Limit to 20 most recent
       if (history.length > 20) history = history.slice(0, 20);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(history));
     }
     
-    // Clear seen documents for new search
     seenDocuments.current.clear();
     
     if (!query || query.trim() === '') {
-      // For empty queries, just clear results without making API calls
       console.log('Empty query, showing empty state');
       setResults([]);
-      // Don't update facet counts for empty queries
       return;
     }
 
@@ -253,36 +243,8 @@ export const SearchPageProvider = ({ children }) => {
       console.log('Searching with query:', query);
       setLoading(true);
       
-      // Always fetch both search results and facet counts on first search
-      // Otherwise, be smarter about reusing existing facet data
-      let facetPromise;
-      const isFirstSearch = Object.keys(documentCounts.jurisdictions).length === 0;
-      
-      if (isFirstSearch || query !== searchQuery) {
-        console.log(`Fetching facet counts for ${isFirstSearch ? 'first' : 'new'} query: "${query}"`);
-        facetPromise = searchKendra(query, null, null, true);
-      } else {
-        console.log('Search query unchanged, reusing existing facet counts');
-        facetPromise = Promise.resolve({ facets: documentCounts });
-      }
-      
-      // Always fetch search results
-      const resultsPromise = queryWithRetry(query, null, null, currentRunId);
-      
-      // Run these promises in parallel
-      const [apiResults, facetResponse] = await Promise.all([
-        resultsPromise,
-        facetPromise
-      ]);
-      
-      // Update facet counts if we got new ones
-      if (facetResponse && facetResponse.facets) {
-        console.log(`Received facet counts for query "${query}":`, {
-          documentTypes: Object.keys(facetResponse.facets.documentTypes || {}).length,
-          jurisdictions: Object.keys(facetResponse.facets.jurisdictions || {}).length
-        });
-        setDocumentCounts(facetResponse.facets);
-      }
+      // First, get the initial search results
+      const apiResults = await queryWithRetry(query, null, null, currentRunId);
       
       if (currentRunId === searchRunId.current) {
         if (apiResults && apiResults.length > 0) {
@@ -296,7 +258,6 @@ export const SearchPageProvider = ({ children }) => {
           });
           
           console.log(`Setting ${uniqueResults.length} unique results from API`);
-          // Don't limit results here
           setResults(uniqueResults);
           setUsingMockData(false);
         } else {
@@ -304,10 +265,29 @@ export const SearchPageProvider = ({ children }) => {
           setResults([]);
         }
       }
+
+      // Then, fetch facet counts in the background
+      setFacetLoading(true);
+      try {
+        const facetResponse = await searchKendra(query, null, null, true);
+        if (facetResponse && facetResponse.facets) {
+          console.log(`Received facet counts for query "${query}":`, {
+            documentTypes: Object.keys(facetResponse.facets.documentTypes || {}).length,
+            jurisdictions: Object.keys(facetResponse.facets.jurisdictions || {}).length
+          });
+          setDocumentCounts(facetResponse.facets);
+        }
+      } catch (facetError) {
+        console.error('Error fetching facet counts:', facetError);
+      } finally {
+        setFacetLoading(false);
+      }
     } catch (error) {
       console.error('Error in handleSearch:', error);
       setError(error);
       setResults([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -428,6 +408,7 @@ export const SearchPageProvider = ({ children }) => {
     <SearchPageContext.Provider value={{
       results,
       loading,
+      facetLoading,
       error,
       usingMockData,
       handleSearch,

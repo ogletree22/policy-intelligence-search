@@ -1,6 +1,7 @@
 .mobile-chat {
   display: flex;
   flex-direction: column;
+  width: 100%;
   height: 100%;
   background-color: #ffffff;
 }
@@ -14,11 +15,12 @@
   flex-direction: column;
   gap: 16px;
   background-color: #f8f9fa;
-  padding-bottom: 76px; /* Match the search bar spacing */
+  padding-bottom: 10px; /* Match the search bar spacing */
 }
 
 .message {
-  max-width: 85%;
+  max-width: 100%;
+  width: 100%;
   padding: 12px 16px;
   border-radius: 12px;
   font-size: 14px;
@@ -28,7 +30,6 @@
 
 .message.user {
   align-self: flex-end;
-
   color: white;
   border-bottom-right-radius: 4px;
   margin-left: 24px;
@@ -36,13 +37,32 @@
 }
 
 .message.assistant {
-  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
   background-color: white;
   color: #333;
   border-bottom-left-radius: 4px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  margin-right: 24px;
-  margin-left: 8px;
+  margin-right: 0px;
+  margin-left: 0px;
+  max-width: 100%;
+  width: 100%;
+}
+
+.message.assistant ul,
+.message.assistant li,
+.message.assistant a,
+.message.assistant div {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+
+.message.assistant hr, .message.assistant .divider {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  box-sizing: border-box;
 }
 
 .chat-input {
@@ -179,4 +199,10 @@
 
 :root.dark-mode .typing-indicator span {
   background-color: #4a9eff;
+}
+
+@media (max-width: 900px) {
+  .message.assistant {
+    flex-direction: column;
+  }
 } 
