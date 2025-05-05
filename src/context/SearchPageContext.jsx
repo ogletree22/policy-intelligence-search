@@ -223,6 +223,13 @@ export const SearchPageProvider = ({ children }) => {
     }
     
     console.log(`Document type filter: "${documentType || 'None'}"`);
+    if (documentType) {
+      console.log('Document type details:');
+      console.log(`- Raw value: "${documentType}"`);
+      console.log(`- Length: ${documentType.length}`);
+      console.log(`- Character codes:`, Array.from(documentType).map(c => c.charCodeAt(0)));
+      console.log(`- Has leading space: ${documentType.startsWith(' ')}`);
+    }
     console.log(`Run ID: ${runId}`);
     console.log('===========================================');
     
@@ -416,10 +423,32 @@ export const SearchPageProvider = ({ children }) => {
     
     // Get active filters from the processed filters
     const activeFilterKeys = Object.keys(processedFilters).filter(key => processedFilters[key] === true);
+    
+    // Original newFilters keys (with spaces preserved)
+    const originalActiveKeys = Object.keys(newFilters).filter(key => newFilters[key] === true);
+    console.log('Original active keys:', originalActiveKeys);
 
     // Get all active jurisdiction and document type filters
     const jurisdictionFilters = activeFilterKeys.filter(key => JURISDICTIONS.includes(key));
-    const documentTypeFilters = activeFilterKeys.filter(key => DOCUMENT_TYPES.includes(key));
+    
+    // For document types, we need to check both with the original format (preserving spaces)
+    // and with the processed format (spaces replaced with underscores)
+    const documentTypeFilters = originalActiveKeys.filter(key => {
+      // Direct match with original format (spaces preserved)
+      if (DOCUMENT_TYPES.includes(key)) {
+        console.log(`Found document type match for "${key}" in original format`);
+        return true;
+      }
+      
+      // Match with processed format (spaces replaced with underscores)
+      const processedKey = key.replace(/ /g, '_');
+      if (DOCUMENT_TYPES.some(docType => docType.replace(/ /g, '_') === processedKey)) {
+        console.log(`Found document type match for "${key}" in processed format`);
+        return true;
+      }
+      
+      return false;
+    });
 
     console.log('Active jurisdiction filters:', jurisdictionFilters);
     console.log('Active document type filters:', documentTypeFilters);
@@ -436,7 +465,13 @@ export const SearchPageProvider = ({ children }) => {
     // If we have filters, perform a new search with them
     if (jurisdictionFilters.length > 0 || documentTypeFilters.length > 0) {
       // Get document type filter (Kendra only supports one document type)
-      const documentType = documentTypeFilters.length > 0 ? documentTypeFilters[0] : null;
+      // IMPORTANT: We must use the exact string format that Kendra expects (including spaces)
+      let documentType = null;
+      if (documentTypeFilters.length > 0) {
+        // Use the original format with spaces preserved for Kendra
+        documentType = documentTypeFilters[0];
+        console.log(`Using document type filter for Kendra API: "${documentType}"`);
+      }
 
       // Perform a new search with the current query and filters
       searchRunId.current++;
@@ -466,6 +501,11 @@ export const SearchPageProvider = ({ children }) => {
               console.log('First document jurisdiction details:');
               console.log(`- Original value: "${doc.jurisdiction}"`);
               console.log(`- After conversion: "${doc.jurisdiction ? doc.jurisdiction.replace(/ /g, '_') : null}"`);
+              
+              // Debug document type filtering
+              console.log('Document Type Filtering Details:');
+              console.log(`- All documentTypeFilters:`, documentTypeFilters);
+              console.log(`- Raw doc.type: "${doc.type}"`);
             }
             
             // Check jurisdiction filter - safely handle undefined jurisdictions
@@ -499,9 +539,32 @@ export const SearchPageProvider = ({ children }) => {
               });
             }
             
-            // Check document type filter
-            const typeMatch = documentTypeFilters.length === 0 || 
-              documentTypeFilters.includes(doc.type);
+            // Check document type filter - normalize to handle spaces and case differences
+            // IMPORTANT: If we already filtered by document type at the API level, skip client-side filtering
+            let typeMatch = true;
+            if (documentTypeFilters.length > 0 && documentType === null) {
+              // Only do client-side document type filtering if we didn't already filter at API level
+              const normalize = str => str?.toLowerCase().replace(/[\s_]+/g, '').trim();
+              typeMatch = documentTypeFilters.some(filter => normalize(filter) === normalize(doc.type));
+              
+              // Log normalized match result for first document
+              if (filteredResults.indexOf(doc) === 0) {
+                console.log(`- Normalized doc.type: "${normalize(doc.type)}"`);
+                console.log(`- Normalized filters:`, documentTypeFilters.map(filter => normalize(filter)));
+                console.log(`- Type match result: ${typeMatch}`);
+                console.log(`- Using client-side document type filtering: true`);
+              }
+            } else if (documentTypeFilters.length > 0) {
+              // We already filtered at the API level, so trust the results
+              typeMatch = true;
+              
+              // Log for the first document
+              if (filteredResults.indexOf(doc) === 0) {
+                console.log(`- API-level document filtering was used with type: "${documentType}"`);
+                console.log(`- Skipping client-side document type filtering`);
+                console.log(`- Type match result: ${typeMatch}`);
+              }
+            }
             
             return jurisdictionMatch && typeMatch;
           });
