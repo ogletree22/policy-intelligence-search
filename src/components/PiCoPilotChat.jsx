@@ -42,9 +42,7 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
               fontSize: '0.6em !important', 
               marginLeft: '4px !important', 
               color: '#6096ba !important',
-              verticalAlign: 'sub !important',
-              position: 'relative !important',
-              bottom: '-0.25em !important'
+              lineHeight: '0 !important'
             }}>Beta</sub>
           </h3>
         </span>
