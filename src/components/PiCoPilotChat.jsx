@@ -44,26 +44,12 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
         </span>
         {showToggleButton && (
           <button
-            style={{
-              background: '#457B9D',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '2px 10px',
-              fontSize: '12px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'background 0.2s',
-              outline: 'none',
-              marginLeft: 12,
-              whiteSpace: 'nowrap',
-            }}
-            onMouseOver={e => e.currentTarget.style.background = '#274C77'}
-            onMouseOut={e => e.currentTarget.style.background = '#457B9D'}
-            onFocus={e => e.currentTarget.style.outline = 'none'}
+            className="history-btn"
+            style={{ marginLeft: 12, whiteSpace: 'nowrap' }}
             onClick={() => setShowHistory(true)}
+            aria-label="Show message history"
           >
-            Show History
+            History
           </button>
         )}
       </div>

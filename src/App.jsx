@@ -1,5 +1,5 @@
 // App.jsx
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import TopNav from './components/TopNav';
 import SidebarFilters from './components/SidebarFilters';
@@ -19,6 +19,7 @@ import { FolderPageProvider } from './context/FolderPageContext';
 import { SearchPageProvider, useSearchPage } from './context/SearchPageContext';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { ChatProvider } from './context/ChatContext';
+import { SidebarProvider, useSidebar } from './context/SidebarContext';
 import './aws-config';
 import mockDataCO2 from './mockDataCO2.js';
 import mockDataNM from './mockDataNM';
@@ -44,11 +45,16 @@ function MainContent() {
   const location = useLocation();
   const { results, loading, error, usingMockData, documentCounts, handleFilterChange } = useSearchPage();
   const isMobile = useMobileDetect();
+  const { sidebarCollapsed, resetSidebarAnimation } = useSidebar();
 
   const isHomePage = location.pathname === '/' || location.hash === '#/';
   const isFoldersPage = location.pathname === '/folders' || location.hash === '#/folders';
   const isPiCoPilotPage = location.pathname === '/copilot' || location.hash === '#/copilot';
   const isDynamicSearchPage = location.pathname === '/dynamic' || location.hash === '#/dynamic' || location.pathname === '/' || location.hash === '#/';
+
+  React.useEffect(() => {
+    resetSidebarAnimation();
+  }, [location, resetSidebarAnimation]);
 
   // Return mobile layout if on mobile device
   if (isMobile) {
@@ -71,7 +77,7 @@ function MainContent() {
           />
         </aside>
 
-        <main className={`main-section ${isPiCoPilotPage ? 'full-width' : ''}`}>
+        <main className={`main-section ${isPiCoPilotPage ? 'full-width' : ''}${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
           {isHomePage && (
             <div className="center-content">
               <SearchBar />
@@ -165,7 +171,9 @@ function App() {
 export default function AppWithAuth() {
   return (
     <AuthProvider>
-      <App />
+      <SidebarProvider>
+        <App />
+      </SidebarProvider>
     </AuthProvider>
   );
 }

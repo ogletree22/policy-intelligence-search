@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './PiCoPilot.css';
 import MessageHistory from './MessageHistory';
 import PiCoPilotChat from './PiCoPilotChat';
 import SourcesPanel from './CitationsPanel';
 import SidebarFilters from './SidebarFilters';
 import { useSearchPage } from '../context/SearchPageContext';
+import { useSidebar } from '../context/SidebarContext';
+import { useLocation } from 'react-router-dom';
 
 // Import the AI avatar image
 import aiAvatar from '../assets/AI-technology.png';
@@ -12,6 +14,8 @@ import aiAvatar from '../assets/AI-technology.png';
 const PiCoPilot = () => {
   const { results } = useSearchPage();
   const [showHistory, setShowHistory] = useState(true);
+  const { sidebarCollapsed, resetSidebarAnimation } = useSidebar();
+  const location = useLocation();
 
   // Example history items
   const historyItems = [
@@ -45,10 +49,14 @@ const PiCoPilot = () => {
     console.log('Filters changed:', filters);
   };
 
+  useEffect(() => {
+    resetSidebarAnimation();
+  }, [location, resetSidebarAnimation]);
+
   return (
     <div className="app-wrapper">
       <div className="main-layout">
-        <aside className="sidebar">
+        <aside className={`sidebar${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
           <SidebarFilters 
             onFilterChange={handleFilterChange}
             instanceId="copilot-page"
@@ -56,7 +64,7 @@ const PiCoPilot = () => {
             documentTypesInactive={true}
           />
         </aside>
-        <div className="copilot-container">
+        <div className={`copilot-container${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
           <div className="copilot-content">
             {showHistory && <MessageHistory onClose={() => setShowHistory(false)} />}
             <PiCoPilotChat showHistory={showHistory} setShowHistory={setShowHistory} showToggleButton={!showHistory} />

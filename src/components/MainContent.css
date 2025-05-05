@@ -25,4 +25,13 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0;
+}
+
+.copilot-container {
+  margin-left: 275px;
+  /* ...other styles... */
+}
+
+.copilot-container.sidebar-collapsed {
+  margin-left: 60px;
 } 

@@ -11,7 +11,9 @@
 }
 
 .sidebar {
-  width: 245px;
+  width: var(--sidebar-width, 275px) !important;
+  min-width: var(--sidebar-width, 275px) !important;
+  max-width: var(--sidebar-width, 275px) !important;
   flex-shrink: 0;
   background: white;
   border-right: 1px solid #e0e0e0;
@@ -26,7 +28,7 @@
   padding: 20px;
   box-sizing: border-box;
   overflow: hidden;
-  margin-left: 275px;
+  margin-left: var(--sidebar-width, 275px);
 }
 
 .copilot-content {
@@ -361,4 +363,11 @@ h3 {
     padding: 8px;
     font-size: 13px;
   }
+}
+
+.sidebar.sidebar-collapsed {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+  transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
 } 

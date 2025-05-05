@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useContext } from 'react';
-import { FaUser, FaFolder, FaTrash, FaEye, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaUser, FaFolder, FaTrash, FaEye, FaTimes, FaChevronDown, FaChevronUp, FaBars, FaAngleDoubleLeft, FaAngleDoubleRight } from 'react-icons/fa';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { JurisdictionIcon, DocumentTypeIcon } from './icons/FilterIcons';
 import { AuthContext } from '../context/AuthContext';
 import { useSearchPage } from '../context/SearchPageContext';
 import './SidebarFilters.css';
 import WorkingFolderView from './WorkingFolderView';
+import { useSidebar } from '../context/SidebarContext';
 
 const JURISDICTIONS = [
   'Colorado',
@@ -371,16 +372,34 @@ const SidebarFilters = ({
     };
   }, [showUserMenu]);
 
+  // Add at the top, after other useState declarations
+  const { sidebarCollapsed: isCollapsed, setSidebarCollapsed } = useSidebar();
+
+  const handleToggleCollapse = () => {
+    setSidebarCollapsed(!isCollapsed);
+  };
+
   return (
-    <div className={`sidebar-filters ${isDisabled ? 'disabled' : ''}`}>
+    <div className={`sidebar-filters${isDisabled ? ' disabled' : ''}${isCollapsed ? ' collapsed' : ''}`}>
       <div className="user-profile">
-        <button 
-          className="user-icon"
-          onClick={() => setShowUserMenu(!showUserMenu)}
-          aria-label="User menu"
-        >
-          <FaUser />
-        </button>
+        <div className="user-profile-collapse-btn">
+          <button
+            className="collapse-sidebar-button"
+            onClick={handleToggleCollapse}
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isCollapsed ? <FaAngleDoubleRight /> : <FaAngleDoubleLeft />}
+          </button>
+        </div>
+        <div className="user-profile-user-btn">
+          <button 
+            className="user-icon"
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            aria-label="User menu"
+          >
+            <FaUser />
+          </button>
+        </div>
         {showUserMenu && (
           <div className="user-dropdown">
             <div className="user-dropdown-content">
@@ -394,200 +413,199 @@ const SidebarFilters = ({
           </div>
         )}
       </div>
-      <div className="sidebar-header">
-        <h2 className="sidebar-title">Filters</h2>
-        <div className="filter-actions">
-          <button 
-            className="apply-filters-button"
-            onClick={applyFilters}
-            disabled={!Object.values(pendingFilters.jurisdictions).some(Boolean) && 
-                     !Object.values(pendingFilters.documentTypes).some(Boolean)}
-          >
-            Apply
-          </button>
-          <button 
-            className="remove-filters-button"
-            onClick={removeFilters}
-            disabled={Object.keys(filters.jurisdictions).length === 0 && 
-                     Object.keys(filters.documentTypes).length === 0}
-          >
-            Remove
-          </button>
-        </div>
-      </div>
-      
-      <div className="filter-groups-container">
-        <div className="filter-group">
-          <div className="filter-group-title">
-            <JurisdictionIcon className="filter-icon" />
-            <span>Jurisdiction</span>
-            <button 
-              className="collapse-button"
-              onClick={() => {
-                if (!jurisdictionsInactive) setIsJurisdictionCollapsed(!isJurisdictionCollapsed);
-              }}
-              aria-label={isJurisdictionCollapsed ? "Expand jurisdiction filters" : "Collapse jurisdiction filters"}
-              disabled={jurisdictionsInactive}
-              style={jurisdictionsInactive ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-            >
-              {isJurisdictionCollapsed ? <FaChevronDown /> : <FaChevronUp />}
-            </button>
+      {!isCollapsed && (
+        <>
+          <div className="sidebar-header">
+            <h2 className="sidebar-title">Filters</h2>
+            <div className="filter-actions">
+              <button 
+                className="apply-filters-button"
+                onClick={applyFilters}
+                disabled={!Object.values(pendingFilters.jurisdictions).some(Boolean) && 
+                        !Object.values(pendingFilters.documentTypes).some(Boolean)}
+              >
+                Apply
+              </button>
+              <button 
+                className="remove-filters-button"
+                onClick={removeFilters}
+                disabled={Object.keys(filters.jurisdictions).length === 0 && 
+                        Object.keys(filters.documentTypes).length === 0}
+              >
+                Remove
+              </button>
+            </div>
           </div>
-          {!isJurisdictionCollapsed && !jurisdictionsInactive && (
-            <>
-              {visibleJurisdictions.map((jurisdiction, index) => {
-                // Get raw count directly from the documentCounts
-                let rawCount = 0;
-                if (documentCounts && documentCounts.jurisdictions) {
-                  rawCount = documentCounts.jurisdictions[jurisdiction] || 0;
-                  // Get processed count which handles various naming conventions
-                  rawCount = getJurisdictionCount(jurisdiction, documentCounts.jurisdictions);
-                }
-                
-                const count = rawCount;
+          <div className="filter-groups-container">
+            <div className="filter-group">
+              <div className="filter-group-title">
+                <JurisdictionIcon className="filter-icon" />
+                <span>Jurisdiction</span>
+                <button 
+                  className="collapse-button"
+                  onClick={() => {
+                    if (!jurisdictionsInactive) setIsJurisdictionCollapsed(!isJurisdictionCollapsed);
+                  }}
+                  aria-label={isJurisdictionCollapsed ? "Expand jurisdiction filters" : "Collapse jurisdiction filters"}
+                  disabled={jurisdictionsInactive}
+                  style={jurisdictionsInactive ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                >
+                  {isJurisdictionCollapsed ? <FaChevronDown /> : <FaChevronUp />}
+                </button>
+              </div>
+              {!isJurisdictionCollapsed && !jurisdictionsInactive && (
+                <>
+                  {visibleJurisdictions.map((jurisdiction, index) => {
+                    // Get raw count directly from the documentCounts
+                    let rawCount = 0;
+                    if (documentCounts && documentCounts.jurisdictions) {
+                      rawCount = documentCounts.jurisdictions[jurisdiction] || 0;
+                      // Get processed count which handles various naming conventions
+                      rawCount = getJurisdictionCount(jurisdiction, documentCounts.jurisdictions);
+                    }
+                    
+                    const count = rawCount;
+                    // Check both current filters and pending filters
+                    const isSelected = (
+                      (filters.jurisdictions[jurisdiction] && pendingFilters.jurisdictions[jurisdiction] !== false) ||
+                      pendingFilters.jurisdictions[jurisdiction] === true
+                    );
+                    return (
+                      <label 
+                        key={`${instanceId}-jurisdiction-${index}`} 
+                        htmlFor={`${instanceId}-jurisdiction-${index}`}
+                        className="filter-label"
+                      >
+                        <input
+                          type="checkbox"
+                          id={`${instanceId}-jurisdiction-${index}`}
+                          checked={isSelected}
+                          onChange={() => handleFilterChange('jurisdictions', jurisdiction)}
+                        />
+                        <span className="filter-label-text">
+                          {formatJurisdictionName(jurisdiction)}
+                          {count > 0 && <span className="count-inline">({count})</span>}
+                        </span>
+                      </label>
+                    );
+                  })}
+                  {sortedJurisdictions.length > 10 && (
+                    <button 
+                      className="show-more-button"
+                      onClick={() => setShowAllJurisdictions(!showAllJurisdictions)}
+                    >
+                      {showAllJurisdictions ? 'Show Less' : 'Show More'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="filter-group">
+              <div className="filter-group-title">
+                <DocumentTypeIcon className="filter-icon" />
+                <span>Document Type</span>
+                <button 
+                  className="collapse-button"
+                  onClick={() => {
+                    if (!documentTypesInactive) setIsDocumentTypeCollapsed(!isDocumentTypeCollapsed);
+                  }}
+                  aria-label={isDocumentTypeCollapsed ? "Expand document type filters" : "Collapse document type filters"}
+                  disabled={documentTypesInactive}
+                  style={documentTypesInactive ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                >
+                  {isDocumentTypeCollapsed ? <FaChevronDown /> : <FaChevronUp />}
+                </button>
+              </div>
+              {!isDocumentTypeCollapsed && !documentTypesInactive && DOCUMENT_TYPES.map((type, index) => {
+                const displayType = type.trim();
+                const count = docTypeCounts[type] || 0;
                 // Check both current filters and pending filters
                 const isSelected = (
-                  (filters.jurisdictions[jurisdiction] && pendingFilters.jurisdictions[jurisdiction] !== false) ||
-                  pendingFilters.jurisdictions[jurisdiction] === true
+                  (filters.documentTypes[type] && pendingFilters.documentTypes[type] !== false) ||
+                  pendingFilters.documentTypes[type] === true
                 );
                 return (
                   <label 
-                    key={`${instanceId}-jurisdiction-${index}`} 
-                    htmlFor={`${instanceId}-jurisdiction-${index}`}
+                    key={`${instanceId}-doctype-${index}`} 
+                    htmlFor={`${instanceId}-doctype-${index}`} 
                     className="filter-label"
                   >
                     <input
                       type="checkbox"
-                      id={`${instanceId}-jurisdiction-${index}`}
+                      id={`${instanceId}-doctype-${index}`}
                       checked={isSelected}
-                      onChange={() => handleFilterChange('jurisdictions', jurisdiction)}
+                      onChange={() => handleFilterChange('documentTypes', type)}
                     />
                     <span className="filter-label-text">
-                      {formatJurisdictionName(jurisdiction)}
+                      {displayType}
                       {count > 0 && <span className="count-inline">({count})</span>}
                     </span>
                   </label>
                 );
               })}
-              {sortedJurisdictions.length > 10 && (
-                <button 
-                  className="show-more-button"
-                  onClick={() => setShowAllJurisdictions(!showAllJurisdictions)}
-                >
-                  {showAllJurisdictions ? 'Show Less' : 'Show More'}
-                </button>
-              )}
-            </>
-          )}
-        </div>
-
-        <div className="filter-group">
-          <div className="filter-group-title">
-            <DocumentTypeIcon className="filter-icon" />
-            <span>Document Type</span>
-            <button 
-              className="collapse-button"
-              onClick={() => {
-                if (!documentTypesInactive) setIsDocumentTypeCollapsed(!isDocumentTypeCollapsed);
-              }}
-              aria-label={isDocumentTypeCollapsed ? "Expand document type filters" : "Collapse document type filters"}
-              disabled={documentTypesInactive}
-              style={documentTypesInactive ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-            >
-              {isDocumentTypeCollapsed ? <FaChevronDown /> : <FaChevronUp />}
-            </button>
-          </div>
-          {!isDocumentTypeCollapsed && !documentTypesInactive && DOCUMENT_TYPES.map((type, index) => {
-            const displayType = type.trim();
-            const count = docTypeCounts[type] || 0;
-            // Check both current filters and pending filters
-            const isSelected = (
-              (filters.documentTypes[type] && pendingFilters.documentTypes[type] !== false) ||
-              pendingFilters.documentTypes[type] === true
-            );
-            
-            return (
-              <label 
-                key={`${instanceId}-doctype-${index}`} 
-                htmlFor={`${instanceId}-doctype-${index}`} 
-                className="filter-label"
-              >
-                <input
-                  type="checkbox"
-                  id={`${instanceId}-doctype-${index}`}
-                  checked={isSelected}
-                  onChange={() => handleFilterChange('documentTypes', type)}
-                />
-                <span className="filter-label-text">
-                  {displayType}
-                  {count > 0 && <span className="count-inline">({count})</span>}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-        
-        <div className="filter-separator"></div>
-
-        <div className="working-folder-section">
-          <div className="working-folder-header">
-            <span>Working Folder ({workingFolderDocs.length})</span>
-            <div className="working-folder-actions">
-              {instanceId !== 'copilot-page' && (
-                <>
-                  <button 
-                    className="view-folder-button" 
-                    onClick={() => setIsWorkingFolderOpen(true)}
-                    title="View working folder contents"
-                  >
-                    <FaEye />
-                  </button>
-                  <button 
-                    className="clear-all-button"
-                    onClick={() => {
-                      // Clear all documents from working folder
-                      workingFolderDocs.forEach(doc => {
-                        removeFromWorkingFolder(doc.id);
-                      });
-                    }}
-                    title="Clear all documents"
-                    disabled={workingFolderDocs.length === 0}
-                  >
-                    <FaTimes />
-                  </button>
-                </>
-              )}
+            </div>
+            <div className="filter-separator"></div>
+            <div className="working-folder-section">
+              <div className="working-folder-header">
+                <span>Working Folder ({workingFolderDocs.length})</span>
+                <div className="working-folder-actions">
+                  {instanceId !== 'copilot-page' && (
+                    <>
+                      <button 
+                        className="view-folder-button" 
+                        onClick={() => setIsWorkingFolderOpen(true)}
+                        title="View working folder contents"
+                      >
+                        <FaEye />
+                      </button>
+                      <button 
+                        className="clear-all-button"
+                        onClick={() => {
+                          // Clear all documents from working folder
+                          workingFolderDocs.forEach(doc => {
+                            removeFromWorkingFolder(doc.id);
+                          });
+                        }}
+                        title="Clear all documents"
+                        disabled={workingFolderDocs.length === 0}
+                      >
+                        <FaTimes />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="working-folder-list">
+                {workingFolderDocs.length === 0 ? (
+                  <div className="empty-folder-message">
+                    <span className="empty-text">No documents selected</span>
+                  </div>
+                ) : (
+                  workingFolderDocs.map((doc) => (
+                    <div key={doc.id} className="working-folder-item">
+                      <span className="doc-title">{doc.title}</span>
+                      <button
+                        className="remove-doc-button"
+                        onClick={() => removeFromWorkingFolder(doc.id)}
+                        title="Remove from working folder"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
-          <div className="working-folder-list">
-            {workingFolderDocs.length === 0 ? (
-              <div className="empty-folder-message">
-                <span className="empty-text">No documents selected</span>
-              </div>
-            ) : (
-              workingFolderDocs.map((doc) => (
-                <div key={doc.id} className="working-folder-item">
-                  <span className="doc-title">{doc.title}</span>
-                  <button
-                    className="remove-doc-button"
-                    onClick={() => removeFromWorkingFolder(doc.id)}
-                    title="Remove from working folder"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {instanceId !== 'copilot-page' && (
-        <WorkingFolderView 
-          isOpen={isWorkingFolderOpen}
-          onClose={() => setIsWorkingFolderOpen(false)}
-          documents={workingFolderDocs}
-        />
+          {instanceId !== 'copilot-page' && (
+            <WorkingFolderView 
+              isOpen={isWorkingFolderOpen}
+              onClose={() => setIsWorkingFolderOpen(false)}
+              documents={workingFolderDocs}
+            />
+          )}
+        </>
       )}
     </div>
   );

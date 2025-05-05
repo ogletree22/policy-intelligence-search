@@ -12,27 +12,12 @@ const MessageHistory = ({ onClose }) => {
         <h3 style={{ margin: 0 }}>Message History</h3>
         {onClose && (
           <button
+            className="history-btn"
             onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#274C77',
-              fontSize: 14,
-              cursor: 'pointer',
-              padding: 4,
-              borderRadius: 4,
-              marginLeft: 8,
-              outline: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              transition: 'background 0.2s',
-            }}
-            onMouseOver={e => e.currentTarget.style.background = '#e7ecef'}
-            onMouseOut={e => e.currentTarget.style.background = 'none'}
-            onFocus={e => e.currentTarget.style.outline = 'none'}
+            style={{ marginLeft: 8 }}
             aria-label="Hide message history"
           >
-            <FaTimes />
+            Hide
           </button>
         )}
       </div>

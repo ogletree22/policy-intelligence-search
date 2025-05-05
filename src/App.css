@@ -44,10 +44,14 @@ html, body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  margin-left: 275px;
+  margin-left: var(--sidebar-width, 275px);
   padding: 20px;
   box-sizing: border-box;
   min-width: 800px;
+}
+
+.main-section.sidebar-collapsed {
+  margin-left: 60px;
 }
 
 .main-section.full-width {
@@ -84,7 +88,9 @@ html, body {
 }
 
 .sidebar {
-  width: 275px;
+  width: var(--sidebar-width, 275px);
+  min-width: var(--sidebar-width, 275px);
+  max-width: var(--sidebar-width, 275px);
   background-color: white;
   border-right: 1px solid #e0e0e0;
   height: 100%;
@@ -97,5 +103,17 @@ html, body {
   opacity: 0.5;
   pointer-events: none;
 }
+
+.sidebar.sidebar-collapsed {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+}
+
+.topnav {
+  margin-left: var(--sidebar-width, 275px);
+}
+
+/* Remove sidebar-animated transitions for instant snapping */
 
 
