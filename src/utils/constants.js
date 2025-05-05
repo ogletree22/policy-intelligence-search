@@ -50,7 +50,7 @@ export const JURISDICTIONS = [
   'Idaho',
   'Illinois',
   'Kansas',
-  'Kentuvky',
+  'Kentucky',
   'Maryland',
   'Massachusetts',
   'Michigan',

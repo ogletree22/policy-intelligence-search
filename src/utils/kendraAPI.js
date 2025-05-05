@@ -8,8 +8,7 @@ const INDEX_ID = 'ac2e614a-1a60-4788-921f-439355c5756d';
 
 /**
  * Search Kendra with optional jurisdiction filter and document type filter
- * @param {string} query - Search query
- * @param {string} [jurisdiction] - Optional jurisdiction to filter by
+ * @param {string|string[]} [jurisdiction] - Optional jurisdiction(s) to filter by (string or array of strings)
  * @param {string} [documentType] - Optional document type (_category) to filter by
  * @param {boolean} [fetchFacets] - Whether to fetch facet counts instead of search results
  * @param {boolean} [suppressErrors] - Whether to suppress error messages (default: false)
@@ -19,7 +18,54 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
   try {
     // Trim inputs but preserve the leading space in " Source Report"
     const trimmedQuery = query?.trim() || '';
-    const trimmedJurisdiction = jurisdiction?.trim() || null;
+    
+    // Build the base request using proper Kendra API structure
+    const requestBody = {
+      // Return to previous wildcard format since that works with the Lambda
+      QueryText: trimmedQuery ? `*${trimmedQuery}*` : '*',
+      IndexId: INDEX_ID,
+      PageSize: 100
+    };
+
+    // Process jurisdiction filters in new AttributeFilter format
+    const jurisdictionFilters = [];
+    
+    // Handle different types of jurisdiction input (null, string, or array)
+    if (jurisdiction) {
+      // Convert single string to array for consistent processing
+      const jurisdictionsArray = Array.isArray(jurisdiction) ? jurisdiction : [jurisdiction];
+      
+      // Build jurisdiction filters
+      jurisdictionsArray.forEach(jur => {
+        if (jur && typeof jur === 'string') {
+          // Ensure jurisdiction doesn't have underscores (should be spaces)
+          let processedJurisdiction = jur;
+          
+          // Convert underscores to spaces if needed
+          if (jur.includes('_')) {
+            processedJurisdiction = jur.replace(/_/g, ' ').trim();
+          } else {
+            processedJurisdiction = jur.trim();
+          }
+          
+          if (processedJurisdiction) {
+            // Create a Kendra EqualsTo filter for this jurisdiction
+            const filter = {
+              EqualsTo: {
+                Key: "jurisdiction",
+                Value: {
+                  StringValue: processedJurisdiction
+                }
+              }
+            };
+            
+            jurisdictionFilters.push(filter);
+          }
+        }
+      });
+      
+      console.log(`Created ${jurisdictionFilters.length} jurisdiction filters:`, JSON.stringify(jurisdictionFilters, null, 2));
+    }
     
     // Special handling for document type - don't trim " Source Report"
     let processedDocType = null;
@@ -32,14 +78,6 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       processedDocType = documentType?.trim() || null;
     }
     
-    // Create the base request using proper Kendra API structure
-    const requestBody = {
-      // Return to previous wildcard format since that works with the Lambda
-      QueryText: trimmedQuery ? `*${trimmedQuery}*` : '*',
-      IndexId: INDEX_ID,
-      PageSize: 100
-    };
-
     // Handle facet retrieval with proper Facets structure
     if (fetchFacets) {
       console.log("Requesting facets data");
@@ -54,7 +92,16 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
           // Use the original raw query exactly as entered by the user - NO WILDCARDS
           // This is critical for the dedicated jurisdiction counts endpoint
           console.log("Fetching jurisdiction counts for raw search query:", query);
-          jurisdictionCounts = await fetchFacetCounts(query);
+          
+          // Pass the jurisdiction filter to the facet counts endpoint if available
+          let jurisdictionAttributeFilter = null;
+          if (jurisdictionFilters.length > 0) {
+            jurisdictionAttributeFilter = jurisdictionFilters.length === 1 
+              ? jurisdictionFilters[0] 
+              : { OrAllFilters: jurisdictionFilters };
+          }
+          
+          jurisdictionCounts = await fetchFacetCounts(query, jurisdictionAttributeFilter);
           console.log(`Received ${Object.keys(jurisdictionCounts).length} jurisdiction counts from dedicated endpoint`);
         } catch (facetError) {
           console.error("Error fetching jurisdiction counts:", facetError);
@@ -67,19 +114,30 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       // Still get document type counts from the main Kendra endpoint
       requestBody.facetSummary = true;
       
-      // We're only using the main Kendra endpoint for document type counts now
-      // But still add these filters if specified for consistency
-      if (trimmedJurisdiction) {
-        requestBody.jurisdiction = trimmedJurisdiction;
-        console.log(`Adding jurisdiction filter to facet request: "${trimmedJurisdiction}"`);
+      // Apply jurisdiction filters if any
+      if (jurisdictionFilters.length > 0) {
+        // Add attribute filter to request
+        if (jurisdictionFilters.length === 1) {
+          // Single jurisdiction filter - set both formats for compatibility
+          requestBody.AttributeFilter = jurisdictionFilters[0];
+          requestBody.jurisdiction = jurisdictionFilters[0].EqualsTo.Value.StringValue;
+          console.log(`Using single jurisdiction filter: "${requestBody.jurisdiction}"`);
+        } else {
+          // Multiple jurisdiction filters with OR logic
+          requestBody.AttributeFilter = {
+            OrAllFilters: jurisdictionFilters
+          };
+          console.log(`Using ${jurisdictionFilters.length} jurisdiction filters with OR logic`);
+        }
       }
 
+      // Add document type filter if specified
       if (processedDocType) {
         requestBody._category = processedDocType;
         console.log(`Adding document type filter to facet request: "${processedDocType}"`);
       }
       
-      // Make the main Kendra API request for document type counts
+      // Log complete request for monitoring
       console.log('Making Kendra request for document type counts:', JSON.stringify(requestBody, null, 2));
       
       const response = await fetch(API_ENDPOINT, {
@@ -146,10 +204,21 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
     } else {
       // For regular search results (not facets), we use the Lambda-friendly format
       
-      // Add jurisdiction filter if specified
-      if (trimmedJurisdiction) {
-        requestBody.jurisdiction = trimmedJurisdiction;
-        console.log(`Adding jurisdiction filter: "${trimmedJurisdiction}"`);
+      // Apply jurisdiction filters if any
+      if (jurisdictionFilters.length > 0) {
+        // Add attribute filter to request
+        if (jurisdictionFilters.length === 1) {
+          // Single jurisdiction filter - set both formats for compatibility
+          requestBody.AttributeFilter = jurisdictionFilters[0];
+          requestBody.jurisdiction = jurisdictionFilters[0].EqualsTo.Value.StringValue;
+          console.log(`Using single jurisdiction filter: "${requestBody.jurisdiction}"`);
+        } else {
+          // Multiple jurisdiction filters with OR logic
+          requestBody.AttributeFilter = {
+            OrAllFilters: jurisdictionFilters
+          };
+          console.log(`Using ${jurisdictionFilters.length} jurisdiction filters with OR logic`);
+        }
       }
 
       // Add document type filter if specified
@@ -159,7 +228,7 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       }
       
       // Log complete request for monitoring
-      console.log('Making Kendra request for search results:', JSON.stringify(requestBody, null, 2));
+      console.log('Kendra request payload:', JSON.stringify(requestBody, null, 2));
 
       const response = await fetch(API_ENDPOINT, {
         method: 'POST',
@@ -205,7 +274,11 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       
       const totalAvailable = data.TotalNumberOfResults || data.TotalResultCount || resultsArray.length || 0;
       
-      console.log(`Received ${resultsArray.length} results${trimmedJurisdiction ? ' for ' + trimmedJurisdiction : ''}${processedDocType ? ' with document type "' + processedDocType + '"' : ''}, Total available: ${totalAvailable}`);
+      const jurisdictionSummary = jurisdictionFilters.length > 0 
+        ? `for ${jurisdictionFilters.length} jurisdiction filters` 
+        : 'for all jurisdictions';
+      
+      console.log(`Received ${resultsArray.length} results ${jurisdictionSummary}${processedDocType ? ' with document type "' + processedDocType + '"' : ''}, Total available: ${totalAvailable}`);
       
       return {
         results: resultsArray,
@@ -453,6 +526,22 @@ export const transformKendraResults = (kendraResponse) => {
       description = item._source._excerpt;
     }
     
+    // Extract jurisdiction
+    const jurisdiction = getJurisdictionFromResponse(item);
+
+    // Special debug for South Coast AQMD
+    if (jurisdiction === 'South_Coast_AQMD' || isLikelySouthCoastAQMD(item)) {
+      console.log(`Document appears to be from South Coast AQMD: "${item.DocumentTitle}"`);
+    }
+
+    // Log jurisdiction extraction for debugging
+    if (shouldLog) {
+      console.log(`Extracted jurisdiction: "${jurisdiction}" from:`, {
+        title: item.DocumentTitle || '',
+        documentId: item.DocumentId || ''
+      });
+    }
+    
     // Create and return the standardized document object
     return {
       id: item.Id || item.DocumentId || `doc-${Math.random().toString(36).substring(2, 15)}`,
@@ -460,7 +549,7 @@ export const transformKendraResults = (kendraResponse) => {
       url: documentUrl || item.SourceUri || '',  // Ensure SourceUri is used for URL
       description: description,
       type: documentType,
-      jurisdiction: getJurisdictionFromResponse(item), // Add jurisdiction field
+      jurisdiction: jurisdiction, // Use extracted jurisdiction
       source: item.UpdatedAt || item.CreatedAt || new Date().toISOString()
     };
   });
@@ -476,7 +565,9 @@ function getJurisdictionFromResponse(item) {
       attr => attr.Key === 'jurisdiction' || attr.Key === 'jurisdiction_name'
     );
     if (jurisdictionAttr?.Value?.StringValue) {
-      return jurisdictionAttr.Value.StringValue;
+      // Always convert spaces to underscores for consistency in UI
+      const jurisdictionValue = jurisdictionAttr.Value.StringValue;
+      return jurisdictionValue.replace(/ /g, '_');
     }
   }
 
@@ -484,6 +575,7 @@ function getJurisdictionFromResponse(item) {
   const uri = item.SourceUri || '';
   const documentId = item.DocumentId || '';
   
+  // FIRST PRIORITY: Check for California air districts - these take precedence 
   // Many California districts have their name in the document title with pattern:
   // [District Name] - [Section]: [Title] - [SubSection]: [Details]
   if (title.includes(' - ')) {
@@ -537,28 +629,46 @@ function getJurisdictionFromResponse(item) {
   }
   
   // Also check the DocumentId path - many documents have the jurisdiction in the S3 path
-  if (documentId.includes('s3://') && documentId.includes('/California/')) {
-    const parts = documentId.split('/');
-    const californiaIndex = parts.findIndex(part => part === 'California');
+  if (documentId.includes('s3://')) {
+    // First check specifically for California air districts
+    if (documentId.includes('/California/')) {
+      const parts = documentId.split('/');
+      const californiaIndex = parts.findIndex(part => part === 'California');
+      
+      if (californiaIndex >= 0 && californiaIndex + 1 < parts.length) {
+        const districtPart = parts[californiaIndex + 1];
+        // Check if this is an air district path
+        if (districtPart && (districtPart.includes('APCD') || districtPart.includes('AQMD'))) {
+          // Convert the S3 path format to our internal format
+          const cleanedDistrict = districtPart.replace(/%20/g, '_').replace(/ /g, '_');
+          return cleanedDistrict;
+        }
+      }
+    }
     
-    if (californiaIndex >= 0 && californiaIndex + 1 < parts.length) {
-      const districtPart = parts[californiaIndex + 1];
-      // Check if this is an air district path
-      if (districtPart.includes('APCD') || districtPart.includes('AQMD')) {
-        // Convert the S3 path format to our internal format
-        return districtPart.replace(/%20/g, '_');
+    // Then check for state name in the S3 path
+    const parts = documentId.split('/');
+    if (parts.length >= 4) {  // should be at least 4 parts: s3://, bucket, "kendra-index", state
+      const possibleState = parts[3]; // e.g., "Maryland"
+      if (possibleState && !possibleState.includes('_')) {
+        return possibleState;
       }
     }
   }
   
-  // Check for specific California APCDs/AQMDs
+  // Check for specific California APCDs/AQMDs based on title or URL patterns
   if (title.includes('Santa Barbara County APCD') || uri.includes('santabarbara') || uri.includes('sbcapcd')) {
     return 'Santa_Barbara_County_APCD';
   }
   if (title.includes('San Joaquin Valley APCD') || uri.includes('valleyair')) {
     return 'San_Joaquin_Valley_APCD';
   }
-  if (title.includes('South Coast AQMD') || title.includes('SCAQMD') || uri.includes('aqmd.gov')) {
+  if (title.includes('South Coast AQMD') || 
+      title.includes('SCAQMD') || 
+      uri.includes('aqmd.gov') || 
+      documentId.includes('South_Coast_AQMD') || 
+      documentId.includes('SCAQMD') ||
+      documentId.toLowerCase().includes('south coast')) {
     return 'South_Coast_AQMD';
   }
   if (title.includes('Bay Area AQMD') || title.includes('BAAQMD') || uri.includes('baaqmd')) {
@@ -580,56 +690,145 @@ function getJurisdictionFromResponse(item) {
     return 'Eastern_Kern_APCD';
   }
 
-  // Check for state jurisdictions
-  if (title.startsWith('Kentucky') || uri.includes('kentucky.gov') || uri.includes('/ky/')) {
-    return 'Kentucky';
-  }
-  if (title.startsWith('Colorado') || uri.includes('colorado.gov') || uri.includes('/co/')) {
-    return 'Colorado';
-  }
-  if (title.startsWith('Texas') || uri.includes('texas.gov') || uri.includes('/tx/')) {
-    return 'Texas';
-  }
-  if (title.startsWith('New Mexico') || uri.includes('newmexico.gov') || uri.includes('/nm/')) {
-    return 'New_Mexico';
-  }
-  if (title.startsWith('Washington') || uri.includes('washington.gov') || uri.includes('/wa/')) {
-    return 'Washington';
-  }
-
-  // Check for state codes in the title
-  if (title.includes(' - ')) {
-    const stateCode = title.split(' - ')[0].trim();
-    const stateMapping = {
-      'KY': 'Kentucky',
-      'CO': 'Colorado',
-      'TX': 'Texas',
-      'NM': 'New_Mexico',
-      'WA': 'Washington'
-    };
-    if (stateMapping[stateCode]) {
-      return stateMapping[stateCode];
+  // Check for general patterns that might indicate California air districts
+  const airDistrictPatterns = [
+    /APCD|Air Pollution Control District/i,
+    /AQMD|Air Quality Management District/i
+  ];
+  
+  for (const pattern of airDistrictPatterns) {
+    if (pattern.test(title) || pattern.test(documentId)) {
+      // If it contains a California district pattern, but we don't know which one
+      // Return California as the jurisdiction
+      return 'California';
     }
   }
 
-  // If no clear jurisdiction is found, check the content
-  const content = [title, uri, item.ExcerptText || ''].join(' ').toLowerCase();
-  if (content.includes('kentucky')) return 'Kentucky';
-  if (content.includes('colorado')) return 'Colorado';
-  if (content.includes('texas')) return 'Texas';
-  if (content.includes('new mexico')) return 'New_Mexico';
-  if (content.includes('washington')) return 'Washington';
+  // Extract state name from document title for state regulations
+  // Format is often: "State - XX.XX.XX - Law Name"
+  if (title.includes(' - ')) {
+    const statePart = title.split(' - ')[0].trim();
+    
+    // Check if the first part is a known US state name
+    const states = [
+      'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 
+      'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 
+      'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 
+      'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 
+      'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 
+      'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 
+      'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 
+      'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 
+      'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 
+      'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
+    ];
+    
+    if (states.includes(statePart)) {
+      return statePart.replace(/ /g, '_');
+    }
+  }
 
-  // If still no match, return Unknown instead of defaulting to Colorado
+  // Check the document metadata for state names
+  // Look for these patterns in the document ID or title
+  const statePatterns = [
+    { name: 'Alabama', pattern: /Alabama|\/AL\/|\.al\.gov/ },
+    { name: 'Alaska', pattern: /Alaska|\/AK\/|\.ak\.gov/ },
+    { name: 'Arizona', pattern: /Arizona|\/AZ\/|\.az\.gov/ },
+    { name: 'Arkansas', pattern: /Arkansas|\/AR\/|\.ar\.gov/ },
+    { name: 'California', pattern: /California|\/CA\/|\.ca\.gov/ },
+    { name: 'Colorado', pattern: /Colorado|\/CO\/|\.co\.gov/ },
+    { name: 'Connecticut', pattern: /Connecticut|\/CT\/|\.ct\.gov/ },
+    { name: 'Delaware', pattern: /Delaware|\/DE\/|\.de\.gov/ },
+    { name: 'Florida', pattern: /Florida|\/FL\/|\.fl\.gov/ },
+    { name: 'Georgia', pattern: /Georgia|\/GA\/|\.ga\.gov/ },
+    { name: 'Hawaii', pattern: /Hawaii|\/HI\/|\.hi\.gov/ },
+    { name: 'Idaho', pattern: /Idaho|\/ID\/|\.id\.gov/ },
+    { name: 'Illinois', pattern: /Illinois|\/IL\/|\.il\.gov/ },
+    { name: 'Indiana', pattern: /Indiana|\/IN\/|\.in\.gov/ },
+    { name: 'Iowa', pattern: /Iowa|\/IA\/|\.ia\.gov/ },
+    { name: 'Kansas', pattern: /Kansas|\/KS\/|\.ks\.gov/ },
+    { name: 'Kentucky', pattern: /Kentucky|\/KY\/|\.ky\.gov/ },
+    { name: 'Louisiana', pattern: /Louisiana|\/LA\/|\.la\.gov/ },
+    { name: 'Maine', pattern: /Maine|\/ME\/|\.me\.gov/ },
+    { name: 'Maryland', pattern: /Maryland|\/MD\/|\.md\.gov/ },
+    { name: 'Massachusetts', pattern: /Massachusetts|\/MA\/|\.ma\.gov/ },
+    { name: 'Michigan', pattern: /Michigan|\/MI\/|\.mi\.gov/ },
+    { name: 'Minnesota', pattern: /Minnesota|\/MN\/|\.mn\.gov/ },
+    { name: 'Mississippi', pattern: /Mississippi|\/MS\/|\.ms\.gov/ },
+    { name: 'Missouri', pattern: /Missouri|\/MO\/|\.mo\.gov/ },
+    { name: 'Montana', pattern: /Montana|\/MT\/|\.mt\.gov/ },
+    { name: 'Nebraska', pattern: /Nebraska|\/NE\/|\.ne\.gov/ },
+    { name: 'Nevada', pattern: /Nevada|\/NV\/|\.nv\.gov/ },
+    { name: 'New Hampshire', pattern: /New_Hampshire|New Hampshire|\/NH\/|\.nh\.gov/ },
+    { name: 'New Jersey', pattern: /New_Jersey|New Jersey|\/NJ\/|\.nj\.gov/ },
+    { name: 'New Mexico', pattern: /New_Mexico|New Mexico|\/NM\/|\.nm\.gov/ },
+    { name: 'New York', pattern: /New_York|New York|\/NY\/|\.ny\.gov/ },
+    { name: 'North Carolina', pattern: /North_Carolina|North Carolina|\/NC\/|\.nc\.gov/ },
+    { name: 'North Dakota', pattern: /North_Dakota|North Dakota|\/ND\/|\.nd\.gov/ },
+    { name: 'Ohio', pattern: /Ohio|\/OH\/|\.oh\.gov/ },
+    { name: 'Oklahoma', pattern: /Oklahoma|\/OK\/|\.ok\.gov/ },
+    { name: 'Oregon', pattern: /Oregon|\/OR\/|\.or\.gov/ },
+    { name: 'Pennsylvania', pattern: /Pennsylvania|\/PA\/|\.pa\.gov/ },
+    { name: 'Rhode Island', pattern: /Rhode_Island|Rhode Island|\/RI\/|\.ri\.gov/ },
+    { name: 'South Carolina', pattern: /South_Carolina|South Carolina|\/SC\/|\.sc\.gov/ },
+    { name: 'South Dakota', pattern: /South_Dakota|South Dakota|\/SD\/|\.sd\.gov/ },
+    { name: 'Tennessee', pattern: /Tennessee|\/TN\/|\.tn\.gov/ },
+    { name: 'Texas', pattern: /Texas|\/TX\/|\.tx\.gov/ },
+    { name: 'Utah', pattern: /Utah|\/UT\/|\.ut\.gov/ },
+    { name: 'Vermont', pattern: /Vermont|\/VT\/|\.vt\.gov/ },
+    { name: 'Virginia', pattern: /Virginia|\/VA\/|\.va\.gov/ },
+    { name: 'Washington', pattern: /Washington|\/WA\/|\.wa\.gov/ },
+    { name: 'West Virginia', pattern: /West_Virginia|West Virginia|\/WV\/|\.wv\.gov/ },
+    { name: 'Wisconsin', pattern: /Wisconsin|\/WI\/|\.wi\.gov/ },
+    { name: 'Wyoming', pattern: /Wyoming|\/WY\/|\.wy\.gov/ }
+  ];
+
+  // Combine all metadata for checking
+  const allText = [title, documentId, uri].join(' ');
+  
+  for (const state of statePatterns) {
+    if (state.pattern.test(allText)) {
+      return state.name.replace(/ /g, '_');
+    }
+  }
+
+  // If still no match, return Unknown
   return 'Unknown';
+}
+
+// Add a debug function to help diagnose jurisdiction extraction
+function isLikelySouthCoastAQMD(item) {
+  const title = item.DocumentTitle || '';
+  const uri = item.SourceUri || '';
+  const documentId = item.DocumentId || '';
+  
+  // Log detailed info about a document that might be from South Coast AQMD
+  const checks = {
+    titleHasSouthCoastAQMD: title.includes('South Coast AQMD'),
+    titleHasSCAQMD: title.includes('SCAQMD'),
+    uriHasAQMDdotGov: uri.includes('aqmd.gov'),
+    documentIdHasSouthCoastAQMD: documentId.includes('South_Coast_AQMD'),
+    documentIdHasSCAQMD: documentId.includes('SCAQMD'),
+    documentIdLowerHasSouthCoast: documentId.toLowerCase().includes('south coast')
+  };
+  
+  const isLikely = Object.values(checks).some(v => v === true);
+  
+  if (isLikely) {
+    console.log('Found likely South Coast AQMD document:', { title, documentId, uri });
+    console.log('Check results:', checks);
+  }
+  
+  return isLikely;
 }
 
 /**
  * Fetch comprehensive jurisdiction counts from a dedicated Lambda endpoint
  * @param {string} query - Raw search query exactly as entered by the user (no wildcards or trimming)
+ * @param {Object|Array} [attributeFilter] - Optional jurisdiction filters in AttributeFilter format
  * @returns {Promise<Object>} - Object with jurisdiction counts
  */
-export const fetchFacetCounts = async (query = '') => {
+export const fetchFacetCounts = async (query = '', attributeFilter = null) => {
   try {
     // Don't trim the query - pass it exactly as provided by the user
     // Only check if it's completely empty
@@ -642,8 +841,15 @@ export const fetchFacetCounts = async (query = '') => {
     const requestBody = {
       query: query
     };
+
+    // Add attribute filter if provided
+    if (attributeFilter) {
+      requestBody.attributeFilter = attributeFilter;
+      console.log('Adding jurisdiction filters to facet counts request:', 
+                 JSON.stringify(attributeFilter, null, 2));
+    }
     
-    console.log('Fetching jurisdiction counts with exact raw query:', JSON.stringify(requestBody));
+    console.log('Fetching jurisdiction counts with payload:', JSON.stringify(requestBody, null, 2));
     
     const response = await fetch(FACET_COUNTS_ENDPOINT, {
       method: 'POST',
