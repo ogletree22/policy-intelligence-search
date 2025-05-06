@@ -598,7 +598,13 @@ export const SearchPageProvider = ({ children }) => {
                     documentTypes: Object.keys(facetResponse.facets.documentTypes || {}).length,
                     jurisdictions: Object.keys(facetResponse.facets.jurisdictions || {}).length
                   });
-                  setDocumentCounts(facetResponse.facets);
+                  
+                  // Only update jurisdiction counts and preserve document type counts
+                  // This allows our custom document type counts to persist
+                  setDocumentCounts(prevCounts => ({
+                    jurisdictions: facetResponse.facets.jurisdictions || {},
+                    documentTypes: prevCounts.documentTypes // Preserve existing document type counts
+                  }));
                 }
               })
               .catch(error => {
@@ -619,6 +625,19 @@ export const SearchPageProvider = ({ children }) => {
     }
   };
 
+  // Function to update document type counts only (for use by SidebarFilters)
+  const updateDocumentTypeCounts = useCallback((newDocTypeCounts) => {
+    if (!newDocTypeCounts) return;
+    
+    console.log('Updating document type counts in context:', newDocTypeCounts);
+    
+    // Preserve existing jurisdiction counts while updating document type counts
+    setDocumentCounts(prevCounts => ({
+      jurisdictions: prevCounts.jurisdictions || {},
+      documentTypes: newDocTypeCounts
+    }));
+  }, []);
+
   return (
     <SearchPageContext.Provider value={{
       results,
@@ -634,7 +653,8 @@ export const SearchPageProvider = ({ children }) => {
       searchQuery,
       setSearchQuery,
       documentCounts,
-      sortedJurisdictions
+      sortedJurisdictions,
+      updateDocumentTypeCounts
     }}>
       {children}
     </SearchPageContext.Provider>

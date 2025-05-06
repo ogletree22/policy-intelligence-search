@@ -157,7 +157,7 @@ const DynamicSearch = () => {
   };
 
   const renderResultCard = (result, index) => (
-    <div key={`${result.id || index}`} className="result-card">
+    <div key={`${result.id || result.url || `result-${index}-${Math.random().toString(36).substring(2, 7)}`}`} className="result-card">
       <div className="result-card-header">
         <h3>
           <a href={result.url} target="_blank" rel="noopener noreferrer">
