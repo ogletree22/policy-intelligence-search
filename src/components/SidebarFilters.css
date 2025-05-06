@@ -544,7 +544,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   min-width: 160px;
   overflow: hidden;
-  z-index: 1000;
+  z-index: 9999;
 }
 
 .user-dropdown-content {
@@ -686,4 +686,12 @@
 .collapse-sidebar-button:focus {
   outline: none;
   box-shadow: none;
+}
+
+.sidebar-filters.collapsed .user-dropdown {
+  position: fixed;
+  left: 60px;
+  top: 50px;
+  right: auto;
+  margin-left: 8px;
 }
