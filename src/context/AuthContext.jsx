@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { signIn, signUp, confirmSignUp, signOut, getCurrentUser } from 'aws-amplify/auth';
+import { signIn, signUp, confirmSignUp, signOut, getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
 
 export const AuthContext = createContext();
 
@@ -15,7 +15,8 @@ export const AuthProvider = ({ children }) => {
     const checkUser = async () => {
         try {
             const currentUser = await getCurrentUser();
-            setUser(currentUser);
+            const attributes = await fetchUserAttributes();
+            setUser({ ...currentUser, attributes });
         } catch (error) {
             console.log('Error checking auth state:', error);
             setUser(null);
@@ -27,8 +28,8 @@ export const AuthProvider = ({ children }) => {
     const handleSignIn = async (username, password) => {
         try {
             const user = await signIn({ username, password });
-            console.log('Sign in successful:', user);
-            setUser(user);
+            const attributes = await fetchUserAttributes();
+            setUser({ ...user, attributes });
             setError(null);
             return user;
         } catch (error) {
