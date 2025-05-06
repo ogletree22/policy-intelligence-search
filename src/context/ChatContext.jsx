@@ -79,6 +79,9 @@ export const ChatProvider = ({ children }) => {
         return newHistory;
       });
 
+      // Clear the question input after successful submission
+      setQuestion('');
+
     } catch (err) {
       setError(err.message || 'Failed to fetch response');
     } finally {

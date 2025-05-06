@@ -78,6 +78,16 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       processedDocType = documentType?.trim() || null;
     }
     
+    // Log document type details for debugging
+    if (documentType) {
+      console.log("Document type details:");
+      console.log(` - Original: "${documentType}"`);
+      console.log(` - Length: ${documentType.length}`);
+      console.log(` - Has leading space: ${documentType.startsWith(' ')}`);
+      console.log(` - Character codes: ${Array.from(documentType).map(c => c.charCodeAt(0)).join(', ')}`);
+      console.log(` - Processed: "${processedDocType}"`);
+    }
+    
     // Handle facet retrieval with proper Facets structure
     if (fetchFacets) {
       console.log("Requesting facets data");
