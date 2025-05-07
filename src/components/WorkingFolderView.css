@@ -192,4 +192,71 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.editable-folder-name-area .rename-pencil-btn {
+  background: none;
+  border: none;
+  color: #8ca3b8;
+  font-size: 15px;
+  padding: 2px;
+  margin-left: 4px;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.editable-folder-name-area:hover .rename-pencil-btn {
+  opacity: 1;
+}
+
+.editable-folder-name-area.editing .rename-pencil-btn {
+  display: none;
+}
+
+.rename-action-btn {
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  padding: 2px 6px;
+  margin-left: 2px;
+  color: #457b9d;
+  transition: background 0.2s, color 0.2s;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.rename-action-btn.save-btn:hover {
+  background: #e0f0ff;
+  color: #274c77;
+}
+
+.rename-action-btn.cancel-btn {
+  color: #b23b3b;
+}
+
+.rename-action-btn.cancel-btn:hover {
+  background: #fbeaea;
+  color: #a00;
+}
+
+.editable-folder-name-area input[type="text"] {
+  box-shadow: none;
+  outline: none;
+  border: 1.5px solid #bcd0e5;
+  background: #f7fafc;
+  color: #274C77;
+  font-size: 20px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+  margin-right: 4px;
+  min-width: 120px;
+  transition: border 0.2s;
+}
+
+.editable-folder-name-area input[type="text"]:focus {
+  border-color: #457b9d;
 } 

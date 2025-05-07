@@ -752,24 +752,26 @@
 }
 
 .folders-list .folder-header {
+  height: 34px !important;
+  min-height: 40px !important;
+  width: 100% !important;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   padding: 4px 12px !important;
   background-color: rgba(69, 123, 157, 0.1) !important;
   gap: 6px !important;
-  width: 100% !important;
 }
 
 .folders-list .folder-icon,
 .folders-list .folder-icon svg {
-  font-size: 14px !important;
-  width: 14px !important;
-  height: 14px !important;
-  min-width: 14px !important;
-  min-height: 14px !important;
-  max-width: 14px !important;
-  max-height: 14px !important;
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
   /* color: #457b9d !important; */
   flex-shrink: 0 !important;
   display: flex !important;
@@ -789,7 +791,7 @@
 
 .folders-list .folder-name {
   flex: 1 !important;
-  font-size: 14px !important;
+  font-size: 16px !important;
   font-weight: 500 !important;
   color: #274C77 !important;
   white-space: nowrap !important;
@@ -819,11 +821,17 @@
 }
 
 .folder-documents {
-  padding: 4px 0;
-  max-height: calc(5 * (24px + 8px)); /* Height for 5 items (24px per item + 8px padding) */
+  padding: 4px 0 4px 32px;
+  margin-top: 0px;
+  max-height: 200px;
   overflow-y: auto;
+  transition: max-height 0.3s ease;
   scrollbar-width: thin;
   scrollbar-color: rgba(39, 76, 119, 0.5) rgba(255, 255, 255, 0.15);
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-top-left-radius: 0 !important ;
+  border-top-right-radius: 0 !important;
 }
 
 .folder-documents::-webkit-scrollbar {
@@ -843,6 +851,16 @@
   background: rgba(39, 76, 119, 0.7);
 }
 
+.folder-doc-item:first-child {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.folder-doc-item:last-child {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
 .folder-doc-item {
   display: flex;
   align-items: center;
@@ -852,7 +870,7 @@
   border-radius: 4px;
   background-color: rgba(255, 255, 255, 0.1);
   transition: background-color 0.2s ease;
-  height: 24px;
+  min-height: 28px;
   font-size: 12px;
 }
 
@@ -864,11 +882,22 @@
   white-space: nowrap;
   color: #343434;
   font-size: 12px;
+  line-height: 1.2;
 }
 
 .folder-doc-item .remove-doc-button {
   font-size: 12px;
   padding: 2px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.folder-doc-item:hover .remove-doc-button {
+  opacity: 1;
+}
+
+.folder-doc-item:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Collapsed sidebar styles for new elements */
@@ -982,7 +1011,6 @@
   border-bottom: none !important;
   box-shadow: none !important;
 }
-
 .folder-actions {
   opacity: 0;
   transition: opacity 0.2s;
@@ -990,3 +1018,13 @@
 .folder-header:hover .folder-actions {
   opacity: 1;
 }
+
+.folders-list .folder-header {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  transition: background 0.2s;
+}
+.folders-list .folder-header:hover {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  transition: background 0.2s;
+}
+

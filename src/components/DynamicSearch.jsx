@@ -18,7 +18,8 @@ const DynamicSearch = () => {
   const resultsPerPage = 25; // Show 25 results per page, for a smoother experience
   const maxResults = 100; // Maximum results to display
   const [dropdownOpenIndex, setDropdownOpenIndex] = useState(null);
-  const [addToFolderDropdownIndex, setAddToFolderDropdownIndex] = useState(null);
+  const [addToFolderDropdownId, setAddToFolderDropdownId] = useState(null);
+  const [addToFolderDropdownCoords, setAddToFolderDropdownCoords] = useState({ top: 0, left: 0 });
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
   const [pendingAddToFolderDoc, setPendingAddToFolderDoc] = useState(null);
   
@@ -185,23 +186,37 @@ const DynamicSearch = () => {
   const dropdownCloseTimeout = useRef();
   const dropdownButtonRefs = useRef({});
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
-    if (addToFolderDropdownIndex !== null && dropdownButtonRefs.current[addToFolderDropdownIndex]) {
-      const rect = dropdownButtonRefs.current[addToFolderDropdownIndex].getBoundingClientRect();
+    if (addToFolderDropdownId !== null && dropdownButtonRefs.current[addToFolderDropdownId]) {
+      const rect = dropdownButtonRefs.current[addToFolderDropdownId].getBoundingClientRect();
       setDropdownPosition({
         top: rect.bottom + window.scrollY,
         left: rect.left + window.scrollX,
       });
     }
-  }, [addToFolderDropdownIndex, results]);
+  }, [addToFolderDropdownId, results]);
+
+  useEffect(() => {
+    if (addToFolderDropdownId && dropdownRef.current) {
+      const dropdownRect = dropdownRef.current.getBoundingClientRect();
+      const overflowRight = (addToFolderDropdownCoords.left + dropdownRect.width) - window.innerWidth;
+      if (overflowRight > 0) {
+        setAddToFolderDropdownCoords(coords => ({
+          ...coords,
+          left: Math.max(8, coords.left - overflowRight - 8)
+        }));
+      }
+    }
+  }, [addToFolderDropdownId, addToFolderDropdownCoords.left]);
 
   const renderResultCard = (result, index) => {
     const userFolders = folders.filter(f => f.name !== 'Working Folder');
     const hasUserFolders = userFolders.length > 0;
     const foldersContainingDoc = userFolders.filter(folder => folder.documents.some(doc => doc.id === result.id));
     return (
-      <div key={`${result.id || index}`} className="result-card">
+      <div key={`${result.id || index}`} className="result-card" style={{ position: 'relative' }}>
         <div className="result-card-header">
           <h3>
             <a href={result.url} target="_blank" rel="noopener noreferrer">
@@ -211,7 +226,7 @@ const DynamicSearch = () => {
           <div
             style={{ position: 'relative', display: 'flex', gap: 8 }}
             onMouseLeave={() => {
-              dropdownCloseTimeout.current = setTimeout(() => setAddToFolderDropdownIndex(null), 200);
+              dropdownCloseTimeout.current = setTimeout(() => setAddToFolderDropdownId(null), 200);
             }}
             onMouseEnter={() => {
               if (dropdownCloseTimeout.current) {
@@ -240,9 +255,18 @@ const DynamicSearch = () => {
             <button
               className="add-direct-to-folder-button"
               title={hasUserFolders ? 'Add directly to folder' : 'No folders available'}
-              onClick={() => {
+              onClick={e => {
                 if (hasUserFolders) {
-                  setAddToFolderDropdownIndex(addToFolderDropdownIndex === index ? null : index);
+                  if (addToFolderDropdownId === result.id) {
+                    setAddToFolderDropdownId(null);
+                  } else {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setAddToFolderDropdownCoords({
+                      top: rect.bottom + window.scrollY,
+                      left: rect.left + window.scrollX
+                    });
+                    setAddToFolderDropdownId(result.id);
+                  }
                 } else {
                   setPendingAddToFolderDoc(result);
                   setShowCreateFolderModal(true);
@@ -253,20 +277,21 @@ const DynamicSearch = () => {
             >
               <CreateNewFolderIcon style={{ color: '#ffb300', width: 20, height: 20, background: 'none' }} />
             </button>
-            {addToFolderDropdownIndex === index && hasUserFolders && ReactDOM.createPortal(
+            {addToFolderDropdownId === result.id && hasUserFolders && ReactDOM.createPortal(
               <div
+                ref={dropdownRef}
                 className="add-to-folder-dropdown"
                 style={{
                   position: 'absolute',
-                  top: dropdownPosition.top,
-                  left: dropdownPosition.left,
-                  zIndex: 9999,
+                  left: addToFolderDropdownCoords.left,
+                  top: addToFolderDropdownCoords.top,
+                  zIndex: 2000,
                   background: '#fff',
                   border: '1.5px solid #e0e6ed',
                   borderRadius: 10,
                   boxShadow: '0 4px 16px rgba(39,76,119,0.10)',
                   padding: '2px 8px',
-                  minWidth: 120,
+                  minWidth: 140,
                   fontSize: 12,
                   color: '#274C77',
                   fontFamily: 'Roboto Condensed, Roboto, Arial, sans-serif',
@@ -282,7 +307,7 @@ const DynamicSearch = () => {
                   }
                 }}
                 onMouseLeave={() => {
-                  dropdownCloseTimeout.current = setTimeout(() => setAddToFolderDropdownIndex(null), 200);
+                  dropdownCloseTimeout.current = setTimeout(() => setAddToFolderDropdownId(null), 200);
                 }}
               >
                 {userFolders.map(folder => {
@@ -295,7 +320,7 @@ const DynamicSearch = () => {
                         display: 'block',
                         width: '100%',
                         textAlign: 'left',
-                        padding: '2px 0',
+                        padding: '2px 0 2px 10px',
                         background: 'none',
                         border: 'none',
                         cursor: alreadyInFolder ? 'not-allowed' : 'pointer',
@@ -311,7 +336,7 @@ const DynamicSearch = () => {
                       onClick={() => {
                         if (!alreadyInFolder) {
                           addToFolder(result, folder.id);
-                          setAddToFolderDropdownIndex(null);
+                          setAddToFolderDropdownId(null);
                         }
                       }}
                       onMouseEnter={e => e.currentTarget.style.background = 'rgba(69,123,157,0.07)'}
@@ -387,7 +412,8 @@ const DynamicSearch = () => {
       </div>
       
       {!searchInitiated && !loading && (
-        <div className="suggested-searches">
+        <div className="suggested-searches" style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+          <span style={{ color: '#6c7a89', fontWeight: 400, fontSize: 13, marginRight: 8 }}>Examples:</span>
           {suggestedSearches.map((suggestion, index) => (
             <button
               key={index}

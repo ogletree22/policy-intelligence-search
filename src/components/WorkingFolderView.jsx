@@ -1,21 +1,34 @@
 import React from 'react';
-import { FaTimes, FaTrash, FaFolder } from 'react-icons/fa';
+import { FaTimes, FaTrash, FaFolder, FaEdit, FaCheck, FaTimes as FaTimesSmall } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import aiTechnologyIcon from '../assets/AI-technology.png';
 import betaIcon from '../assets/Pi-CoPilot_Beta.svg';
 import './WorkingFolderView.css';
 
-const WorkingFolderView = ({ isOpen, onClose, documents, title }) => {
+const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
   const navigate = useNavigate();
-  const { removeFromWorkingFolder } = useWorkingFolder();
-  
+  const { removeFromWorkingFolder, renameFolder, removeFromFolder } = useWorkingFolder();
+  const [editing, setEditing] = React.useState(false);
+  const [newName, setNewName] = React.useState(folder?.name || '');
+
+  React.useEffect(() => {
+    setNewName(folder?.name || '');
+  }, [folder]);
+
   if (!isOpen) return null;
 
   const handleRemove = (docId) => {
-    if (docId) {
-      removeFromWorkingFolder(docId);
+    if (docId && folder?.id) {
+      removeFromFolder(docId, folder.id);
     }
+  };
+
+  const handleRename = () => {
+    if (folder && newName.trim() && newName !== folder.name) {
+      renameFolder(folder.id, newName.trim());
+    }
+    setEditing(false);
   };
 
   return (
@@ -24,7 +37,42 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title }) => {
         <div className="working-folder-header" style={{ marginBottom: 0 }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <FaFolder style={{ color: '#274C77', marginLeft: '20px' }} />
-            {title || 'Working Folder Contents'}
+            <span className={`editable-folder-name-area${editing ? ' editing' : ''}`}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, position: 'relative' }}>
+              {editing ? (
+                <>
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={e => setNewName(e.target.value)}
+                    style={{ fontSize: 20, fontWeight: 600, padding: '2px 8px', borderRadius: 6, border: '1.5px solid #bcd0e5', minWidth: 120, color: '#274C77', background: '#f7fafc', outline: 'none', marginRight: 4 }}
+                    autoFocus
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') handleRename();
+                      if (e.key === 'Escape') setEditing(false);
+                    }}
+                  />
+                  <button onClick={handleRename} title="Save" className="rename-action-btn save-btn">
+                    <FaCheck />
+                  </button>
+                  <button onClick={() => setEditing(false)} title="Cancel" className="rename-action-btn cancel-btn">
+                    <FaTimesSmall />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span style={{ color: '#274C77', fontWeight: 600, fontSize: 20 }}>{folder?.name || title || 'Working Folder Contents'}</span>
+                  <button
+                    onClick={() => { setNewName(folder?.name || ''); setEditing(true); }}
+                    title="Rename folder"
+                    className="rename-pencil-btn"
+                    style={{ marginLeft: 4 }}
+                  >
+                    <FaEdit />
+                  </button>
+                </>
+              )}
+            </span>
           </h3>
           <div className="header-actions">
             <button 
@@ -60,7 +108,7 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title }) => {
                   <button
                     className="remove-doc-button"
                     onClick={() => handleRemove(doc.id)}
-                    title="Remove from Working Folder"
+                    title="Remove from Folder"
                   >
                     <FaTrash />
                   </button>

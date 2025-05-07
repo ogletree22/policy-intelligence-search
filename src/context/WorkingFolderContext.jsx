@@ -91,6 +91,12 @@ export function WorkingFolderProvider({ children }) {
     }));
   };
 
+  const renameFolder = (folderId, newName) => {
+    setFolders(prev => prev.map(folder =>
+      folder.id === folderId ? { ...folder, name: newName } : folder
+    ));
+  };
+
   return (
     <WorkingFolderContext.Provider 
       value={{ 
@@ -104,7 +110,8 @@ export function WorkingFolderProvider({ children }) {
         deleteFolder,
         currentFolderId,
         setCurrentFolderId,
-        addToFolder
+        addToFolder,
+        renameFolder
       }}
     >
       {children}

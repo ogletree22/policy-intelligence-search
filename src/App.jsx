@@ -20,6 +20,7 @@ import { SearchPageProvider, useSearchPage } from './context/SearchPageContext';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { ChatProvider } from './context/ChatContext';
 import { SidebarProvider, useSidebar } from './context/SidebarContext';
+import { FolderExpansionProvider } from './context/FolderExpansionContext';
 import './aws-config';
 import mockDataCO2 from './mockDataCO2.js';
 import mockDataNM from './mockDataNM';
@@ -123,42 +124,44 @@ function App() {
           <FolderPageProvider>
             <SearchPageProvider>
               <ChatProvider>
-                <Routes>
-                  <Route 
-                    path="/login" 
-                    element={
-                      !user ? (
-                        isMobile ? (
-                          <MobileLoginPage />
+                <FolderExpansionProvider>
+                  <Routes>
+                    <Route 
+                      path="/login" 
+                      element={
+                        !user ? (
+                          isMobile ? (
+                            <MobileLoginPage />
+                          ) : (
+                            <LoginPage />
+                          )
                         ) : (
-                          <LoginPage />
+                          <Navigate to="/dynamic" replace />
                         )
-                      ) : (
-                        <Navigate to="/dynamic" replace />
-                      )
-                    } 
-                  />
-                  <Route
-                    path="/"
-                    element={
-                      user ? (
-                        <Navigate to="/dynamic" replace />
-                      ) : (
-                        <Navigate to="/login" replace />
-                      )
-                    }
-                  />
-                  <Route
-                    path="/*"
-                    element={
-                      user ? (
-                        <MainContent />
-                      ) : (
-                        <Navigate to="/login" replace />
-                      )
-                    }
-                  />
-                </Routes>
+                      } 
+                    />
+                    <Route
+                      path="/"
+                      element={
+                        user ? (
+                          <Navigate to="/dynamic" replace />
+                        ) : (
+                          <Navigate to="/login" replace />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/*"
+                      element={
+                        user ? (
+                          <MainContent />
+                        ) : (
+                          <Navigate to="/login" replace />
+                        )
+                      }
+                    />
+                  </Routes>
+                </FolderExpansionProvider>
               </ChatProvider>
             </SearchPageProvider>
           </FolderPageProvider>
