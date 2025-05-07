@@ -167,6 +167,54 @@ const getJurisdictionCount = (jurisdiction, jurisdictionCounts = {}) => {
   return directCount + kendraCount + spaceCount;
 };
 
+/**
+ * Fetch document type counts based on selected jurisdictions
+ * @param {Array} selectedJurisdictions - Array of selected jurisdiction names
+ * @param {string} query - Current search query
+ * @returns {Promise<Object>} - Document type counts
+ */
+const fetchDocTypeCounts = async (selectedJurisdictions, query) => {
+  try {
+    // Skip API call if no jurisdictions selected or no query
+    if (!selectedJurisdictions || selectedJurisdictions.length === 0 || !query || query.trim() === '') {
+      console.log('Skipping doc type counts API call - no jurisdictions selected or no query');
+      return null;
+    }
+
+    console.log(`Fetching doc type counts for ${selectedJurisdictions.length} jurisdictions with query: "${query}"`);
+    
+    const response = await fetch('https://gbgi989gbe.execute-api.us-west-2.amazonaws.com/sbx/facet-counts-doc-type', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        selectedJurisdictions,
+        query
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('Received doc type counts raw response:', data);
+    
+    // Check if we have docTypeCounts in the response
+    if (data && data.docTypeCounts) {
+      console.log('Extracted document type counts:', data.docTypeCounts);
+      return data.docTypeCounts;
+    } else {
+      console.warn('API response did not contain docTypeCounts property:', data);
+      return {};
+    }
+  } catch (error) {
+    console.error('Error fetching doc type counts:', error);
+    return null;
+  }
+};
+
 const SidebarFilters = ({ 
   onFilterChange, 
   isDisabled, 
@@ -234,6 +282,13 @@ const SidebarFilters = ({
       const jurisdictionCounts = documentCounts.jurisdictions || {};
     }
   }, [documentCounts]);
+
+  // Also watch for context document counts changes
+  React.useEffect(() => {
+    if (contextDocumentCounts) {
+      console.log("Context document counts updated:", contextDocumentCounts);
+    }
+  }, [contextDocumentCounts]);
 
   const handleFilterChange = useCallback((category, value) => {
     console.log('Filter change in SidebarFilters:', category, value);
@@ -339,8 +394,16 @@ const SidebarFilters = ({
     onFilterChange({});
   }, [onFilterChange]);
 
-  // Extract document counts from props
-  const { documentTypes: docTypeCounts = {}, jurisdictions: jurisdictionCounts = {} } = documentCounts;
+  // Extract document counts from props OR context (prioritize context for document types)
+  // This ensures we use the updated document type counts from the context
+  const { jurisdictions: jurisdictionCounts = {} } = documentCounts;
+  // Get document type counts from context if available, otherwise from props
+  const docTypeCounts = contextDocumentCounts?.documentTypes || documentCounts.documentTypes || {};
+  
+  // Debug the document counts being used
+  React.useEffect(() => {
+    console.log("Document type counts being used in UI:", docTypeCounts);
+  }, [docTypeCounts]);
 
   // Use the sorted jurisdictions from the search context if available, or fall back to local sorting
   const sortedJurisdictions = React.useMemo(() => {
