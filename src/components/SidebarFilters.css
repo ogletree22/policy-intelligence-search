@@ -784,7 +784,7 @@
 }
 
 .folders-list .folder-header:hover .folder-icon {
-  color: #274c77 !important;
+  filter: brightness(0.8) !important;
 }
 
 .folders-list .folder-name {
@@ -819,15 +819,41 @@
 }
 
 .folder-documents {
-  padding: 8px 12px;
+  padding: 4px 0;
+  max-height: calc(5 * (24px + 8px)); /* Height for 5 items (24px per item + 8px padding) */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(39, 76, 119, 0.5) rgba(255, 255, 255, 0.15);
+}
+
+.folder-documents::-webkit-scrollbar {
+  width: 6px;
+}
+
+.folder-documents::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.folder-documents::-webkit-scrollbar-thumb {
+  background: rgba(39, 76, 119, 0.5);
+  border-radius: 3px;
+}
+
+.folder-documents::-webkit-scrollbar-thumb:hover {
+  background: rgba(39, 76, 119, 0.7);
 }
 
 .folder-doc-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 6px 0;
-  font-size: 13px;
+  justify-content: space-between;
+  padding: 4px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s ease;
+  height: 24px;
+  font-size: 12px;
 }
 
 .folder-doc-item .doc-title {
@@ -837,6 +863,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #343434;
+  font-size: 12px;
 }
 
 .folder-doc-item .remove-doc-button {

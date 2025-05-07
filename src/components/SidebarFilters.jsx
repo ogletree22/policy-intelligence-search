@@ -675,6 +675,8 @@ const SidebarFilters = ({
                       <div key={folder.id} className="folder-item">
                         <div
                           className={`folder-header${dragOverFolderId === folder.id ? ' drag-over' : ''}`}
+                          onClick={() => setExpandedFolders(prev => ({ ...prev, [folder.id]: !isExpanded }))}
+                          style={{ cursor: 'pointer' }}
                           onDragOver={e => {
                             e.preventDefault();
                             setDragOverFolderId(folder.id);
@@ -692,7 +694,10 @@ const SidebarFilters = ({
                         >
                           <button
                             className="toggle-folder-button"
-                            onClick={() => setExpandedFolders(prev => ({ ...prev, [folder.id]: !isExpanded }))}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedFolders(prev => ({ ...prev, [folder.id]: !isExpanded }));
+                            }}
                             aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
                             style={{ marginRight: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#457b9d', fontSize: 14 }}
                           >
@@ -709,14 +714,20 @@ const SidebarFilters = ({
                           <span className="folder-actions">
                             <button
                               className="view-folder-button"
-                              onClick={() => setViewingFolder(folder)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setViewingFolder(folder);
+                              }}
                               title="View folder contents"
                             >
                               <FaEye />
                             </button>
                             <button
                               className="delete-folder-button"
-                              onClick={() => deleteFolder(folder.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteFolder(folder.id);
+                              }}
                               title="Delete folder"
                             >
                               <FaTrash />

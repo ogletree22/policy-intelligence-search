@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { useSearchPage } from '../context/SearchPageContext';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { FaFolderPlus, FaFolderMinus, FaThLarge, FaList, FaGlobe, FaChevronDown, FaChevronLeft, FaChevronRight, FaChevronUp } from 'react-icons/fa';
@@ -19,6 +20,7 @@ const DynamicSearch = () => {
   const [dropdownOpenIndex, setDropdownOpenIndex] = useState(null);
   const [addToFolderDropdownIndex, setAddToFolderDropdownIndex] = useState(null);
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
+  const [pendingAddToFolderDoc, setPendingAddToFolderDoc] = useState(null);
   
   const suggestedSearches = [
     'NOx reduction',
@@ -180,6 +182,20 @@ const DynamicSearch = () => {
     '#ffd600', // yellow accent
   ];
 
+  const dropdownCloseTimeout = useRef();
+  const dropdownButtonRefs = useRef({});
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (addToFolderDropdownIndex !== null && dropdownButtonRefs.current[addToFolderDropdownIndex]) {
+      const rect = dropdownButtonRefs.current[addToFolderDropdownIndex].getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+      });
+    }
+  }, [addToFolderDropdownIndex, results]);
+
   const renderResultCard = (result, index) => {
     const userFolders = folders.filter(f => f.name !== 'Working Folder');
     const hasUserFolders = userFolders.length > 0;
@@ -192,14 +208,22 @@ const DynamicSearch = () => {
               {result.title}
             </a>
           </h3>
-          <div 
+          <div
             style={{ position: 'relative', display: 'flex', gap: 8 }}
-            onMouseLeave={() => setAddToFolderDropdownIndex(null)}
+            onMouseLeave={() => {
+              dropdownCloseTimeout.current = setTimeout(() => setAddToFolderDropdownIndex(null), 200);
+            }}
+            onMouseEnter={() => {
+              if (dropdownCloseTimeout.current) {
+                clearTimeout(dropdownCloseTimeout.current);
+                dropdownCloseTimeout.current = null;
+              }
+            }}
           >
             {/* Folder color indicators */}
             {foldersContainingDoc.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginRight: 2 }}>
-                {foldersContainingDoc.slice(0, 3).map((folder, i) => (
+                {foldersContainingDoc.map((folder, i) => (
                   <span key={folder.id} style={{
                     display: 'inline-block',
                     width: 10,
@@ -220,37 +244,88 @@ const DynamicSearch = () => {
                 if (hasUserFolders) {
                   setAddToFolderDropdownIndex(addToFolderDropdownIndex === index ? null : index);
                 } else {
+                  setPendingAddToFolderDoc(result);
                   setShowCreateFolderModal(true);
                 }
               }}
               style={{ marginLeft: 4 }}
+              ref={el => (dropdownButtonRefs.current[index] = el)}
             >
               <CreateNewFolderIcon style={{ color: '#ffb300', width: 20, height: 20, background: 'none' }} />
             </button>
-            {addToFolderDropdownIndex === index && hasUserFolders && (
-              <div className="add-to-folder-dropdown" style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, background: '#fff', border: '1px solid #ccc', borderRadius: 4, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            {addToFolderDropdownIndex === index && hasUserFolders && ReactDOM.createPortal(
+              <div
+                className="add-to-folder-dropdown"
+                style={{
+                  position: 'absolute',
+                  top: dropdownPosition.top,
+                  left: dropdownPosition.left,
+                  zIndex: 9999,
+                  background: '#fff',
+                  border: '1.5px solid #e0e6ed',
+                  borderRadius: 10,
+                  boxShadow: '0 4px 16px rgba(39,76,119,0.10)',
+                  padding: '2px 8px',
+                  minWidth: 120,
+                  fontSize: 12,
+                  color: '#274C77',
+                  fontFamily: 'Roboto Condensed, Roboto, Arial, sans-serif',
+                  fontWeight: 400,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                }}
+                onMouseEnter={() => {
+                  if (dropdownCloseTimeout.current) {
+                    clearTimeout(dropdownCloseTimeout.current);
+                    dropdownCloseTimeout.current = null;
+                  }
+                }}
+                onMouseLeave={() => {
+                  dropdownCloseTimeout.current = setTimeout(() => setAddToFolderDropdownIndex(null), 200);
+                }}
+              >
                 {userFolders.map(folder => {
                   const alreadyInFolder = folder.documents.some(doc => doc.id === result.id);
                   return (
                     <div
                       key={folder.id}
                       className="add-to-folder-dropdown-item"
-                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 16px', background: 'none', border: 'none', cursor: alreadyInFolder ? 'not-allowed' : 'pointer', color: alreadyInFolder ? '#aaa' : 'inherit', opacity: alreadyInFolder ? 0.7 : 1, position: 'relative' }}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '2px 0',
+                        background: 'none',
+                        border: 'none',
+                        cursor: alreadyInFolder ? 'not-allowed' : 'pointer',
+                        color: alreadyInFolder ? '#aaa' : 'inherit',
+                        opacity: alreadyInFolder ? 0.7 : 1,
+                        position: 'relative',
+                        borderRadius: 6,
+                        transition: 'background 0.15s',
+                        fontWeight: 400,
+                        fontSize: 12,
+                      }}
+                      onMouseDown={e => e.preventDefault()}
                       onClick={() => {
                         if (!alreadyInFolder) {
                           addToFolder(result, folder.id);
                           setAddToFolderDropdownIndex(null);
                         }
                       }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(69,123,157,0.07)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}
                     >
                       {folder.name}
                       {alreadyInFolder && (
-                        <span style={{ marginLeft: 8, color: '#4caf50', fontSize: 14, fontWeight: 600 }}>✔</span>
+                        <span style={{ marginLeft: 8, color: '#4caf50', fontSize: 12, fontWeight: 600 }}>✔</span>
                       )}
                     </div>
                   );
                 })}
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         </div>
@@ -481,9 +556,16 @@ const DynamicSearch = () => {
       </div>
       <CreateFolderModal
         isOpen={showCreateFolderModal}
-        onClose={() => setShowCreateFolderModal(false)}
-        onCreateFolder={name => {
-          createFolder(name);
+        onClose={() => {
+          setShowCreateFolderModal(false);
+          setPendingAddToFolderDoc(null);
+        }}
+        onCreateFolder={folderName => {
+          const newFolder = createFolder(folderName);
+          if (pendingAddToFolderDoc && newFolder) {
+            addToFolder(pendingAddToFolderDoc, newFolder.id);
+            setPendingAddToFolderDoc(null);
+          }
           setShowCreateFolderModal(false);
         }}
       />

@@ -69,13 +69,15 @@
   font-weight: 500;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.2s ease;
+.create-folder-modal .form-group input {
+  width: 100% !important;
+  padding: 8px 12px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  transition: border-color 0.2s ease !important;
+  background: #fff !important;
+  box-sizing: border-box !important;
 }
 
 .form-group input:focus {
@@ -83,45 +85,46 @@
   border-color: #457b9d;
 }
 
-.form-actions {
+.create-folder-modal .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 }
 
-.cancel-button,
-.create-button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.create-folder-modal .form-actions .cancel-button,
+.create-folder-modal .form-actions .create-button {
+  padding: 8px 16px !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
 }
 
-.cancel-button {
-  background: none;
-  border: 1px solid #ddd;
-  color: #666;
+.create-folder-modal .form-actions .cancel-button {
+  background: none !important;
+  border: 1px solid #ddd !important;
+  color: #666 !important;
 }
 
-.cancel-button:hover {
-  background-color: #f5f5f5;
+.create-folder-modal .form-actions .cancel-button:hover {
+  background-color: #f5f5f5 !important;
 }
 
-.create-button {
-  background-color: #457b9d;
-  border: none;
-  color: white;
+.create-folder-modal .form-actions .create-button {
+  background-color: #457b9d !important;
+  border: none !important;
+  color: white !important;
 }
 
-.create-button:hover {
-  background-color: #274c77;
+.create-folder-modal .form-actions .create-button:hover {
+  background-color: #274c77 !important;
 }
 
-.create-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+.create-folder-modal .form-actions .create-button:disabled {
+  background-color: #ccc !important;
+  cursor: not-allowed !important;
 }
 
 @keyframes slideIn {
