@@ -73,6 +73,8 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       // Keep the leading space for Source Report
       processedDocType = " Source Report";
       console.log("Preserving leading space in Source Report filter");
+      // Debug log to verify space is preserved
+      console.log("Source Report character codes:", Array.from(processedDocType).map(c => c.charCodeAt(0)));
     } else {
       // For other document types, trim as usual
       processedDocType = documentType?.trim() || null;
@@ -86,6 +88,78 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       console.log(` - Has leading space: ${documentType.startsWith(' ')}`);
       console.log(` - Character codes: ${Array.from(documentType).map(c => c.charCodeAt(0)).join(', ')}`);
       console.log(` - Processed: "${processedDocType}"`);
+    }
+    
+    // Create document type filter if specified
+    let documentTypeFilter = null;
+    if (processedDocType) {
+      documentTypeFilter = {
+        EqualsTo: {
+          Key: "_category",
+          Value: {
+            StringValue: processedDocType
+          }
+        }
+      };
+      console.log(`Created document type filter:`, JSON.stringify(documentTypeFilter, null, 2));
+      
+      // Extra check for " Source Report" to ensure space is preserved after JSON serialization
+      if (processedDocType === " Source Report") {
+        const serialized = JSON.stringify(documentTypeFilter);
+        console.log("Serialized Source Report filter:", serialized);
+        console.log("Space preserved in serialization:", serialized.includes('" Source Report"'));
+      }
+    }
+    
+    // Build the combined AttributeFilter
+    let combinedAttributeFilter = null;
+    
+    // Add jurisdiction filters if any
+    if (jurisdictionFilters.length > 0) {
+      if (jurisdictionFilters.length === 1) {
+        combinedAttributeFilter = jurisdictionFilters[0];
+      } else {
+        combinedAttributeFilter = {
+          OrAllFilters: jurisdictionFilters
+        };
+      }
+    }
+    
+    // Add document type filter if specified
+    if (documentTypeFilter) {
+      if (!combinedAttributeFilter) {
+        combinedAttributeFilter = documentTypeFilter;
+      } else {
+        // If we already have jurisdiction filters, combine with AND logic
+        combinedAttributeFilter = {
+          AndAllFilters: [
+            combinedAttributeFilter,
+            documentTypeFilter
+          ]
+        };
+      }
+    }
+    
+    // Apply the combined filter to the request
+    if (combinedAttributeFilter) {
+      requestBody.AttributeFilter = combinedAttributeFilter;
+      console.log(`Applied combined attribute filter:`, JSON.stringify(combinedAttributeFilter, null, 2));
+      
+      // Add a fallback for Source Report for backward compatibility with Lambda
+      if (processedDocType === " Source Report") {
+        console.log("Adding fallback _category field for Source Report compatibility");
+        requestBody._category = " Source Report";
+      }
+    } else if (processedDocType) {
+      // If we only have a document type filter but no combined filter
+      // (e.g., no jurisdiction filters were created), add it directly
+      requestBody.AttributeFilter = documentTypeFilter;
+      
+      // Add a fallback for Source Report for backward compatibility with Lambda
+      if (processedDocType === " Source Report") {
+        console.log("Adding fallback _category field for Source Report compatibility");
+        requestBody._category = " Source Report";
+      }
     }
     
     // Handle facet retrieval with proper Facets structure
@@ -124,27 +198,10 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       // Still get document type counts from the main Kendra endpoint
       requestBody.facetSummary = true;
       
-      // Apply jurisdiction filters if any
-      if (jurisdictionFilters.length > 0) {
-        // Add attribute filter to request
-        if (jurisdictionFilters.length === 1) {
-          // Single jurisdiction filter - set both formats for compatibility
-          requestBody.AttributeFilter = jurisdictionFilters[0];
-          requestBody.jurisdiction = jurisdictionFilters[0].EqualsTo.Value.StringValue;
-          console.log(`Using single jurisdiction filter: "${requestBody.jurisdiction}"`);
-        } else {
-          // Multiple jurisdiction filters with OR logic
-          requestBody.AttributeFilter = {
-            OrAllFilters: jurisdictionFilters
-          };
-          console.log(`Using ${jurisdictionFilters.length} jurisdiction filters with OR logic`);
-        }
-      }
-
-      // Add document type filter if specified
-      if (processedDocType) {
-        requestBody._category = processedDocType;
-        console.log(`Adding document type filter to facet request: "${processedDocType}"`);
+      // Ensure Source Report handling is consistent for facet requests
+      if (processedDocType === " Source Report") {
+        console.log("Adding fallback _category field for Source Report in facet request");
+        requestBody._category = " Source Report";
       }
       
       // Log complete request for monitoring
@@ -213,29 +270,6 @@ export const searchKendra = async (query = '', jurisdiction = null, documentType
       };
     } else {
       // For regular search results (not facets), we use the Lambda-friendly format
-      
-      // Apply jurisdiction filters if any
-      if (jurisdictionFilters.length > 0) {
-        // Add attribute filter to request
-        if (jurisdictionFilters.length === 1) {
-          // Single jurisdiction filter - set both formats for compatibility
-          requestBody.AttributeFilter = jurisdictionFilters[0];
-          requestBody.jurisdiction = jurisdictionFilters[0].EqualsTo.Value.StringValue;
-          console.log(`Using single jurisdiction filter: "${requestBody.jurisdiction}"`);
-        } else {
-          // Multiple jurisdiction filters with OR logic
-          requestBody.AttributeFilter = {
-            OrAllFilters: jurisdictionFilters
-          };
-          console.log(`Using ${jurisdictionFilters.length} jurisdiction filters with OR logic`);
-        }
-      }
-
-      // Add document type filter if specified
-      if (processedDocType) {
-        requestBody._category = processedDocType;
-        console.log(`Adding document type filter (_category): "${processedDocType}"`);
-      }
       
       // Log complete request for monitoring
       console.log('Kendra request payload:', JSON.stringify(requestBody, null, 2));
@@ -386,6 +420,9 @@ export const transformKendraResults = (kendraResponse) => {
     console.log('Sample Kendra result structure:', JSON.stringify(resultItems[0]).substring(0, 1000) + '...');
     console.log('Document Attributes:', resultItems[0].DocumentAttributes);
   }
+  
+  // Track used IDs to ensure uniqueness
+  const usedIds = new Set();
   
   return resultItems.map((item, index) => {
     // For debugging, log every 5th item to avoid console flood
@@ -552,9 +589,34 @@ export const transformKendraResults = (kendraResponse) => {
       });
     }
     
+    // Generate a unique ID for the document
+    let docId = item.Id || item.DocumentId || '';
+    
+    // If ID is already used or missing, create a unique identifier
+    if (!docId || usedIds.has(docId)) {
+      // Create a unique ID using hash of title + URL if available, or a random string
+      const titlePart = item.DocumentTitle || item.Title || '';
+      const urlPart = documentUrl || '';
+      
+      if (titlePart && urlPart) {
+        // Create a hash from title and URL
+        docId = `doc-${titlePart.substring(0, 20)}-${urlPart.substring(urlPart.lastIndexOf('/') + 1, urlPart.length).substring(0, 10)}-${index}`;
+      } else {
+        // Fallback to random ID with index
+        docId = `doc-${Math.random().toString(36).substring(2, 15)}-${index}`;
+      }
+      
+      if (shouldLog && (item.Id || item.DocumentId)) {
+        console.log(`Generated new unique ID "${docId}" because original ID was duplicate or invalid`);
+      }
+    }
+    
+    // Add the ID to used IDs set
+    usedIds.add(docId);
+    
     // Create and return the standardized document object
     return {
-      id: item.Id || item.DocumentId || `doc-${Math.random().toString(36).substring(2, 15)}`,
+      id: docId,
       title: item.DocumentTitle || item.Title || 'Untitled Document',
       url: documentUrl || item.SourceUri || '',  // Ensure SourceUri is used for URL
       description: description,

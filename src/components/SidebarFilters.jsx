@@ -182,6 +182,54 @@ const FOLDER_COLORS = [
   '#cfd8dc', // blue gray
 ];
 
+/**
+ * Fetch document type counts based on selected jurisdictions
+ * @param {Array} selectedJurisdictions - Array of selected jurisdiction names
+ * @param {string} query - Current search query
+ * @returns {Promise<Object>} - Document type counts
+ */
+const fetchDocTypeCounts = async (selectedJurisdictions, query) => {
+  try {
+    // Skip API call if no jurisdictions selected or no query
+    if (!selectedJurisdictions || selectedJurisdictions.length === 0 || !query || query.trim() === '') {
+      console.log('Skipping doc type counts API call - no jurisdictions selected or no query');
+      return null;
+    }
+
+    console.log(`Fetching doc type counts for ${selectedJurisdictions.length} jurisdictions with query: "${query}"`);
+    
+    const response = await fetch('https://gbgi989gbe.execute-api.us-west-2.amazonaws.com/sbx/facet-counts-doc-type', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        selectedJurisdictions,
+        query
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('Received doc type counts raw response:', data);
+    
+    // Check if we have docTypeCounts in the response
+    if (data && data.docTypeCounts) {
+      console.log('Extracted document type counts:', data.docTypeCounts);
+      return data.docTypeCounts;
+    } else {
+      console.warn('API response did not contain docTypeCounts property:', data);
+      return {};
+    }
+  } catch (error) {
+    console.error('Error fetching doc type counts:', error);
+    return null;
+  }
+};
+
 const SidebarFilters = ({ 
   onFilterChange, 
   isDisabled, 
@@ -191,8 +239,8 @@ const SidebarFilters = ({
   documentTypesInactive = false
 }) => {
   const { signOut, user } = useContext(AuthContext);
-  // Get the sorted jurisdictions from SearchPageContext
-  const { sortedJurisdictions: contextSortedJurisdictions } = useSearchPage();
+  // Get the sorted jurisdictions and search context from SearchPageContext
+  const { sortedJurisdictions: contextSortedJurisdictions, searchQuery, documentCounts: contextDocumentCounts, updateDocumentTypeCounts } = useSearchPage();
   const [showUserMenu, setShowUserMenu] = useState(false);
   // Add state to track all filters
   const [filters, setFilters] = useState({
@@ -271,7 +319,7 @@ const SidebarFilters = ({
     });
   }, [filters]);
 
-  const applyFilters = useCallback(() => {
+  const applyFilters = useCallback(async () => {
     // Merge current and pending filters
     const mergedFilters = {
       jurisdictions: {
@@ -308,15 +356,36 @@ const SidebarFilters = ({
       console.log(`  - Is in DOCUMENT_TYPES: ${DOCUMENT_TYPES.includes(key)}`);
     });
     
-    // Call parent component's filter handler
+    // Get selected jurisdictions for the API call
+    const selectedJurisdictions = Object.keys(mergedFilters.jurisdictions)
+      .filter(key => mergedFilters.jurisdictions[key])
+      .map(key => key.replace(/_/g, ' ')); // Convert underscores to spaces for API
+    
+    // Call parent component's filter handler to update the search results
     onFilterChange(activeFilters);
+    
+    // Make API call to update document type counts if jurisdictions are selected
+    if (selectedJurisdictions.length > 0 && searchQuery && searchQuery.trim() !== '') {
+      console.log('Making API call to update document type counts for jurisdictions:', selectedJurisdictions);
+      try {
+        const docTypeCounts = await fetchDocTypeCounts(selectedJurisdictions, searchQuery);
+        
+        if (docTypeCounts) {
+          // Update the document type counts in the context using the provided function
+          console.log('Updating document type counts with new values:', docTypeCounts);
+          updateDocumentTypeCounts(docTypeCounts);
+        }
+      } catch (error) {
+        console.error('Error updating document type counts:', error);
+      }
+    }
     
     // Clear pending filters after applying
     setPendingFilters({
       jurisdictions: {},
       documentTypes: {}
     });
-  }, [filters, pendingFilters, onFilterChange]);
+  }, [filters, pendingFilters, onFilterChange, searchQuery, updateDocumentTypeCounts]);
 
   const removeFilters = useCallback(() => {
     // Reset both current and pending filters
