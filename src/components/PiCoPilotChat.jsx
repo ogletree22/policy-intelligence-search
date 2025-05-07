@@ -91,6 +91,9 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
                 aria-label="Select folder"
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setShowFolderDropdown((v) => !v); }}
               >
+                <span style={{ fontStyle: 'italic', fontSize: '0.6em', color: '#6096ba', marginRight: 8, verticalAlign: 'super', alignSelf: 'flex-start' }}>
+                  Chatting with:
+                </span>
                 <FolderIconWithIndicator
                   indicatorColor={safeColors[folders.findIndex(f => f.id === selectedFolder.id) % safeColors.length]}
                   size={18}
@@ -119,6 +122,9 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
                   aria-label="Select folder"
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setShowFolderDropdown((v) => !v); }}
                 >
+                  <span style={{ fontStyle: 'italic', fontSize: '0.6em', color: '#6096ba', marginRight: 8, verticalAlign: 'super', alignSelf: 'flex-start' }}>
+                    Chatting with:
+                  </span>
                   <img
                     src={PIglobalFolder}
                     alt="Global Folder"
