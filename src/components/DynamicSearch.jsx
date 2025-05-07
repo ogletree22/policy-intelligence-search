@@ -2,18 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useSearchPage } from '../context/SearchPageContext';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { FaFolderPlus, FaFolderMinus, FaThLarge, FaList, FaGlobe, FaChevronDown, FaChevronLeft, FaChevronRight, FaChevronUp } from 'react-icons/fa';
+import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import dynamicSearchIcon from '../assets/dynamic_search_ii.svg';
 import './DynamicSearch.css';
+import CreateFolderModal from './CreateFolderModal';
 
 const DynamicSearch = () => {
   const { handleSearch, results, loading, error, searchQuery, setSearchQuery } = useSearchPage();
-  const { workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder } = useWorkingFolder();
+  const { workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder, folders, moveToFolder, createFolder, addToFolder } = useWorkingFolder();
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState('folder'); // 'folder' (list), 'grid', or 'jurisdiction'
   const [searchInitiated, setSearchInitiated] = useState(false);
   const [expandedJurisdictions, setExpandedJurisdictions] = useState(new Set());
   const resultsPerPage = 25; // Show 25 results per page, for a smoother experience
   const maxResults = 100; // Maximum results to display
+  const [dropdownOpenIndex, setDropdownOpenIndex] = useState(null);
+  const [addToFolderDropdownIndex, setAddToFolderDropdownIndex] = useState(null);
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
   
   const suggestedSearches = [
     'NOx reduction',
@@ -156,35 +161,107 @@ const DynamicSearch = () => {
     return docs.slice(start, start + DOCS_PER_PAGE);
   };
 
-  const renderResultCard = (result, index) => (
-    <div key={`${result.id || index}`} className="result-card">
-      <div className="result-card-header">
-        <h3>
-          <a href={result.url} target="_blank" rel="noopener noreferrer">
-            {result.title}
-          </a>
-        </h3>
-        <button
-          className={`folder-button ${isInWorkingFolder(result) ? 'in-folder' : ''}`}
-          onClick={() => {
-            if (isInWorkingFolder(result)) {
-              removeFromWorkingFolder(result.id);
-            } else {
-              addToWorkingFolder(result);
-            }
-          }}
-          title={isInWorkingFolder(result) ? "Remove from working folder" : "Add to working folder"}
-        >
-          {isInWorkingFolder(result) ? <FaFolderMinus /> : <FaFolderPlus />}
-        </button>
+  // Fixed palette of visually distinct, accessible colors
+  const FOLDER_COLORS = [
+    '#ff7043', // deep orange
+    '#42a5f5', // blue
+    '#66bb6a', // green
+    '#ab47bc', // purple
+    '#ffa726', // orange
+    '#26a69a', // teal
+    '#ec407a', // pink
+    '#7e57c2', // deep purple
+    '#d4e157', // lime
+    '#789262', // olive
+    '#8d6e63', // brown
+    '#29b6f6', // light blue
+    '#cfd8dc', // blue gray
+    '#f06292', // pink accent
+    '#ffd600', // yellow accent
+  ];
+
+  const renderResultCard = (result, index) => {
+    const userFolders = folders.filter(f => f.name !== 'Working Folder');
+    const hasUserFolders = userFolders.length > 0;
+    const foldersContainingDoc = userFolders.filter(folder => folder.documents.some(doc => doc.id === result.id));
+    return (
+      <div key={`${result.id || index}`} className="result-card">
+        <div className="result-card-header">
+          <h3>
+            <a href={result.url} target="_blank" rel="noopener noreferrer">
+              {result.title}
+            </a>
+          </h3>
+          <div 
+            style={{ position: 'relative', display: 'flex', gap: 8 }}
+            onMouseLeave={() => setAddToFolderDropdownIndex(null)}
+          >
+            {/* Folder color indicators */}
+            {foldersContainingDoc.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginRight: 2 }}>
+                {foldersContainingDoc.slice(0, 3).map((folder, i) => (
+                  <span key={folder.id} style={{
+                    display: 'inline-block',
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: FOLDER_COLORS[userFolders.findIndex(f => f.id === folder.id) % FOLDER_COLORS.length],
+                    border: '1.5px solid #fff',
+                    boxShadow: '0 0 0 1px #ccc',
+                    marginLeft: i === 0 ? 0 : -4,
+                  }} />
+                ))}
+              </div>
+            )}
+            <button
+              className="add-direct-to-folder-button"
+              title={hasUserFolders ? 'Add directly to folder' : 'No folders available'}
+              onClick={() => {
+                if (hasUserFolders) {
+                  setAddToFolderDropdownIndex(addToFolderDropdownIndex === index ? null : index);
+                } else {
+                  setShowCreateFolderModal(true);
+                }
+              }}
+              style={{ marginLeft: 4 }}
+            >
+              <CreateNewFolderIcon style={{ color: '#ffb300', width: 20, height: 20, background: 'none' }} />
+            </button>
+            {addToFolderDropdownIndex === index && hasUserFolders && (
+              <div className="add-to-folder-dropdown" style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, background: '#fff', border: '1px solid #ccc', borderRadius: 4, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                {userFolders.map(folder => {
+                  const alreadyInFolder = folder.documents.some(doc => doc.id === result.id);
+                  return (
+                    <div
+                      key={folder.id}
+                      className="add-to-folder-dropdown-item"
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 16px', background: 'none', border: 'none', cursor: alreadyInFolder ? 'not-allowed' : 'pointer', color: alreadyInFolder ? '#aaa' : 'inherit', opacity: alreadyInFolder ? 0.7 : 1, position: 'relative' }}
+                      onClick={() => {
+                        if (!alreadyInFolder) {
+                          addToFolder(result, folder.id);
+                          setAddToFolderDropdownIndex(null);
+                        }
+                      }}
+                    >
+                      {folder.name}
+                      {alreadyInFolder && (
+                        <span style={{ marginLeft: 8, color: '#4caf50', fontSize: 14, fontWeight: 600 }}>✔</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+        <p className="result-description">{result.description}</p>
+        <div className="result-meta">
+          <span className="result-jurisdiction">{result.jurisdiction}</span>
+          <span className="result-type">{getDocumentType(result)}</span>
+        </div>
       </div>
-      <p className="result-description">{result.description}</p>
-      <div className="result-meta">
-        <span className="result-jurisdiction">{result.jurisdiction}</span>
-        <span className="result-type">{getDocumentType(result)}</span>
-      </div>
-    </div>
-  );
+    );
+  };
   
   return (
     <div className={`dynamic-search-container ${!results.length && !loading ? 'empty-state' : ''}`}>
@@ -402,6 +479,14 @@ const DynamicSearch = () => {
           <p className="no-results">No results found. Try a different search query.</p>
         )}
       </div>
+      <CreateFolderModal
+        isOpen={showCreateFolderModal}
+        onClose={() => setShowCreateFolderModal(false)}
+        onCreateFolder={name => {
+          createFolder(name);
+          setShowCreateFolderModal(false);
+        }}
+      />
     </div>
   );
 };

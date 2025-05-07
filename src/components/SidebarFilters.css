@@ -310,8 +310,11 @@
   width: 100%;
 }
 
-.working-folder-section {
-  padding: 10px 0;
+.working-folder-section, .folders-list, .folder-item, .folders-list .folder-header {
+  border-top: none !important;
+  border-bottom: none !important;
+  background: none !important;
+  box-shadow: none !important;
 }
 
 .working-folder-list {
@@ -694,4 +697,269 @@
   top: 50px;
   right: auto;
   margin-left: 8px;
+}
+
+.create-folder-button {
+  background: none;
+  border: none;
+  color: #457b9d;
+  cursor: pointer;
+  padding: 4px 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.create-folder-button:hover {
+  color: #274c77;
+  background-color: rgba(69, 123, 157, 0.1);
+}
+
+.doc-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.move-to-folder-select {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.move-to-folder-select:hover {
+  border-color: #457b9d;
+}
+
+.folders-list {
+  margin-top: 4px;
+  border-top: 1px solid #eee;
+  padding-top: 4px;
+}
+
+.folder-item {
+  margin-bottom: 12px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.folders-list .folder-header {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  padding: 4px 12px !important;
+  background-color: rgba(69, 123, 157, 0.1) !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+
+.folders-list .folder-icon,
+.folders-list .folder-icon svg {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px !important;
+  min-height: 14px !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+  /* color: #457b9d !important; */
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+  transition: color 0.2s ease !important;
+}
+
+.folders-list .folder-name {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.folders-list .folder-header:hover .folder-icon {
+  color: #274c77 !important;
+}
+
+.folders-list .folder-name {
+  flex: 1 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #274C77 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.folders-list .delete-folder-button {
+  background: none !important;
+  border: none !important;
+  color: #dc3545 !important;
+  cursor: pointer !important;
+  padding: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+}
+
+.folders-list .delete-folder-button:hover {
+  color: #c82333 !important;
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.folder-documents {
+  padding: 8px 12px;
+}
+
+.folder-doc-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.folder-doc-item .doc-title {
+  flex: 1;
+  margin-right: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #343434;
+}
+
+.folder-doc-item .remove-doc-button {
+  font-size: 12px;
+  padding: 2px;
+}
+
+/* Collapsed sidebar styles for new elements */
+.sidebar-filters.collapsed .create-folder-button,
+.sidebar-filters.collapsed .move-to-folder-select,
+.sidebar-filters.collapsed .folder-name,
+.sidebar-filters.collapsed .folder-doc-item .doc-title {
+  display: none !important;
+}
+
+.sidebar-filters.collapsed .folder-header {
+  justify-content: center;
+  padding: 8px 4px;
+}
+
+.sidebar-filters.collapsed .folder-icon {
+  margin-right: 0;
+}
+
+.sidebar-filters.collapsed .folder-documents {
+  padding: 4px;
+}
+
+.sidebar-filters.collapsed .folder-doc-item {
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.folders-header {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: #a3cef1 !important;
+  padding: 20px 20px 2px 20px !important;
+  margin-top: 24px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+}
+
+.folders-header > * {
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+.folders-header span {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #274C77;
+  letter-spacing: 0.5px;
+}
+
+.folders-header .create-folder-button {
+  background: none;
+  border: none;
+  color: #457b9d;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  transition: color 0.2s, background 0.2s;
+}
+
+.folders-header .create-folder-button:hover {
+  color: #274c77;
+  background-color: rgba(69, 123, 157, 0.1);
+}
+
+.folders-list .folder-header.drag-over {
+  background-color: #a3cef1 !important;
+  box-shadow: 0 0 0 2px #457b9d33;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.toggle-folder-button {
+  background: none !important;
+  border: none !important;
+  color: #8ca3b8 !important;
+  cursor: pointer;
+  font-size: 13px !important;
+  font-weight: normal !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+  box-shadow: none !important;
+}
+
+.toggle-folder-button:hover, .toggle-folder-button:focus {
+  color: #457b9d !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.toggle-folder-button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.sidebar-filters *, .sidebar-filters *::before, .sidebar-filters *::after {
+  border-top: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+.folder-actions {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.folder-header:hover .folder-actions {
+  opacity: 1;
 }

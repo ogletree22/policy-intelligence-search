@@ -1,12 +1,12 @@
 import React from 'react';
-import { FaTimes, FaTrash } from 'react-icons/fa';
+import { FaTimes, FaTrash, FaFolder } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import aiTechnologyIcon from '../assets/AI-technology.png';
 import betaIcon from '../assets/Pi-CoPilot_Beta.svg';
 import './WorkingFolderView.css';
 
-const WorkingFolderView = ({ isOpen, onClose, documents }) => {
+const WorkingFolderView = ({ isOpen, onClose, documents, title }) => {
   const navigate = useNavigate();
   const { removeFromWorkingFolder } = useWorkingFolder();
   
@@ -21,8 +21,11 @@ const WorkingFolderView = ({ isOpen, onClose, documents }) => {
   return (
     <div className="working-folder-overlay">
       <div className="working-folder-modal">
-        <div className="working-folder-header">
-          <h3>Working Folder Contents</h3>
+        <div className="working-folder-header" style={{ marginBottom: 0 }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FaFolder style={{ color: '#274C77', marginLeft: '20px' }} />
+            {title || 'Working Folder Contents'}
+          </h3>
           <div className="header-actions">
             <button 
               className="copilot-button" 

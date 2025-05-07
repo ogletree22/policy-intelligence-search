@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useContext } from 'react';
-import { FaUser, FaFolder, FaTrash, FaEye, FaTimes, FaChevronDown, FaChevronUp, FaBars, FaAngleDoubleLeft, FaAngleDoubleRight } from 'react-icons/fa';
+import { FaUser, FaFolder, FaTrash, FaEye, FaTimes, FaChevronDown, FaChevronUp, FaBars, FaAngleDoubleLeft, FaAngleDoubleRight, FaFolderPlus, FaChevronRight } from 'react-icons/fa';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { JurisdictionIcon, DocumentTypeIcon } from './icons/FilterIcons';
 import { AuthContext } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import { useSearchPage } from '../context/SearchPageContext';
 import './SidebarFilters.css';
 import WorkingFolderView from './WorkingFolderView';
 import { useSidebar } from '../context/SidebarContext';
+import CreateFolderModal from './CreateFolderModal';
 
 const JURISDICTIONS = [
   'Colorado',
@@ -164,6 +165,23 @@ const getJurisdictionCount = (jurisdiction, jurisdictionCounts = {}) => {
   return directCount + kendraCount + spaceCount;
 };
 
+// Add the same color palette as in DynamicSearch
+const FOLDER_COLORS = [
+  '#ff7043', // deep orange
+  '#42a5f5', // blue
+  '#66bb6a', // green
+  '#ab47bc', // purple
+  '#ffa726', // orange
+  '#26a69a', // teal
+  '#ec407a', // pink
+  '#7e57c2', // deep purple
+  '#d4e157', // lime
+  '#789262', // olive
+  '#8d6e63', // brown
+  '#29b6f6', // light blue
+  '#cfd8dc', // blue gray
+];
+
 const SidebarFilters = ({ 
   onFilterChange, 
   isDisabled, 
@@ -194,8 +212,23 @@ const SidebarFilters = ({
   const [showAllJurisdictions, setShowAllJurisdictions] = useState(false);
 
   // Get working folder functionality from context
-  const { workingFolderDocs, removeFromWorkingFolder } = useWorkingFolder();
+  const { 
+    workingFolderDocs, 
+    removeFromWorkingFolder, 
+    folders, 
+    createFolder,
+    deleteFolder,
+    moveToFolder,
+    removeFromFolder,
+    currentFolderId,
+    setCurrentFolderId
+  } = useWorkingFolder();
   const [isWorkingFolderOpen, setIsWorkingFolderOpen] = useState(false);
+  const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
+  const [draggedDocId, setDraggedDocId] = useState(null);
+  const [dragOverFolderId, setDragOverFolderId] = useState(null);
+  const [expandedFolders, setExpandedFolders] = useState({});
+  const [viewingFolder, setViewingFolder] = useState(null);
   
   // Add this near the top of the component function, after the state declarations
   // This will force the component to refresh when document counts change
@@ -545,46 +578,68 @@ const SidebarFilters = ({
                 );
               })}
             </div>
-            <div className="filter-separator"></div>
             <div className="working-folder-section">
-              <div className="working-folder-header">
-                <span>Working Folder ({workingFolderDocs.length})</span>
-                <div className="working-folder-actions">
-                  {instanceId !== 'copilot-page' && (
-                    <>
-                      <button 
-                        className="view-folder-button" 
-                        onClick={() => setIsWorkingFolderOpen(true)}
-                        title="View working folder contents"
-                      >
-                        <FaEye />
-                      </button>
-                      <button 
-                        className="clear-all-button"
-                        onClick={() => {
-                          // Clear all documents from working folder
-                          workingFolderDocs.forEach(doc => {
-                            removeFromWorkingFolder(doc.id);
-                          });
-                        }}
-                        title="Clear all documents"
-                        disabled={workingFolderDocs.length === 0}
-                      >
-                        <FaTimes />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="working-folder-list">
-                {workingFolderDocs.length === 0 ? (
-                  <div className="empty-folder-message">
-                    <span className="empty-text">No documents selected</span>
+              {false && (
+                <div className="working-folder-header">
+                  <span>Working Folder ({workingFolderDocs.length})</span>
+                  <div className="working-folder-actions">
+                    {instanceId !== 'copilot-page' && (
+                      <>
+                        <button 
+                          className="view-folder-button" 
+                          onClick={() => setIsWorkingFolderOpen(true)}
+                          title="View working folder contents"
+                        >
+                          <FaEye />
+                        </button>
+                        <button 
+                          className="clear-all-button"
+                          onClick={() => {
+                            // Clear all documents from working folder
+                            workingFolderDocs.forEach(doc => {
+                              removeFromWorkingFolder(doc.id);
+                            });
+                          }}
+                          title="Clear all documents"
+                          disabled={workingFolderDocs.length === 0}
+                        >
+                          <FaTimes />
+                        </button>
+                      </>
+                    )}
                   </div>
-                ) : (
-                  workingFolderDocs.map((doc) => (
-                    <div key={doc.id} className="working-folder-item">
-                      <span className="doc-title">{doc.title}</span>
+                </div>
+              )}
+              <div className="working-folder-list">
+                {workingFolderDocs.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="working-folder-item"
+                    draggable={true}
+                    onDragStart={() => { setDraggedDocId(doc.id); console.log('Drag start', doc.id); }}
+                    onDragEnd={() => { setDraggedDocId(null); console.log('Drag end'); }}
+                  >
+                    <span className="doc-title">{doc.title}</span>
+                    <div className="doc-actions">
+                      {folders.length > 0 && (
+                        <select
+                          className="move-to-folder-select"
+                          onChange={(e) => {
+                            const folderId = parseInt(e.target.value);
+                            if (folderId) {
+                              moveToFolder(doc.id, folderId);
+                            }
+                          }}
+                          value=""
+                        >
+                          <option value="">Move to...</option>
+                          {folders.map(folder => (
+                            <option key={folder.id} value={folder.id}>
+                              {folder.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                       <button
                         className="remove-doc-button"
                         onClick={() => removeFromWorkingFolder(doc.id)}
@@ -593,16 +648,125 @@ const SidebarFilters = ({
                         <FaTrash />
                       </button>
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
+              {/* New Folders header and create button */}
+              {folders.length > 0 || instanceId !== 'copilot-page' ? (
+                <div className="folders-header">
+                  <span>Folders</span>
+                  {instanceId !== 'copilot-page' && (
+                    <button 
+                      className="create-folder-button"
+                      onClick={() => setIsCreateFolderModalOpen(true)}
+                      title="Create new folder"
+                    >
+                      +
+                    </button>
+                  )}
+                </div>
+              ) : null}
+              {/* Folders list */}
+              {folders.length > 0 && (
+                <div className="folders-list">
+                  {folders.map((folder, idx) => {
+                    const isExpanded = expandedFolders[folder.id] !== false;
+                    return (
+                      <div key={folder.id} className="folder-item">
+                        <div
+                          className={`folder-header${dragOverFolderId === folder.id ? ' drag-over' : ''}`}
+                          onDragOver={e => {
+                            e.preventDefault();
+                            setDragOverFolderId(folder.id);
+                          }}
+                          onDragLeave={() => setDragOverFolderId(null)}
+                          onDrop={e => {
+                            e.preventDefault();
+                            let docId = e.dataTransfer.getData('application/x-doc-id');
+                            if (!docId && draggedDocId) docId = draggedDocId;
+                            if (docId) {
+                              moveToFolder(docId, folder.id);
+                            }
+                            setDragOverFolderId(null);
+                          }}
+                        >
+                          <button
+                            className="toggle-folder-button"
+                            onClick={() => setExpandedFolders(prev => ({ ...prev, [folder.id]: !isExpanded }))}
+                            aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
+                            style={{ marginRight: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#457b9d', fontSize: 14 }}
+                          >
+                            {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
+                          </button>
+                          {/* Colored folder icon with white drop shadow for contrast */}
+                          <FaFolder className="folder-icon" style={{ color: FOLDER_COLORS[idx % FOLDER_COLORS.length], marginRight: 8, filter: 'drop-shadow(0 0 2px #fff)' }} />
+                          <span className="folder-name">
+                            {folder.name}
+                            <span className="folder-count" style={{ color: '#274C77', fontSize: '13px', fontWeight: 700, marginLeft: 4 }}>
+                              ({folder.documents.length})
+                            </span>
+                          </span>
+                          <span className="folder-actions">
+                            <button
+                              className="view-folder-button"
+                              onClick={() => setViewingFolder(folder)}
+                              title="View folder contents"
+                            >
+                              <FaEye />
+                            </button>
+                            <button
+                              className="delete-folder-button"
+                              onClick={() => deleteFolder(folder.id)}
+                              title="Delete folder"
+                            >
+                              <FaTrash />
+                            </button>
+                          </span>
+                        </div>
+                        {isExpanded && folder.documents.length > 0 && (
+                          <div className="folder-documents">
+                            {folder.documents.map(doc => (
+                              <div key={doc.id} className="folder-doc-item">
+                                <span className="doc-title">{doc.title}</span>
+                                <button
+                                  className="remove-doc-button"
+                                  onClick={() => removeFromFolder(doc.id, folder.id)}
+                                  title="Remove from folder"
+                                >
+                                  <FaTrash />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
           {instanceId !== 'copilot-page' && (
-            <WorkingFolderView 
-              isOpen={isWorkingFolderOpen}
-              onClose={() => setIsWorkingFolderOpen(false)}
-              documents={workingFolderDocs}
+            <>
+              <WorkingFolderView 
+                isOpen={isWorkingFolderOpen}
+                onClose={() => setIsWorkingFolderOpen(false)}
+                documents={workingFolderDocs}
+              />
+              <CreateFolderModal
+                isOpen={isCreateFolderModalOpen}
+                onClose={() => setIsCreateFolderModalOpen(false)}
+                onCreateFolder={createFolder}
+              />
+            </>
+          )}
+          {/* Folder view modal */}
+          {viewingFolder && (
+            <WorkingFolderView
+              isOpen={!!viewingFolder}
+              onClose={() => setViewingFolder(null)}
+              documents={viewingFolder.documents}
+              title={viewingFolder.name}
             />
           )}
         </>

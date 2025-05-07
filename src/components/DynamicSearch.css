@@ -748,4 +748,26 @@
   margin-top: 0;
   color: #acc6e4;
   font-size: 12px;
+}
+
+.add-direct-to-folder-button {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.add-direct-to-folder-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.add-direct-to-folder-button:hover {
+  background: none !important;
 } 
