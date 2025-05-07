@@ -8,6 +8,8 @@ import './SidebarFilters.css';
 import WorkingFolderView from './WorkingFolderView';
 import { useSidebar } from '../context/SidebarContext';
 import CreateFolderModal from './CreateFolderModal';
+import { FOLDER_COLORS, FolderIconWithIndicator } from './FolderIconWithIndicator';
+import { useFolderExpansion } from '../context/FolderExpansionContext';
 
 const JURISDICTIONS = [
   'Colorado',
@@ -165,71 +167,6 @@ const getJurisdictionCount = (jurisdiction, jurisdictionCounts = {}) => {
   return directCount + kendraCount + spaceCount;
 };
 
-// Add the same color palette as in DynamicSearch
-const FOLDER_COLORS = [
-  '#ff7043', // deep orange
-  '#42a5f5', // blue
-  '#66bb6a', // green
-  '#ab47bc', // purple
-  '#ffa726', // orange
-  '#26a69a', // teal
-  '#ec407a', // pink
-  '#7e57c2', // deep purple
-  '#d4e157', // lime
-  '#789262', // olive
-  '#8d6e63', // brown
-  '#29b6f6', // light blue
-  '#cfd8dc', // blue gray
-];
-
-/**
- * Fetch document type counts based on selected jurisdictions
- * @param {Array} selectedJurisdictions - Array of selected jurisdiction names
- * @param {string} query - Current search query
- * @returns {Promise<Object>} - Document type counts
- */
-const fetchDocTypeCounts = async (selectedJurisdictions, query) => {
-  try {
-    // Skip API call if no jurisdictions selected or no query
-    if (!selectedJurisdictions || selectedJurisdictions.length === 0 || !query || query.trim() === '') {
-      console.log('Skipping doc type counts API call - no jurisdictions selected or no query');
-      return null;
-    }
-
-    console.log(`Fetching doc type counts for ${selectedJurisdictions.length} jurisdictions with query: "${query}"`);
-    
-    const response = await fetch('https://gbgi989gbe.execute-api.us-west-2.amazonaws.com/sbx/facet-counts-doc-type', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        selectedJurisdictions,
-        query
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log('Received doc type counts raw response:', data);
-    
-    // Check if we have docTypeCounts in the response
-    if (data && data.docTypeCounts) {
-      console.log('Extracted document type counts:', data.docTypeCounts);
-      return data.docTypeCounts;
-    } else {
-      console.warn('API response did not contain docTypeCounts property:', data);
-      return {};
-    }
-  } catch (error) {
-    console.error('Error fetching doc type counts:', error);
-    return null;
-  }
-};
-
 const SidebarFilters = ({ 
   onFilterChange, 
   isDisabled, 
@@ -275,9 +212,11 @@ const SidebarFilters = ({
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [draggedDocId, setDraggedDocId] = useState(null);
   const [dragOverFolderId, setDragOverFolderId] = useState(null);
-  const [expandedFolders, setExpandedFolders] = useState({});
   const [viewingFolder, setViewingFolder] = useState(null);
   
+  // Persistent expandedFolders state
+  const { expandedFolders, setExpandedFolders } = useFolderExpansion();
+
   // Add this near the top of the component function, after the state declarations
   // This will force the component to refresh when document counts change
   React.useEffect(() => {
@@ -773,24 +712,27 @@ const SidebarFilters = ({
                             {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
                           </button>
                           {/* Colored folder icon with white drop shadow for contrast */}
-                          <FaFolder className="folder-icon" style={{ color: FOLDER_COLORS[idx % FOLDER_COLORS.length], marginRight: 8, filter: 'drop-shadow(0 0 2px #fff)' }} />
+                          <FolderIconWithIndicator 
+                            indicatorColor={FOLDER_COLORS[idx % FOLDER_COLORS.length]} 
+                            size={40} 
+                            count={folder.documents.length}
+                          />
                           <span className="folder-name">
                             {folder.name}
-                            <span className="folder-count" style={{ color: '#274C77', fontSize: '13px', fontWeight: 700, marginLeft: 4 }}>
-                              ({folder.documents.length})
-                            </span>
                           </span>
                           <span className="folder-actions">
-                            <button
-                              className="view-folder-button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setViewingFolder(folder);
-                              }}
-                              title="View folder contents"
-                            >
-                              <FaEye />
-                            </button>
+                            {instanceId !== 'copilot-page' && (
+                              <button
+                                className="view-folder-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setViewingFolder(folder);
+                                }}
+                                title="View folder contents"
+                              >
+                                <FaEye />
+                              </button>
+                            )}
                             <button
                               className="delete-folder-button"
                               onClick={(e) => {
@@ -842,12 +784,18 @@ const SidebarFilters = ({
           )}
           {/* Folder view modal */}
           {viewingFolder && (
-            <WorkingFolderView
-              isOpen={!!viewingFolder}
-              onClose={() => setViewingFolder(null)}
-              documents={viewingFolder.documents}
-              title={viewingFolder.name}
-            />
+            (() => {
+              const latestFolder = folders.find(f => f.id === viewingFolder.id);
+              return (
+                <WorkingFolderView
+                  isOpen={!!viewingFolder}
+                  onClose={() => setViewingFolder(null)}
+                  documents={latestFolder ? latestFolder.documents : []}
+                  title={latestFolder ? latestFolder.name : viewingFolder.name}
+                  folder={latestFolder || viewingFolder}
+                />
+              );
+            })()
           )}
         </>
       )}
