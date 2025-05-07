@@ -163,7 +163,6 @@ const DynamicSearch = () => {
     return docs.slice(start, start + DOCS_PER_PAGE);
   };
 
-<<<<<<< HEAD
   // Fixed palette of visually distinct, accessible colors
   const FOLDER_COLORS = [
     '#ff7043', // deep orange
@@ -335,29 +334,6 @@ const DynamicSearch = () => {
           <span className="result-jurisdiction">{result.jurisdiction}</span>
           <span className="result-type">{getDocumentType(result)}</span>
         </div>
-=======
-  const renderResultCard = (result, index) => (
-    <div key={`${result.id || result.url || `result-${index}-${Math.random().toString(36).substring(2, 7)}`}`} className="result-card">
-      <div className="result-card-header">
-        <h3>
-          <a href={result.url} target="_blank" rel="noopener noreferrer">
-            {result.title}
-          </a>
-        </h3>
-        <button
-          className={`folder-button ${isInWorkingFolder(result) ? 'in-folder' : ''}`}
-          onClick={() => {
-            if (isInWorkingFolder(result)) {
-              removeFromWorkingFolder(result.id);
-            } else {
-              addToWorkingFolder(result);
-            }
-          }}
-          title={isInWorkingFolder(result) ? "Remove from working folder" : "Add to working folder"}
-        >
-          {isInWorkingFolder(result) ? <FaFolderMinus /> : <FaFolderPlus />}
-        </button>
->>>>>>> 866882126daff8be6e08e609a7313bfc8fdb3562
       </div>
     );
   };
