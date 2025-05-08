@@ -331,6 +331,10 @@ export const SearchPageProvider = ({ children }) => {
     searchRunId.current++;
     const currentRunId = searchRunId.current;
     
+    // Reset filters when a new search is performed
+    setFilters({});
+    console.log('Filters reset for new search');
+    
     initialSearchPerformed.current = true;
     
     if (query && query.trim() !== '') {

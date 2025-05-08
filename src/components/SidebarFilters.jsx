@@ -225,7 +225,7 @@ const SidebarFilters = ({
 }) => {
   const { signOut, user } = useContext(AuthContext);
   // Get the sorted jurisdictions and search context from SearchPageContext
-  const { sortedJurisdictions: contextSortedJurisdictions, searchQuery, documentCounts: contextDocumentCounts, updateDocumentTypeCounts } = useSearchPage();
+  const { sortedJurisdictions: contextSortedJurisdictions, searchQuery, documentCounts: contextDocumentCounts, updateDocumentTypeCounts, filters: contextFilters } = useSearchPage();
   const [showUserMenu, setShowUserMenu] = useState(false);
   // Add state to track all filters
   const [filters, setFilters] = useState({
@@ -238,6 +238,22 @@ const SidebarFilters = ({
     jurisdictions: {},
     documentTypes: {}
   });
+
+  // Sync with context filters - if they're reset on new search, clear the sidebar filters too
+  React.useEffect(() => {
+    // If context filters are empty, reset local filters
+    if (contextFilters && Object.keys(contextFilters).length === 0) {
+      console.log("Context filters were reset, clearing sidebar filters");
+      setFilters({
+        jurisdictions: {},
+        documentTypes: {}
+      });
+      setPendingFilters({
+        jurisdictions: {},
+        documentTypes: {}
+      });
+    }
+  }, [contextFilters]);
 
   // Set default state to open or collapsed based on jurisdictionsInactive
   const [isJurisdictionCollapsed, setIsJurisdictionCollapsed] = useState(true);

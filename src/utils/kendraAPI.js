@@ -424,7 +424,8 @@ export const transformKendraResults = (kendraResponse) => {
   // Track used IDs to ensure uniqueness
   const usedIds = new Set();
   
-  return resultItems.map((item, index) => {
+  // Create transformed results
+  const transformedResults = resultItems.map((item, index) => {
     // For debugging, log every 5th item to avoid console flood
     const shouldLog = index % 5 === 0 || index === 0;
     if (shouldLog) {
@@ -614,7 +615,27 @@ export const transformKendraResults = (kendraResponse) => {
     // Add the ID to used IDs set
     usedIds.add(docId);
     
-    // Create and return the standardized document object
+    // Extract the data source for determining which duplicate to keep
+    const dataSource = item.DocumentId ? 
+      (item.DocumentId.includes('sbx-kendra-index') ? 'kendra-index' : 
+       item.DocumentId.includes('sbx-colorado-only') ? 'colorado-only' : 'other') : 'unknown';
+    
+    // Extract regulation number from title if available (for Colorado regulations)
+    const title = item.DocumentTitle || item.Title || '';
+    let regNumber = null;
+    let normalizedTitle = title;
+    
+    // For Colorado regulations, try to extract the regulation number
+    if (jurisdiction === 'Colorado' && title.includes('Regulation') && title.includes('Number')) {
+      const match = title.match(/Regulation\s+Number\s+(\d+)/i);
+      if (match && match[1]) {
+        regNumber = parseInt(match[1], 10);
+        // Create a normalized title for deduplication
+        normalizedTitle = `Colorado Regulation ${regNumber}`;
+      }
+    }
+    
+    // Create and return the standardized document object with deduplication info
     return {
       id: docId,
       title: item.DocumentTitle || item.Title || 'Untitled Document',
@@ -622,15 +643,106 @@ export const transformKendraResults = (kendraResponse) => {
       description: description,
       type: documentType,
       jurisdiction: jurisdiction, // Use extracted jurisdiction
-      source: item.UpdatedAt || item.CreatedAt || new Date().toISOString()
+      source: item.UpdatedAt || item.CreatedAt || new Date().toISOString(),
+      // Add fields for deduplication
+      dataSource,
+      regNumber,
+      normalizedTitle,
+      // Original item ID for debugging
+      originalId: item.DocumentId || ''
     };
   });
+
+  // Deduplicate results
+  console.log(`Deduplicating ${transformedResults.length} results...`);
+  const uniqueDocuments = new Map();
+  
+  // First pass: Group by normalized title and metadata
+  transformedResults.forEach(doc => {
+    // Create a deduplication key
+    let dedupeKey;
+    
+    if (doc.regNumber && doc.jurisdiction === 'Colorado') {
+      // For Colorado regulations with reg numbers, use jurisdiction + regNumber
+      dedupeKey = `${doc.jurisdiction}-regulation-${doc.regNumber}`;
+    } else {
+      // For other documents, use a normalized version of the title + jurisdiction
+      const normalizedTitle = doc.title
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+      dedupeKey = `${doc.jurisdiction}-${normalizedTitle}`;
+    }
+    
+    // If we already have this document, decide which to keep
+    if (uniqueDocuments.has(dedupeKey)) {
+      const existingDoc = uniqueDocuments.get(dedupeKey);
+      
+      // Prefer kendra-index over colorado-only, but prefer docs with longer descriptions
+      // Keep the one with more info, or if they have the same description length, 
+      // prefer documents from the main kendra-index
+      if (doc.description.length > existingDoc.description.length + 20) {
+        // If the new document has a significantly longer description, prefer it
+        uniqueDocuments.set(dedupeKey, doc);
+        console.log(`Replacing document "${existingDoc.title}" with better version from ${doc.dataSource}`);
+      } else if (doc.dataSource === 'kendra-index' && existingDoc.dataSource !== 'kendra-index' && 
+                doc.description.length >= existingDoc.description.length - 20) {
+        // If the new document is from kendra-index and has a comparable description, prefer it
+        uniqueDocuments.set(dedupeKey, doc);
+        console.log(`Replacing document "${existingDoc.title}" with preferred source ${doc.dataSource}`);
+      }
+      // Otherwise keep the existing one
+    } else {
+      // No duplicate yet, just add it
+      uniqueDocuments.set(dedupeKey, doc);
+    }
+  });
+  
+  // Convert Map back to array and remove deduplication fields
+  const dedupedResults = Array.from(uniqueDocuments.values()).map(doc => {
+    // Remove internal fields used for deduplication
+    const { dataSource, regNumber, normalizedTitle, originalId, ...cleanDoc } = doc;
+    return cleanDoc;
+  });
+  
+  console.log(`Deduplication complete. Reduced from ${transformedResults.length} to ${dedupedResults.length} results`);
+  return dedupedResults;
+};
+
+/**
+ * Helper function to normalize jurisdiction names, fixing typos and ensuring consistency
+ * @param {string} value - The jurisdiction value to normalize
+ * @returns {string} - The normalized jurisdiction value
+ */
+const normalizeJurisdiction = (value) => {
+  if (!value) return 'Unknown';
+  
+  // Fix common typos
+  if (value === 'Kentuvky') return 'Kentucky';
+  
+  // Special handling for Albuquerque documents
+  // The value could be "New Mexico" but the document is from Albuquerque
+  // We'll handle this more specifically in getJurisdictionFromResponse
+  
+  return value;
 };
 
 /**
  * Helper function to extract jurisdiction from Lambda response
  */
 function getJurisdictionFromResponse(item) {
+  const title = item.DocumentTitle || '';
+  const uri = item.SourceUri || '';
+  const documentId = item.DocumentId || '';
+  
+  // Special case for New Mexico-Albuquerque
+  // Check for Albuquerque in document ID or title first
+  if (documentId.includes('New_Mexico-Albuquerque') || 
+      documentId.includes('New Mexico-Albuquerque') ||
+      title.startsWith('New Mexico-Albuquerque')) {
+    return 'New_Mexico-Albuquerque';
+  }
+  
   // First check DocumentAttributes for jurisdiction
   if (Array.isArray(item.DocumentAttributes)) {
     const jurisdictionAttr = item.DocumentAttributes.find(
@@ -639,13 +751,9 @@ function getJurisdictionFromResponse(item) {
     if (jurisdictionAttr?.Value?.StringValue) {
       // Always convert spaces to underscores for consistency in UI
       const jurisdictionValue = jurisdictionAttr.Value.StringValue;
-      return jurisdictionValue.replace(/ /g, '_');
+      return normalizeJurisdiction(jurisdictionValue).replace(/ /g, '_');
     }
   }
-
-  const title = item.DocumentTitle || '';
-  const uri = item.SourceUri || '';
-  const documentId = item.DocumentId || '';
   
   // FIRST PRIORITY: Check for California air districts - these take precedence 
   // Many California districts have their name in the document title with pattern:
@@ -718,12 +826,18 @@ function getJurisdictionFromResponse(item) {
       }
     }
     
+    // Check for New Mexico-Albuquerque in the S3 path
+    if (documentId.includes('/New_Mexico-Albuquerque/')) {
+      return 'New_Mexico-Albuquerque';
+    }
+    
     // Then check for state name in the S3 path
     const parts = documentId.split('/');
     if (parts.length >= 4) {  // should be at least 4 parts: s3://, bucket, "kendra-index", state
-      const possibleState = parts[3]; // e.g., "Maryland"
+      const possibleState = parts[3]; // e.g., "Maryland" or "Kentuvky"
       if (possibleState && !possibleState.includes('_')) {
-        return possibleState;
+        // Normalize state name to fix typos like "Kentuvky"
+        return normalizeJurisdiction(possibleState);
       }
     }
   }
@@ -795,13 +909,14 @@ function getJurisdictionFromResponse(item) {
       'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
     ];
     
-    if (states.includes(statePart)) {
-      return statePart.replace(/ /g, '_');
+    // Apply normalization to fix typos like "Kentuvky"
+    const normalizedStatePart = normalizeJurisdiction(statePart);
+    if (states.includes(normalizedStatePart)) {
+      return normalizedStatePart.replace(/ /g, '_');
     }
   }
-
-  // Check the document metadata for state names
-  // Look for these patterns in the document ID or title
+  
+  // Update statePatterns to include New Mexico-Albuquerque as a separate jurisdiction
   const statePatterns = [
     { name: 'Alabama', pattern: /Alabama|\/AL\/|\.al\.gov/ },
     { name: 'Alaska', pattern: /Alaska|\/AK\/|\.ak\.gov/ },
@@ -819,7 +934,7 @@ function getJurisdictionFromResponse(item) {
     { name: 'Indiana', pattern: /Indiana|\/IN\/|\.in\.gov/ },
     { name: 'Iowa', pattern: /Iowa|\/IA\/|\.ia\.gov/ },
     { name: 'Kansas', pattern: /Kansas|\/KS\/|\.ks\.gov/ },
-    { name: 'Kentucky', pattern: /Kentucky|\/KY\/|\.ky\.gov/ },
+    { name: 'Kentucky', pattern: /Kentucky|Kentuvky|\/KY\/|\.ky\.gov/ },
     { name: 'Louisiana', pattern: /Louisiana|\/LA\/|\.la\.gov/ },
     { name: 'Maine', pattern: /Maine|\/ME\/|\.me\.gov/ },
     { name: 'Maryland', pattern: /Maryland|\/MD\/|\.md\.gov/ },
@@ -833,6 +948,7 @@ function getJurisdictionFromResponse(item) {
     { name: 'Nevada', pattern: /Nevada|\/NV\/|\.nv\.gov/ },
     { name: 'New Hampshire', pattern: /New_Hampshire|New Hampshire|\/NH\/|\.nh\.gov/ },
     { name: 'New Jersey', pattern: /New_Jersey|New Jersey|\/NJ\/|\.nj\.gov/ },
+    { name: 'New Mexico-Albuquerque', pattern: /New_Mexico-Albuquerque|New Mexico-Albuquerque|Albuquerque,? NM|Albuquerque,? New Mexico/ },
     { name: 'New Mexico', pattern: /New_Mexico|New Mexico|\/NM\/|\.nm\.gov/ },
     { name: 'New York', pattern: /New_York|New York|\/NY\/|\.ny\.gov/ },
     { name: 'North Carolina', pattern: /North_Carolina|North Carolina|\/NC\/|\.nc\.gov/ },
