@@ -20,6 +20,7 @@ const LoginPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [passwordMatchError, setPasswordMatchError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [inviteCode, setInviteCode] = useState('');
   const { signIn, signUp, confirmSignUp, resetPassword, confirmResetPassword } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -120,11 +121,15 @@ const LoginPage = () => {
           setError('First name and last name are required');
           return;
         }
+        if (!inviteCode.trim()) {
+          setError('Invite code is required');
+          return;
+        }
         await signUp(email, password, {
           email,
           given_name: firstName.trim(),
           family_name: lastName.trim()
-        });
+        }, inviteCode.trim());
         setShowConfirmation(true);
       }
     } catch (error) {
@@ -252,6 +257,15 @@ const LoginPage = () => {
               placeholder="Last Name"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
+              required={!isLogin}
+            />
+          </div>
+          <div className="input-group">
+            <input
+              type="text"
+              placeholder="Invite Code"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
               required={!isLogin}
             />
           </div>

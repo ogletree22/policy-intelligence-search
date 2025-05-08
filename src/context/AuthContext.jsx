@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const handleSignUp = async (username, password, attributes) => {
+    const handleSignUp = async (username, password, attributes, inviteCode) => {
         try {
             const { user } = await signUp({
                 username,
@@ -49,6 +49,9 @@ export const AuthProvider = ({ children }) => {
                         email: attributes.email,
                         given_name: attributes.given_name,
                         family_name: attributes.family_name
+                    },
+                    clientMetadata: {
+                        inviteCode: inviteCode
                     }
                 }
             });
