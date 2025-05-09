@@ -77,6 +77,7 @@ const SearchResults = () => {
 
     // Only trigger swipe if horizontal movement is significant
     if (Math.abs(xDiff) > 10) {
+      e.preventDefault(); // Prevent default to avoid scroll lock
       setTouchEnd({
         x: e.targetTouches[0].clientX,
         docId
