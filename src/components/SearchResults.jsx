@@ -161,6 +161,10 @@ const SearchResults = () => {
   };
 
   if (loading) {
+    if (isMobile) {
+      // On mobile, do not show the loading text below the navbar
+      return null;
+    }
     return (
       <div className="results-container">
         <div className="loading-spinner">Loading...</div>

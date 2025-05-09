@@ -33,10 +33,13 @@ const MobileSearchBar = ({ centered }) => {
         placeholder="Search for policies..."
         className="mobile-search-input"
       />
+      {loading && (
+        null
+      )}
       <button 
         className="mobile-search-button"
         onClick={() => handleSearch(query)}
-        disabled={loading}
+        disabled={loading || !query.trim()}
         aria-label="Search"
       >
         <FaSearch />

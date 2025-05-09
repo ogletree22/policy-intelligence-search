@@ -107,4 +107,18 @@
   opacity: 1;
   pointer-events: all;
   transition: opacity 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #457B9D;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 8px;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 } 

@@ -26,9 +26,20 @@ const MobileLayout = () => {
   // Crossfade search bar transition state
   const [searchBarTransition, setSearchBarTransition] = useState(activeTab === 'search' && (!results || results.length === 0) && !loading && !error ? 'centered' : 'bottom');
   const prevIsSearchEmpty = useRef(activeTab === 'search' && (!results || results.length === 0) && !loading && !error);
+  const fadeOutTimeout = useRef();
+  const fadeInTimeout = useRef();
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    if (
+      tab === 'search' &&
+      (!results || results.length === 0) &&
+      !loading &&
+      !error
+    ) {
+      setSearchBarTransition('centered');
+      prevIsSearchEmpty.current = true;
+    }
   };
 
   const handleSignOut = async () => {
@@ -65,21 +76,29 @@ const MobileLayout = () => {
   const isSearchEmpty = activeTab === 'search' && (!results || results.length === 0) && !loading && !error;
 
   useEffect(() => {
-    // When search is initiated, trigger fade out, then fade in at bottom
+    // Clear any previous timeouts
+    if (fadeOutTimeout.current) clearTimeout(fadeOutTimeout.current);
+    if (fadeInTimeout.current) clearTimeout(fadeInTimeout.current);
+
     if (prevIsSearchEmpty.current && !isSearchEmpty) {
       setSearchBarTransition('fadingOut');
-      setTimeout(() => {
+      fadeOutTimeout.current = setTimeout(() => {
         setSearchBarTransition('fadingIn');
-        setTimeout(() => {
+        fadeInTimeout.current = setTimeout(() => {
           setSearchBarTransition('bottom');
         }, 700);
       }, 700);
     }
-    // If user clears search, go back to centered
     if (!prevIsSearchEmpty.current && isSearchEmpty) {
       setSearchBarTransition('centered');
     }
     prevIsSearchEmpty.current = isSearchEmpty;
+
+    // Cleanup on unmount
+    return () => {
+      if (fadeOutTimeout.current) clearTimeout(fadeOutTimeout.current);
+      if (fadeInTimeout.current) clearTimeout(fadeInTimeout.current);
+    };
   }, [isSearchEmpty]);
 
   if (loadingWelcome) return null;
@@ -144,6 +163,21 @@ const MobileLayout = () => {
       <div className="mobile-content">
         {activeTab === 'search' ? (
           <div className="search-section">
+            {loading && (
+              <div style={{
+                position: 'fixed',
+                top: '30%',
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'center',
+                zIndex: 300
+              }}>
+                <div className="spinner" style={{ width: 64, height: 64, borderWidth: 3 }} />
+              </div>
+            )}
             <SearchResults />
           </div>
         ) : (
