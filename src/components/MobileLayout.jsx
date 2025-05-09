@@ -10,6 +10,7 @@ import MobileWelcomeOverlay from './MobileWelcomeOverlay';
 import piLogo from '../assets/PI Logo long.svg';
 import MobileFolderIcon from './MobileFolderIcon';
 import WorkingFolderView from './WorkingFolderView';
+import piGlobalFolder from '../assets/PI_global_folder.svg';
 import './MobileLayout.css';
 
 const MobileLayout = () => {
@@ -182,8 +183,7 @@ const MobileLayout = () => {
       {workingFolderDocs.length > 0 && (
         <div
           className="mobile-folder-fab"
-          onClick={() => setShowFolderModal(true)}
-          role="button"
+          {...(activeTab === 'chat' ? {} : { onClick: () => setShowFolderModal(true), role: 'button' })}
           style={{
             position: 'fixed',
             bottom: 90,
@@ -196,7 +196,7 @@ const MobileLayout = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            cursor: 'pointer',
+            cursor: activeTab === 'chat' ? 'default' : 'pointer',
             border: '2px solid #f3f3f3',
             height: 48,
             minWidth: 64,
@@ -207,7 +207,11 @@ const MobileLayout = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-            <MobileFolderIcon size={44} count={workingFolderDocs.length} />
+            {activeTab === 'chat' ? (
+              <img src={piGlobalFolder} alt="PI Global Folder" style={{ width: 32, height: 32 }} />
+            ) : (
+              <MobileFolderIcon size={44} count={workingFolderDocs.length} />
+            )}
           </div>
         </div>
       )}

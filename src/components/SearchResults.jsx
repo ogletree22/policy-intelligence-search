@@ -217,9 +217,7 @@ const SearchResults = () => {
               )}
             </div>
             {isMobile && (
-              <div className="swipe-hint">
-                {inFolder ? '← Swipe left to remove' : '→ Swipe right to add'}
-              </div>
+              null
             )}
           </div>
         );
