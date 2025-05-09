@@ -1,4 +1,5 @@
 import React from 'react';
+import MobileFolderSVG from '../assets/Mobile_folder.svg';
 
 export const FOLDER_COLORS = [
   '#ff7043', // deep orange
@@ -34,4 +35,31 @@ export const FolderIconWithIndicator = ({ indicatorColor = "#ffb300", size = 18,
       {count}
     </text>
   </svg>
-); 
+);
+
+export const MobileFolderIconWithIndicator = ({ size = 32, count = 0, style = {} }) => {
+  // The folder will be 70% of the icon size (10% larger than before)
+  const folderSize = size * 0.7;
+  // Indicator: half previous size, top-right
+  const indicatorRadius = size * 0.14;
+  const indicatorCenterX = size * 0.82;
+  const indicatorCenterY = size * 0.18;
+  const indicatorFontSize = size * 0.22;
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 4539 4620"
+      style={{ display: 'inline-block', verticalAlign: 'middle', ...style }}
+      xmlns="http://www.w3.org/2000/svg"
+      xmlnsXlink="http://www.w3.org/1999/xlink"
+      xmlSpace="preserve"
+    >
+      <rect id="Mobile_folder" x="0" y="0" width="4538.57" height="4619.08" fill="none"/>
+      <path d="M2298.25,543.192l0,3895.83l-12.241,60.377l-33.147,49.186l-49.187,33.147l-60.377,12.242l-1969.35,0l-60.376,-12.242l-49.187,-33.147l-33.147,-49.186l-12.242,-60.377l0,-3895.83l12.242,-60.377l33.147,-49.187l49.187,-33.147l60.376,-12.241l1969.35,-0l60.377,12.241l49.187,33.147l33.147,49.187l12.241,60.377Zm-854.409,3708.37c0,-59.451 -48.267,-107.718 -107.718,-107.718l-354.995,0c-59.451,0 -107.718,48.267 -107.718,107.718c-0,59.451 48.267,107.718 107.718,107.718l354.995,-0c59.451,-0 107.718,-48.267 107.718,-107.718Zm606.409,-319.031l0,-3296.29l-1783.25,-0l0,3296.29l1783.25,-0Zm-891.625,-3175.49c77.613,-0 140.625,63.012 140.625,140.625c0,77.613 -63.012,140.625 -140.625,140.625c-77.613,-0 -140.625,-63.012 -140.625,-140.625c0,-77.613 63.012,-140.625 140.625,-140.625Z" style={{fill:'#274c77'}}/>
+      {/* Indicator at top-right */}
+      <circle cx={indicatorCenterX * 4539} cy={indicatorCenterY * 4620} r={indicatorRadius * 4539} fill="#ffb300" />
+      <text x={indicatorCenterX * 4539} y={(indicatorCenterY * 4620) + (indicatorRadius * 4539 * 0.35)} textAnchor="middle" dominantBaseline="middle" style={{ fontFamily: "Roboto, 'Roboto Condensed', sans-serif", fontWeight: 700, fontSize: indicatorFontSize * 4539, fill: "#274c77" }}>{count}</text>
+    </svg>
+  );
+}; 

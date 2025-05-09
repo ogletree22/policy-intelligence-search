@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import './MobileWorkingFolderModal.css';
+import { FaMobileAlt } from 'react-icons/fa';
 
 const MobileWorkingFolderModal = ({ onClose }) => {
   const { workingFolderDocs, removeFromWorkingFolder } = useWorkingFolder();
@@ -120,7 +121,10 @@ const MobileWorkingFolderModal = ({ onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
-          <h2 className="modal-title">Working Folder</h2>
+          <h2 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FaMobileAlt style={{ color: '#274C77' }} />
+            Mobile Folder
+          </h2>
         </div>
         
         <div className="documents-list">

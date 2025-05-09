@@ -1028,3 +1028,11 @@
   transition: background 0.2s;
 }
 
+.duplicate-notice {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.duplicate-notice.visible {
+  opacity: 1;
+}
+

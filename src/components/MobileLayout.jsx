@@ -14,7 +14,9 @@ import './MobileLayout.css';
 const MobileLayout = () => {
   const [activeTab, setActiveTab] = useState('search');
   const [showFolderModal, setShowFolderModal] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    return !localStorage.getItem('hasSeenMobileWelcome');
+  });
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { results, loading } = useSearchPage();
   const { workingFolderDocs } = useWorkingFolder();
@@ -50,7 +52,10 @@ const MobileLayout = () => {
   return (
     <div className="mobile-layout">
       {showWelcome && (
-        <MobileWelcomeOverlay onClose={() => setShowWelcome(false)} />
+        <MobileWelcomeOverlay onClose={() => {
+          setShowWelcome(false);
+          localStorage.setItem('hasSeenMobileWelcome', 'true');
+        }} />
       )}
       <div className="mobile-header">
         <div className="header-content">
@@ -89,6 +94,10 @@ const MobileLayout = () => {
               </button>
               {showUserMenu && (
                 <div className="user-dropdown">
+                  <button onClick={() => {
+                    setShowWelcome(true);
+                    setShowUserMenu(false);
+                  }}>Help</button>
                   <button onClick={handleSignOut}>Sign Out</button>
                 </div>
               )}

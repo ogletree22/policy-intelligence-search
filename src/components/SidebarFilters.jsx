@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useContext } from 'react';
-import { FaUser, FaFolder, FaTrash, FaEye, FaTimes, FaChevronDown, FaChevronUp, FaBars, FaAngleDoubleLeft, FaAngleDoubleRight, FaFolderPlus, FaChevronRight } from 'react-icons/fa';
+import { FaUser, FaFolder, FaTrash, FaEye, FaTimes, FaChevronDown, FaChevronUp, FaBars, FaAngleDoubleLeft, FaAngleDoubleRight, FaFolderPlus, FaChevronRight, FaMobileAlt } from 'react-icons/fa';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { JurisdictionIcon, DocumentTypeIcon } from './icons/FilterIcons';
 import { AuthContext } from '../context/AuthContext';
@@ -9,6 +9,7 @@ import WorkingFolderView from './WorkingFolderView';
 import { useSidebar } from '../context/SidebarContext';
 import CreateFolderModal from './CreateFolderModal';
 import { FOLDER_COLORS, FolderIconWithIndicator } from './FolderIconWithIndicator';
+import MobileFolderIcon from './MobileFolderIcon';
 import { useFolderExpansion } from '../context/FolderExpansionContext';
 
 const JURISDICTIONS = [
@@ -495,6 +496,12 @@ const SidebarFilters = ({
   // Add at the top, after other useState declarations
   const { sidebarCollapsed: isCollapsed, setSidebarCollapsed } = useSidebar();
 
+  // State for expanding/collapsing the Mobile Folder
+  const [isMobileFolderExpanded, setIsMobileFolderExpanded] = useState(true);
+
+  // Add state for duplicate notification
+  const [duplicateNotice, setDuplicateNotice] = useState({ folderId: null, show: false });
+
   const handleToggleCollapse = () => {
     setSidebarCollapsed(!isCollapsed);
   };
@@ -698,45 +705,7 @@ const SidebarFilters = ({
                 </div>
               )}
               <div className="working-folder-list">
-                {workingFolderDocs.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="working-folder-item"
-                    draggable={true}
-                    onDragStart={() => { setDraggedDocId(doc.id); console.log('Drag start', doc.id); }}
-                    onDragEnd={() => { setDraggedDocId(null); console.log('Drag end'); }}
-                  >
-                    <span className="doc-title">{doc.title}</span>
-                    <div className="doc-actions">
-                      {folders.length > 0 && (
-                        <select
-                          className="move-to-folder-select"
-                          onChange={(e) => {
-                            const folderId = parseInt(e.target.value);
-                            if (folderId) {
-                              moveToFolder(doc.id, folderId);
-                            }
-                          }}
-                          value=""
-                        >
-                          <option value="">Move to...</option>
-                          {folders.map(folder => (
-                            <option key={folder.id} value={folder.id}>
-                              {folder.name}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      <button
-                        className="remove-doc-button"
-                        onClick={() => removeFromWorkingFolder(doc.id)}
-                        title="Remove from working folder"
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                {/* Removed duplicate working-folder-list. Mobile Folder docs now only appear in the Folders section. */}
               </div>
               {/* New Folders header and create button */}
               {folders.length > 0 || instanceId !== 'copilot-page' ? (
@@ -754,97 +723,207 @@ const SidebarFilters = ({
                 </div>
               ) : null}
               {/* Folders list */}
-              {folders.length > 0 && (
-                <div className="folders-list">
-                  {folders.map((folder, idx) => {
-                    const isExpanded = expandedFolders[folder.id] !== false;
-                    return (
-                      <div key={folder.id} className="folder-item">
+              <div className="folders-list">
+                {/* Mobile Folder at the top */}
+                <div className="folder-item mobile-folder-item" style={{ marginBottom: 8 }}>
+                  <div
+                    className={`folder-header${isMobileFolderExpanded ? '' : ' collapsed'}`}
+                    style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                    onClick={() => setIsMobileFolderExpanded(exp => !exp)}
+                  >
+                    <button
+                      className="toggle-folder-button"
+                      onClick={e => { e.stopPropagation(); setIsMobileFolderExpanded(exp => !exp); }}
+                      aria-label={isMobileFolderExpanded ? 'Collapse Mobile Folder' : 'Expand Mobile Folder'}
+                      style={{ marginRight: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#457b9d', fontSize: 14 }}
+                    >
+                      {isMobileFolderExpanded ? <FaChevronDown /> : <FaChevronRight />}
+                    </button>
+                    <MobileFolderIcon size={40} count={workingFolderDocs.length} style={{ marginRight: 4, paddingTop: 7, paddingBottom: 0 }} />
+                    <span className="folder-name" style={{ fontWeight: 600, color: '#274C77' }}>Mobile Folder</span>
+                    <span style={{ marginLeft: 'auto', color: '#888', fontSize: 13 }}>{workingFolderDocs.length} docs</span>
+                  </div>
+                  {isMobileFolderExpanded && workingFolderDocs.length > 0 && (
+                    <div className="folder-documents">
+                      {workingFolderDocs.map(doc => (
                         <div
-                          className={`folder-header${dragOverFolderId === folder.id ? ' drag-over' : ''}`}
-                          onClick={() => setExpandedFolders(prev => ({ ...prev, [folder.id]: !isExpanded }))}
-                          style={{ cursor: 'pointer' }}
-                          onDragOver={e => {
-                            e.preventDefault();
-                            setDragOverFolderId(folder.id);
+                          key={doc.id}
+                          className="folder-doc-item"
+                          draggable
+                          onDragStart={e => {
+                            e.dataTransfer.setData('application/x-doc-id', doc.id);
+                            setDraggedDocId(doc.id);
                           }}
-                          onDragLeave={() => setDragOverFolderId(null)}
-                          onDrop={e => {
-                            e.preventDefault();
-                            let docId = e.dataTransfer.getData('application/x-doc-id');
-                            if (!docId && draggedDocId) docId = draggedDocId;
-                            if (docId) {
-                              moveToFolder(docId, folder.id);
-                            }
-                            setDragOverFolderId(null);
-                          }}
+                          onDragEnd={() => setDraggedDocId(null)}
+                          style={{ cursor: 'grab' }}
                         >
+                          <span className="doc-title">{doc.title}</span>
                           <button
-                            className="toggle-folder-button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setExpandedFolders(prev => ({ ...prev, [folder.id]: !isExpanded }));
-                            }}
-                            aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
-                            style={{ marginRight: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#457b9d', fontSize: 14 }}
+                            className="remove-doc-button"
+                            onClick={() => removeFromWorkingFolder(doc.id)}
+                            title="Remove from Mobile Folder"
                           >
-                            {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
+                            <FaTrash />
                           </button>
-                          {/* Colored folder icon with white drop shadow for contrast */}
-                          <FolderIconWithIndicator 
-                            indicatorColor={FOLDER_COLORS[idx % FOLDER_COLORS.length]} 
-                            size={40} 
-                            count={folder.documents.length}
-                          />
-                          <span className="folder-name">
-                            {folder.name}
-                          </span>
-                          <span className="folder-actions">
-                            {instanceId !== 'copilot-page' && (
-                              <button
-                                className="view-folder-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setViewingFolder(folder);
-                                }}
-                                title="View folder contents"
-                              >
-                                <FaEye />
-                              </button>
-                            )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {folders.length > 0 && (
+                  <>
+                    {folders.map((folder, idx) => {
+                      const isExpanded = expandedFolders[folder.id] !== false;
+                      return (
+                        <div key={folder.id} className="folder-item">
+                          <div
+                            className={`folder-header${dragOverFolderId === folder.id ? ' drag-over' : ''}`}
+                            onClick={() => setExpandedFolders(prev => ({ ...prev, [folder.id]: !isExpanded }))}
+                            style={{ cursor: 'pointer' }}
+                            onDragOver={e => {
+                              e.preventDefault();
+                              setDragOverFolderId(folder.id);
+                            }}
+                            onDragLeave={() => setDragOverFolderId(null)}
+                            onDrop={e => {
+                              e.preventDefault();
+                              let docId = e.dataTransfer.getData('application/x-doc-id');
+                              if (!docId && draggedDocId) docId = draggedDocId;
+                              if (docId) {
+                                // Prevent duplicate files in the same folder
+                                if (!folder.documents.some(doc => doc.id === docId)) {
+                                  moveToFolder(docId, folder.id);
+                                } else {
+                                  setDuplicateNotice({ folderId: folder.id, show: true });
+                                  setTimeout(() => setDuplicateNotice({ folderId: null, show: false }), 2000);
+                                }
+                              }
+                              setDragOverFolderId(null);
+                            }}
+                          >
                             <button
-                              className="delete-folder-button"
+                              className="toggle-folder-button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                deleteFolder(folder.id);
+                                setExpandedFolders(prev => ({ ...prev, [folder.id]: !isExpanded }));
                               }}
-                              title="Delete folder"
+                              aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
+                              style={{ marginRight: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#457b9d', fontSize: 14 }}
                             >
-                              <FaTrash />
+                              {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
                             </button>
-                          </span>
-                        </div>
-                        {isExpanded && folder.documents.length > 0 && (
-                          <div className="folder-documents">
-                            {folder.documents.map(doc => (
-                              <div key={doc.id} className="folder-doc-item">
-                                <span className="doc-title">{doc.title}</span>
+                            {/* Colored folder icon with white drop shadow for contrast */}
+                            <FolderIconWithIndicator 
+                              indicatorColor={FOLDER_COLORS[idx % FOLDER_COLORS.length]} 
+                              size={40} 
+                              count={folder.documents.length}
+                            />
+                            <span className="folder-name">
+                              {folder.name}
+                            </span>
+                            <span className="folder-actions">
+                              {instanceId !== 'copilot-page' && (
                                 <button
-                                  className="remove-doc-button"
-                                  onClick={() => removeFromFolder(doc.id, folder.id)}
-                                  title="Remove from folder"
+                                  className="view-folder-button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setViewingFolder(folder);
+                                  }}
+                                  title="View folder contents"
                                 >
-                                  <FaTrash />
+                                  <FaEye />
                                 </button>
-                              </div>
-                            ))}
+                              )}
+                              <button
+                                className="delete-folder-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteFolder(folder.id);
+                                }}
+                                title="Delete folder"
+                              >
+                                <FaTrash />
+                              </button>
+                            </span>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                          {isExpanded && folder.documents.length > 0 && (
+                            <div
+                              className="folder-documents"
+                              onDragOver={e => {
+                                e.preventDefault();
+                                setDragOverFolderId(folder.id);
+                              }}
+                              onDragLeave={() => setDragOverFolderId(null)}
+                              onDrop={e => {
+                                e.preventDefault();
+                                let docId = e.dataTransfer.getData('application/x-doc-id');
+                                if (!docId && draggedDocId) docId = draggedDocId;
+                                if (docId) {
+                                  // Prevent duplicate files in the same folder
+                                  if (!folder.documents.some(doc => doc.id === docId)) {
+                                    moveToFolder(docId, folder.id);
+                                  } else {
+                                    setDuplicateNotice({ folderId: folder.id, show: true });
+                                    setTimeout(() => setDuplicateNotice({ folderId: null, show: false }), 2000);
+                                  }
+                                }
+                                setDragOverFolderId(null);
+                              }}
+                              style={{ position: 'relative' }}
+                            >
+                              {/* Always render the duplicate notice for transition */}
+                              <span
+                                className={`duplicate-notice${duplicateNotice.show && duplicateNotice.folderId === folder.id ? ' visible' : ''}`}
+                                style={{
+                                  color: '#d32f2f',
+                                  fontWeight: 500,
+                                  fontSize: 13,
+                                  background: '#fff3cd',
+                                  borderRadius: 6,
+                                  padding: '6px 16px',
+                                  position: 'absolute',
+                                  left: '50%',
+                                  top: '30%',
+                                  transform: 'translate(-50%, 0)',
+                                  zIndex: 10,
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                                  whiteSpace: 'nowrap',
+                                  pointerEvents: 'none',
+                                  border: '1.5px solid #ffe082',
+                                }}
+                              >
+                                File already exists in this folder
+                              </span>
+                              {folder.documents.map(doc => (
+                                <div
+                                  key={doc.id}
+                                  className="folder-doc-item"
+                                  draggable
+                                  onDragStart={e => {
+                                    e.dataTransfer.setData('application/x-doc-id', doc.id);
+                                    setDraggedDocId(doc.id);
+                                  }}
+                                  onDragEnd={() => setDraggedDocId(null)}
+                                  style={{ cursor: 'grab' }}
+                                >
+                                  <span className="doc-title">{doc.title}</span>
+                                  <button
+                                    className="remove-doc-button"
+                                    onClick={() => removeFromFolder(doc.id, folder.id)}
+                                    title="Remove from folder"
+                                  >
+                                    <FaTrash />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
             </div>
           </div>
           {instanceId !== 'copilot-page' && (

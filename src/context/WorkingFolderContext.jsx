@@ -43,21 +43,33 @@ export function WorkingFolderProvider({ children }) {
 
   const moveToFolder = (documentId, folderId) => {
     // Remove from working folder
-    removeFromWorkingFolder(documentId);
-    
-    // Add to the target folder
-    setFolders(prev => prev.map(folder => {
-      if (folder.id === folderId) {
-        const doc = workingFolderDocs.find(d => d.id === documentId);
-        if (doc && !folder.documents.some(d => d.id === documentId)) {
-          return {
-            ...folder,
-            documents: [...folder.documents, doc]
-          };
+    setWorkingFolderDocs(prev => prev.filter(doc => doc.id !== documentId));
+
+    // Remove from all folders and add to the target folder
+    setFolders(prev => {
+      // Find the document in any folder or workingFolderDocs
+      let doc = workingFolderDocs.find(d => d.id === documentId);
+      if (!doc) {
+        for (const folder of prev) {
+          const found = folder.documents.find(d => d.id === documentId);
+          if (found) {
+            doc = found;
+            break;
+          }
         }
       }
-      return folder;
-    }));
+      if (!doc) return prev; // If not found, do nothing
+
+      return prev.map(folder => {
+        // Remove from all folders
+        let newDocs = folder.documents.filter(d => d.id !== documentId);
+        // Add to target folder if not already present
+        if (folder.id === folderId && !folder.documents.some(d => d.id === documentId)) {
+          newDocs = [...newDocs, doc];
+        }
+        return { ...folder, documents: newDocs };
+      });
+    });
   };
 
   const removeFromFolder = (documentId, folderId) => {
