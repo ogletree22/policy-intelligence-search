@@ -267,4 +267,9 @@
 
 .editable-folder-name-area input[type="text"]:focus {
   border-color: #457b9d;
+}
+
+.working-folder-header button:focus, .working-folder-header button:active {
+  outline: none !important;
+  box-shadow: none !important;
 } 

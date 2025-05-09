@@ -12,6 +12,7 @@ export const ChatProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
   const [activeThreadIndex, setActiveThreadIndex] = useState(null);
+  const [lastQuestion, setLastQuestion] = useState('');
 
   // Load chat history from localStorage on mount
   useEffect(() => {
@@ -111,7 +112,9 @@ export const ChatProvider = ({ children }) => {
       activeThreadIndex,
       setActiveThreadIndex,
       handleChatSubmit,
-      clearChat
+      clearChat,
+      lastQuestion,
+      setLastQuestion
     }}>
       {children}
     </ChatContext.Provider>

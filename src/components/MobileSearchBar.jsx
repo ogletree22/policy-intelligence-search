@@ -3,7 +3,7 @@ import { FaSearch } from 'react-icons/fa';
 import { useSearchPage } from '../context/SearchPageContext';
 import './MobileSearchBar.css';
 
-const MobileSearchBar = () => {
+const MobileSearchBar = ({ centered }) => {
   const { searchQuery, handleSearch, loading } = useSearchPage();
   const [query, setQuery] = useState(searchQuery);
 
@@ -24,7 +24,7 @@ const MobileSearchBar = () => {
   };
 
   return (
-    <div className="mobile-search-container">
+    <div className={`mobile-search-container${centered ? ' centered' : ''}`}>
       <input
         type="text"
         value={query}

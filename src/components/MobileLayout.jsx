@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useSearchPage } from '../context/SearchPageContext';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { AuthContext } from '../context/AuthContext';
@@ -15,13 +15,16 @@ import './MobileLayout.css';
 const MobileLayout = () => {
   const [activeTab, setActiveTab] = useState('search');
   const [showFolderModal, setShowFolderModal] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(() => {
-    return !localStorage.getItem('hasSeenMobileWelcome');
-  });
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [loadingWelcome, setLoadingWelcome] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const { results, loading } = useSearchPage();
+  const { results, loading, error } = useSearchPage();
   const { workingFolderDocs } = useWorkingFolder();
   const { signOut } = useContext(AuthContext);
+
+  // Crossfade search bar transition state
+  const [searchBarTransition, setSearchBarTransition] = useState(activeTab === 'search' && (!results || results.length === 0) && !loading && !error ? 'centered' : 'bottom');
+  const prevIsSearchEmpty = useRef(activeTab === 'search' && (!results || results.length === 0) && !loading && !error);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -49,6 +52,36 @@ const MobileLayout = () => {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [showUserMenu]);
+
+  useEffect(() => {
+    // Delay rendering until we know if the welcome modal should show
+    const hasSeen = localStorage.getItem('hasSeenMobileWelcome');
+    setShowWelcome(!hasSeen);
+    setLoadingWelcome(false);
+  }, []);
+
+  // Determine if the search page is empty (no results, not loading, no error)
+  const isSearchEmpty = activeTab === 'search' && (!results || results.length === 0) && !loading && !error;
+
+  useEffect(() => {
+    // When search is initiated, trigger fade out, then fade in at bottom
+    if (prevIsSearchEmpty.current && !isSearchEmpty) {
+      setSearchBarTransition('fadingOut');
+      setTimeout(() => {
+        setSearchBarTransition('fadingIn');
+        setTimeout(() => {
+          setSearchBarTransition('bottom');
+        }, 700);
+      }, 700);
+    }
+    // If user clears search, go back to centered
+    if (!prevIsSearchEmpty.current && isSearchEmpty) {
+      setSearchBarTransition('centered');
+    }
+    prevIsSearchEmpty.current = isSearchEmpty;
+  }, [isSearchEmpty]);
+
+  if (loadingWelcome) return null;
 
   return (
     <div className="mobile-layout">
@@ -120,9 +153,30 @@ const MobileLayout = () => {
       </div>
 
       {activeTab === 'search' && (
-        <div className="search-bar-container">
-          <MobileSearchBar />
-        </div>
+        <>
+          {(searchBarTransition === 'centered' || searchBarTransition === 'fadingOut') && (
+            <>
+              <div className={`search-bar-container centered crossfade${searchBarTransition === 'fadingOut' ? ' fade-out' : ''}`}>
+                <MobileSearchBar centered={true} />
+              </div>
+              {/* Cheat: cover the bottom with a box in the starting state */}
+              <div style={{
+                position: 'fixed',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 64,
+                background: '#f8f9fa',
+                zIndex: 101
+              }} />
+            </>
+          )}
+          {(searchBarTransition === 'bottom' || searchBarTransition === 'fadingIn') && (
+            <div className={`search-bar-container crossfade${searchBarTransition === 'fadingIn' ? ' fade-in' : ''}`}>
+              <MobileSearchBar centered={false} />
+            </div>
+          )}
+        </>
       )}
 
       {workingFolderDocs.length > 0 && (
@@ -130,7 +184,6 @@ const MobileLayout = () => {
           className="mobile-folder-fab"
           onClick={() => setShowFolderModal(true)}
           role="button"
-          tabIndex={0}
           style={{
             position: 'fixed',
             bottom: 90,
