@@ -9,6 +9,8 @@ import MobileChat from './MobileChat';
 import MobileWorkingFolderModal from './MobileWorkingFolderModal';
 import MobileWelcomeOverlay from './MobileWelcomeOverlay';
 import piLogo from '../assets/PI Logo long.svg';
+import MobileFolderIcon from './MobileFolderIcon';
+import WorkingFolderView from './WorkingFolderView';
 import './MobileLayout.css';
 
 const MobileLayout = () => {
@@ -125,18 +127,41 @@ const MobileLayout = () => {
       )}
 
       {workingFolderDocs.length > 0 && (
-        <div 
-          className="mobile-folder-indicator"
+        <div
+          className="mobile-folder-fab"
           onClick={() => setShowFolderModal(true)}
           role="button"
           tabIndex={0}
+          style={{
+            position: 'fixed',
+            bottom: 90,
+            right: 20,
+            background: 'white',
+            borderRadius: 18,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            padding: '10px 10px 0px 10px',
+            zIndex: 120,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            border: '2px solid #f3f3f3',
+            height: 48,
+            minWidth: 64,
+            minHeight: 40,
+            maxWidth: '90vw',
+            maxHeight: '90vw',
+            boxSizing: 'border-box',
+          }}
         >
-          {workingFolderDocs.length} {workingFolderDocs.length === 1 ? 'document' : 'documents'} in folder
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+            <MobileFolderIcon size={44} count={workingFolderDocs.length} />
+          </div>
         </div>
       )}
 
       {showFolderModal && (
-        <MobileWorkingFolderModal onClose={() => setShowFolderModal(false)} />
+        <WorkingFolderView isOpen={showFolderModal} onClose={() => setShowFolderModal(false)} documents={workingFolderDocs} />
       )}
     </div>
   );

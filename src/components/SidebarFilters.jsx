@@ -741,7 +741,20 @@ const SidebarFilters = ({
                     </button>
                     <MobileFolderIcon size={40} count={workingFolderDocs.length} style={{ marginRight: 4, paddingTop: 7, paddingBottom: 0 }} />
                     <span className="folder-name" style={{ fontWeight: 600, color: '#274C77' }}>Mobile Folder</span>
-                    <span style={{ marginLeft: 'auto', color: '#888', fontSize: 13 }}>{workingFolderDocs.length} docs</span>
+                    <span className="folder-actions">
+                      {instanceId !== 'copilot-page' && (
+                        <button
+                          className="view-folder-button"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setIsWorkingFolderOpen(true);
+                          }}
+                          title="View Mobile Folder contents"
+                        >
+                          <FaEye />
+                        </button>
+                      )}
+                    </span>
                   </div>
                   {isMobileFolderExpanded && workingFolderDocs.length > 0 && (
                     <div className="folder-documents">

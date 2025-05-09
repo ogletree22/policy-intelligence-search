@@ -1,9 +1,10 @@
 import React from 'react';
-import { FaTimes, FaTrash, FaFolder, FaEdit, FaCheck, FaTimes as FaTimesSmall } from 'react-icons/fa';
+import { FaTimes, FaTrash, FaEdit, FaCheck, FaTimes as FaTimesSmall } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import aiTechnologyIcon from '../assets/AI-technology.png';
 import betaIcon from '../assets/Pi-CoPilot_Beta.svg';
+import MobileFolderIcon from './MobileFolderIcon';
 import './WorkingFolderView.css';
 
 const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
@@ -18,9 +19,15 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
 
   if (!isOpen) return null;
 
+  const isMobileFolder = !folder;
+
   const handleRemove = (docId) => {
-    if (docId && folder?.id) {
-      removeFromFolder(docId, folder.id);
+    if (docId) {
+      if (isMobileFolder) {
+        removeFromWorkingFolder(docId);
+      } else if (folder?.id) {
+        removeFromFolder(docId, folder.id);
+      }
     }
   };
 
@@ -36,10 +43,12 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
       <div className="working-folder-modal">
         <div className="working-folder-header" style={{ marginBottom: 0 }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FaFolder style={{ color: '#274C77', marginLeft: '20px' }} />
+            <MobileFolderIcon size={32} count={documents.length} style={{ marginLeft: 20 }} />
             <span className={`editable-folder-name-area${editing ? ' editing' : ''}`}
               style={{ display: 'flex', alignItems: 'center', gap: 4, position: 'relative' }}>
-              {editing ? (
+              {isMobileFolder ? (
+                <span style={{ color: '#274C77', fontWeight: 600, fontSize: 20 }}>Mobile Folder</span>
+              ) : editing ? (
                 <>
                   <input
                     type="text"
@@ -75,17 +84,19 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
             </span>
           </h3>
           <div className="header-actions">
-            <button 
-              className="copilot-button" 
-              onClick={() => {
-                navigate('/copilot');
-                onClose();
-              }}
-              title="Open in PI-Copilot"
-            >
-              <img src={betaIcon} alt="Beta" className="copilot-icon" />
-              <span className="copilot-text">PI Co-Pilot</span>
-            </button>
+            {!isMobileFolder && (
+              <button 
+                className="copilot-button" 
+                onClick={() => {
+                  navigate('/copilot');
+                  onClose();
+                }}
+                title="Open in PI-Copilot"
+              >
+                <img src={betaIcon} alt="Beta" className="copilot-icon" />
+                <span className="copilot-text">PI Co-Pilot</span>
+              </button>
+            )}
             <button className="close-button" onClick={onClose}>
               <FaTimes />
             </button>
@@ -93,7 +104,7 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
         </div>
         <div className="working-folder-content">
           {documents.length === 0 ? (
-            <p className="empty-message">No documents in working folder</p>
+            <p className="empty-message">No documents in {isMobileFolder ? 'Mobile Folder' : 'working folder'}</p>
           ) : (
             <ul className="document-list">
               {documents.map((doc) => (
