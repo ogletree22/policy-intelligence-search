@@ -6,7 +6,6 @@ import { FaUser } from 'react-icons/fa';
 import MobileSearchBar from './MobileSearchBar';
 import SearchResults from './SearchResults';
 import MobileChat from './MobileChat';
-import MobileWorkingFolderModal from './MobileWorkingFolderModal';
 import MobileWelcomeOverlay from './MobileWelcomeOverlay';
 import piLogo from '../assets/PI Logo long.svg';
 import MobileFolderIcon from './MobileFolderIcon';

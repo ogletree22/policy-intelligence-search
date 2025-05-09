@@ -29,6 +29,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-right: 6px;
+  margin-left: 10px;
 }
 
 .working-folder-header h3 {
@@ -97,9 +99,12 @@
 }
 
 .working-folder-content {
-  padding: 20px;
+  padding: 8px 20px 20px 20px;
   overflow-y: auto;
   flex: 1;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  height: 100%;
 }
 
 .empty-message {
@@ -121,6 +126,9 @@
   gap: 12px;
   padding: 16px;
   border-bottom: 1px solid #eee;
+  touch-action: pan-y !important;
+  -webkit-user-select: auto !important;
+  user-select: auto !important;
 }
 
 .document-item:last-child {
