@@ -47,6 +47,8 @@
   margin-left: 0px;
   max-width: 100%;
   width: 100%;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .message.assistant ul,
@@ -63,6 +65,11 @@
   margin-left: 0;
   margin-right: 0;
   box-sizing: border-box;
+}
+
+.message.assistant > div:first-child {
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .chat-input {
