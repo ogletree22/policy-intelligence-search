@@ -9,9 +9,11 @@ import './WorkingFolderView.css';
 
 const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
   const navigate = useNavigate();
-  const { removeFromWorkingFolder, renameFolder, removeFromFolder } = useWorkingFolder();
+  const { removeFromWorkingFolder, renameFolder, removeFromFolder, removeFromFolderRemote, renameFolderRemote } = useWorkingFolder();
   const [editing, setEditing] = React.useState(false);
   const [newName, setNewName] = React.useState(folder?.name || '');
+  const [isRemoving, setIsRemoving] = React.useState({});
+  const [isRenaming, setIsRenaming] = React.useState(false);
 
   React.useEffect(() => {
     setNewName(folder?.name || '');
@@ -21,21 +23,59 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
 
   const isMobileFolder = !folder;
 
-  const handleRemove = (docId) => {
+  const handleRemove = async (docId) => {
     if (docId) {
-      if (isMobileFolder) {
-        removeFromWorkingFolder(docId);
-      } else if (folder?.id) {
-        removeFromFolder(docId, folder.id);
+      // Set removing state for this document
+      setIsRemoving(prev => ({ ...prev, [docId]: true }));
+      
+      try {
+        if (isMobileFolder) {
+          // Handle mobile folder (local only)
+          removeFromWorkingFolder(docId);
+        } else if (folder?.id) {
+          // For regular folders, use the remote API
+          console.log("🟣🟣🟣 Removing document from folder 🟣🟣🟣");
+          console.log("Document ID:", docId);
+          console.log("Folder ID:", folder.id);
+          
+          const success = await removeFromFolderRemote(docId, folder.id);
+          console.log("🟣🟣🟣 Document removal result:", success ? "SUCCESS" : "FAILED", "🟣🟣🟣");
+          
+          // Note: removeFromFolderRemote already calls removeFromFolder internally
+          // so we don't need to call it again here
+        }
+      } catch (error) {
+        console.error("Error removing document from folder:", error);
+      } finally {
+        // Clear removing state
+        setIsRemoving(prev => ({ ...prev, [docId]: false }));
       }
     }
   };
 
-  const handleRename = () => {
+  const handleRename = async () => {
     if (folder && newName.trim() && newName !== folder.name) {
-      renameFolder(folder.id, newName.trim());
+      setIsRenaming(true);
+      
+      try {
+        console.log("🔵🔵🔵 Renaming folder 🔵🔵🔵");
+        console.log("Folder ID:", folder.id);
+        console.log("New name:", newName.trim());
+        
+        const success = await renameFolderRemote(folder.id, newName.trim());
+        console.log("🔵🔵🔵 Folder rename result:", success ? "SUCCESS" : "FAILED", "🔵🔵🔵");
+        
+        // Note: renameFolderRemote already calls renameFolder internally
+      } catch (error) {
+        console.error("Error renaming folder:", error);
+      } finally {
+        setIsRenaming(false);
+        setEditing(false);
+      }
+    } else {
+      // Just close the editing UI if there's no change
+      setEditing(false);
     }
-    setEditing(false);
   };
 
   return (
@@ -60,11 +100,26 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
                       if (e.key === 'Enter') handleRename();
                       if (e.key === 'Escape') setEditing(false);
                     }}
+                    disabled={isRenaming}
                   />
-                  <button onClick={handleRename} title="Save" className="rename-action-btn save-btn">
-                    <FaCheck />
+                  <button 
+                    onClick={handleRename} 
+                    title="Save" 
+                    className="rename-action-btn save-btn"
+                    disabled={isRenaming}
+                  >
+                    {isRenaming ? (
+                      <span className="spinner-sm"></span>
+                    ) : (
+                      <FaCheck />
+                    )}
                   </button>
-                  <button onClick={() => setEditing(false)} title="Cancel" className="rename-action-btn cancel-btn">
+                  <button 
+                    onClick={() => setEditing(false)} 
+                    title="Cancel" 
+                    className="rename-action-btn cancel-btn"
+                    disabled={isRenaming}
+                  >
                     <FaTimesSmall />
                   </button>
                 </>
@@ -120,8 +175,13 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
                     className="remove-doc-button"
                     onClick={() => handleRemove(doc.id)}
                     title="Remove from Folder"
+                    disabled={isRemoving[doc.id]}
                   >
-                    <FaTrash />
+                    {isRemoving[doc.id] ? (
+                      <span className="spinner-sm"></span>
+                    ) : (
+                      <FaTrash />
+                    )}
                   </button>
                 </li>
               ))}

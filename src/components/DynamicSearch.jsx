@@ -10,7 +10,7 @@ import CreateFolderModal from './CreateFolderModal';
 
 const DynamicSearch = () => {
   const { handleSearch, results, loading, error, searchQuery, setSearchQuery } = useSearchPage();
-  const { workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder, folders, moveToFolder, createFolder, addToFolder } = useWorkingFolder();
+  const { workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder, folders, moveToFolder, createFolder, addToFolder, addToFolderRemote } = useWorkingFolder();
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState('folder'); // 'folder' (list), 'grid', or 'jurisdiction'
   const [searchInitiated, setSearchInitiated] = useState(false);
@@ -335,7 +335,19 @@ const DynamicSearch = () => {
                       onMouseDown={e => e.preventDefault()}
                       onClick={() => {
                         if (!alreadyInFolder) {
-                          addToFolder(result, folder.id);
+                          console.log("🔴🔴🔴 ADDING DOCUMENT TO FOLDER FROM DROPDOWN 🔴🔴🔴");
+                          console.log("Document:", result);
+                          console.log("Target folder:", folder);
+                          
+                          // Call the remote API instead of just local state update
+                          addToFolderRemote(result, folder.id)
+                            .then(success => {
+                              console.log("🔴🔴🔴 Document add result from dropdown:", success ? "SUCCESS" : "FAILED", "🔴🔴🔴");
+                            })
+                            .catch(error => {
+                              console.error("🔴🔴🔴 Error adding document from dropdown:", error, "🔴🔴🔴");
+                            });
+                            
                           setAddToFolderDropdownId(null);
                         }
                       }}
@@ -586,13 +598,25 @@ const DynamicSearch = () => {
           setShowCreateFolderModal(false);
           setPendingAddToFolderDoc(null);
         }}
-        onCreateFolder={folderName => {
-          const newFolder = createFolder(folderName);
-          if (pendingAddToFolderDoc && newFolder) {
-            addToFolder(pendingAddToFolderDoc, newFolder.id);
-            setPendingAddToFolderDoc(null);
+        onCreateFolder={async (folderName) => {
+          try {
+            const newFolder = await createFolder(folderName);
+            if (pendingAddToFolderDoc && newFolder) {
+              // Update to use remote API
+              addToFolderRemote(pendingAddToFolderDoc, newFolder.id)
+                .then(success => {
+                  console.log("🔴🔴🔴 Document add result after folder creation:", success ? "SUCCESS" : "FAILED", "🔴🔴🔴");
+                })
+                .catch(error => {
+                  console.error("🔴🔴🔴 Error adding document after folder creation:", error, "🔴🔴🔴");
+                });
+              setPendingAddToFolderDoc(null);
+            }
+            setShowCreateFolderModal(false);
+          } catch (error) {
+            console.error("Failed to create folder:", error);
+            setShowCreateFolderModal(false);
           }
-          setShowCreateFolderModal(false);
         }}
       />
     </div>

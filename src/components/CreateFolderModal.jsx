@@ -10,6 +10,7 @@ const CreateFolderModal = ({ isOpen, onClose, onCreateFolder }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (folderName.trim()) {
+      console.log("CreateFolderModal - Creating folder with name:", folderName.trim());
       onCreateFolder(folderName.trim());
       setFolderName('');
       onClose();
