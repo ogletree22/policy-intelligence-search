@@ -57,7 +57,7 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
       <div className="chat-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
         <span style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
           <h3 style={{ margin: 0, fontWeight: 600 }}>
-            Policy Intelligence Co-Pilot
+            PI Co-Pilot
           </h3>
           <sub style={{ fontStyle: 'italic', fontSize: '0.7em', color: '#6096ba', marginLeft: 0, fontWeight: 550 }}>
             Beta

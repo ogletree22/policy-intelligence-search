@@ -4,6 +4,7 @@
   align-items: center;
   width: 100%;
   background-color: white;
+  transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
 }
 
 .mobile-search-input {
@@ -60,4 +61,64 @@
 
 :root.dark-mode .mobile-search-button:hover {
   background-color: #1d3857;
+}
+
+.mobile-search-container.centered {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 480px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  border-radius: 18px;
+  z-index: 200;
+  transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+.search-bar-container.centered {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  pointer-events: none;
+  z-index: 200;
+  transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+.search-bar-container.centered .mobile-search-container {
+  pointer-events: all;
+}
+
+.crossfade {
+  opacity: 1;
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+.crossfade.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+.crossfade.fade-in {
+  opacity: 1;
+  pointer-events: all;
+  transition: opacity 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #457B9D;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 8px;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 } 

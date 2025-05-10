@@ -133,6 +133,7 @@ export const SearchPageProvider = ({ children }) => {
   const initialSearchPerformed = useRef(false);
   const searchRunId = useRef(0);
   const seenDocuments = useRef(new Set());
+  const [previousResponse, setPreviousResponse] = useState(null);
 
   // Function to sort jurisdictions by count
   const sortJurisdictionsByCount = useCallback((jurisdictionCounts) => {
@@ -380,10 +381,12 @@ export const SearchPageProvider = ({ children }) => {
           
           console.log(`Setting ${uniqueResults.length} unique results from API`);
           setResults(uniqueResults);
+          setPreviousResponse(uniqueResults[0] || null);
           setUsingMockData(false);
         } else {
           console.log('No results found for query');
           setResults([]);
+          setPreviousResponse(null);
         }
       }
 
@@ -576,6 +579,7 @@ export const SearchPageProvider = ({ children }) => {
           console.log(`Filtered results: ${finalResults.length} items`);
           // Update UI with filtered results
           setResults(finalResults);
+          setPreviousResponse(finalResults[0] || null);
           setUsingMockData(false);
 
           // OPTIMIZED: Only fetch new facet counts if we need them
@@ -658,7 +662,9 @@ export const SearchPageProvider = ({ children }) => {
       setSearchQuery,
       documentCounts,
       sortedJurisdictions,
-      updateDocumentTypeCounts
+      updateDocumentTypeCounts,
+      previousResponse,
+      setPreviousResponse
     }}>
       {children}
     </SearchPageContext.Provider>

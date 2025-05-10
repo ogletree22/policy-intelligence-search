@@ -1,5 +1,5 @@
 // SearchResults.jsx
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { useSearchPage } from '../context/SearchPageContext';
 import './SearchResults.css';
@@ -22,6 +22,7 @@ const SearchResults = () => {
   const [touchEnd, setTouchEnd] = useState(null);
   const [swipingStates, setSwipingStates] = useState({});
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const resultsAreaRef = useRef(null);
 
   // Load folders when component mounts
   useEffect(() => {
@@ -173,41 +174,58 @@ const SearchResults = () => {
     setTouchEnd(null);
   };
 
-  const handleTouchMove = (e, docId) => {
-    if (!isMobile || !touchStart) return;
-    
-    const xDiff = touchStart.x - e.targetTouches[0].clientX;
-    const yDiff = touchStart.y - e.targetTouches[0].clientY;
-    
-    // If vertical scrolling is dominant, don't trigger swipe
-    if (Math.abs(yDiff) > Math.abs(xDiff)) {
+  // Refactored touchmove handler for passive: false
+  useEffect(() => {
+    const area = resultsAreaRef.current;
+    if (!area) return;
+    const handleTouchMoveWrapper = (e) => {
+      if (!touchStart) return;
+      // Find the card being touched
+      const touch = e.targetTouches[0];
+      // Find the card element
+      let card = e.target;
+      while (card && !card.classList.contains('result-card')) {
+        card = card.parentElement;
+      }
+      if (!card) return;
+      const docId = card.getAttribute('data-docid');
+      if (!docId) return;
+      // Use the same logic as before
+      const xDiff = touchStart.x - touch.clientX;
+      const yDiff = touchStart.y - touch.clientY;
+      if (Math.abs(xDiff) > 2 * Math.abs(yDiff) && Math.abs(xDiff) > 10) {
+        e.preventDefault();
+        setTouchEnd({ x: touch.clientX, docId });
+        setSwipingStates(prev => ({ ...prev, [docId]: xDiff }));
+      } else {
+        setSwipingStates({});
+      }
+    };
+    area.addEventListener('touchmove', handleTouchMoveWrapper, { passive: false });
+    return () => {
+      area.removeEventListener('touchmove', handleTouchMoveWrapper);
+    };
+  }, [touchStart]);
+
+  const handleTouchEnd = (doc) => {
+    // Always reset swipe/touch state on touch end
+    if (!isMobile || !touchStart) {
+      setTouchStart(null);
+      setTouchEnd(null);
       setSwipingStates({});
       return;
     }
-
-    // Only trigger swipe if horizontal movement is significant
-    if (Math.abs(xDiff) > 10) {
-      setTouchEnd({
-        x: e.targetTouches[0].clientX,
-        docId
-      });
-
-      setSwipingStates(prev => ({
-        ...prev,
-        [docId]: xDiff
-      }));
+    if (!touchEnd) {
+      setTouchStart(null);
+      setTouchEnd(null);
+      setSwipingStates({});
+      return;
     }
-  };
-
-  const handleTouchEnd = (doc) => {
-    if (!isMobile || !touchStart || !touchEnd) return;
-    
     const swipeDistance = touchStart.x - touchEnd.x;
     const minSwipeDistance = 100; // minimum distance for swipe
 
     if (Math.abs(swipeDistance) > minSwipeDistance) {
       const isInFolder = workingFolderDocs.some(wDoc => wDoc.id === doc.id);
-      
       if (swipeDistance > 0) { // Swipe left to remove
         if (isInFolder) {
           removeFromWorkingFolder(doc.id);
@@ -219,14 +237,10 @@ const SearchResults = () => {
         }
       }
     }
-
-    // Reset states
+    // Always reset states
     setTouchStart(null);
     setTouchEnd(null);
-    setSwipingStates(prev => ({
-      ...prev,
-      [doc.id]: 0
-    }));
+    setSwipingStates({});
   };
 
   const getSwipeStyle = (docId) => {
@@ -251,6 +265,10 @@ const SearchResults = () => {
   };
 
   if (loading) {
+    if (isMobile) {
+      // On mobile, do not show the loading text below the navbar
+      return null;
+    }
     return (
       <div className="results-container">
         <div className="loading-spinner">Loading...</div>
@@ -273,7 +291,7 @@ const SearchResults = () => {
   }
 
   const renderResults = () => (
-    <div className="results-scroll-area">
+    <div className="results-scroll-area" ref={resultsAreaRef}>
       {results.map((result, index) => {
         const docId = result.id;
         const inFolder = documentStates[docId]?.inFolder || false;
@@ -282,8 +300,8 @@ const SearchResults = () => {
           <div 
             key={index} 
             className={`result-card ${inFolder ? 'in-folder' : ''}`}
+            data-docid={docId}
             onTouchStart={(e) => handleTouchStart(e, docId)}
-            onTouchMove={(e) => handleTouchMove(e, docId)}
             onTouchEnd={() => handleTouchEnd(result)}
             style={getSwipeStyle(docId)}
           >
@@ -349,9 +367,7 @@ const SearchResults = () => {
               )}
             </div>
             {isMobile && (
-              <div className="swipe-hint">
-                {inFolder ? '← Swipe left to remove' : '→ Swipe right to add'}
-              </div>
+              null
             )}
           </div>
         );
