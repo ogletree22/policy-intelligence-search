@@ -10,11 +10,7 @@ import './WorkingFolderView.css';
 
 const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
   const navigate = useNavigate();
-<<<<<<< HEAD
-  const { removeFromWorkingFolder, renameFolder, removeFromFolder, removeFromFolderRemote, renameFolderRemote } = useWorkingFolder();
-=======
-  const { removeFromWorkingFolder, renameFolder, removeFromFolder, folders } = useWorkingFolder();
->>>>>>> dabd4953649e9c49404f4e0241e188def3311eab
+  const { removeFromWorkingFolder, renameFolder, removeFromFolder, removeFromFolderRemote, renameFolderRemote, folders } = useWorkingFolder();
   const [editing, setEditing] = React.useState(false);
   const [newName, setNewName] = React.useState(folder?.name || '');
   const [isRemoving, setIsRemoving] = React.useState({});
