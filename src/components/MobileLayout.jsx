@@ -6,7 +6,7 @@ import { FaUser } from 'react-icons/fa';
 import MobileSearchBar from './MobileSearchBar';
 import SearchResults from './SearchResults';
 import MobileChat from './MobileChat';
-import MobileWelcomeOverlay from './MobileWelcomeOverlay';
+// import MobileWelcomeOverlay from './MobileWelcomeOverlay';
 import piLogo from '../assets/PI Logo long.svg';
 import MobileFolderIcon from './MobileFolderIcon';
 import WorkingFolderView from './WorkingFolderView';
@@ -16,8 +16,8 @@ import './MobileLayout.css';
 const MobileLayout = () => {
   const [activeTab, setActiveTab] = useState('search');
   const [showFolderModal, setShowFolderModal] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [loadingWelcome, setLoadingWelcome] = useState(true);
+  // const [showWelcome, setShowWelcome] = useState(false);
+  // const [loadingWelcome, setLoadingWelcome] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { results, loading, error } = useSearchPage();
   const { workingFolderDocs } = useWorkingFolder();
@@ -65,12 +65,11 @@ const MobileLayout = () => {
     };
   }, [showUserMenu]);
 
-  useEffect(() => {
-    // Delay rendering until we know if the welcome modal should show
-    const hasSeen = localStorage.getItem('hasSeenMobileWelcome');
-    setShowWelcome(!hasSeen);
-    setLoadingWelcome(false);
-  }, []);
+  // useEffect(() => {
+  //   const hasSeen = localStorage.getItem('hasSeenMobileWelcome');
+  //   setShowWelcome(!hasSeen);
+  //   setLoadingWelcome(false);
+  // }, []);
 
   // Determine if the search page is empty (no results, not loading, no error)
   const isSearchEmpty = activeTab === 'search' && (!results || results.length === 0) && !loading && !error;
@@ -101,16 +100,10 @@ const MobileLayout = () => {
     };
   }, [isSearchEmpty]);
 
-  if (loadingWelcome) return null;
+  // if (loadingWelcome) return null;
 
   return (
     <div className="mobile-layout">
-      {showWelcome && (
-        <MobileWelcomeOverlay onClose={() => {
-          setShowWelcome(false);
-          localStorage.setItem('hasSeenMobileWelcome', 'true');
-        }} />
-      )}
       <div className="mobile-header">
         <div className="header-content">
           <img 
@@ -148,11 +141,11 @@ const MobileLayout = () => {
               </button>
               {showUserMenu && (
                 <div className="user-dropdown">
-                  <button onClick={() => {
+                  <button onClick={handleSignOut}>Sign Out</button>
+                  {/* <button onClick={() => {
                     setShowWelcome(true);
                     setShowUserMenu(false);
-                  }}>Help</button>
-                  <button onClick={handleSignOut}>Sign Out</button>
+                  }}>Help</button> */}
                 </div>
               )}
             </div>
@@ -253,6 +246,13 @@ const MobileLayout = () => {
       {showFolderModal && (
         <WorkingFolderView isOpen={showFolderModal} onClose={() => setShowFolderModal(false)} documents={workingFolderDocs} />
       )}
+
+      {/* {showWelcome && (
+        <MobileWelcomeOverlay onClose={() => {
+          setShowWelcome(false);
+          localStorage.setItem('hasSeenMobileWelcome', 'true');
+        }} />
+      )} */}
     </div>
   );
 };

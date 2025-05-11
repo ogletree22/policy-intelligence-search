@@ -44,12 +44,22 @@ const MobileChat = () => {
   }, [isStartingState]);
 
   useEffect(() => {
-    if (isLoading && chatMessagesRef.current) {
-      chatMessagesRef.current.scrollTo({ top: 0, behavior: "smooth" });
-    } else if (chatMessagesRef.current) {
-      chatMessagesRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [chatHistory.length, isLoading, question]);
+  }, [chatHistory.length, isLoading]);
+
+  useEffect(() => {
+    if (isLoading && loadingQuestionRef.current && chatMessagesRef.current) {
+      // Scroll so the loading question is at the top of the chat view
+      const container = chatMessagesRef.current;
+      const loadingNode = loadingQuestionRef.current;
+      const containerRect = container.getBoundingClientRect();
+      const loadingRect = loadingNode.getBoundingClientRect();
+      // Scroll so the loading message is at the top
+      container.scrollTop += (loadingRect.top - containerRect.top);
+    }
+  }, [isLoading, question]);
 
   const handleSend = async () => {
     if (!question.trim()) return;
@@ -61,31 +71,12 @@ const MobileChat = () => {
     <div className="mobile-chat">
       {!(inputBarTransition === 'centered' || inputBarTransition === 'fadingOut') && (
         <div className="chat-messages" ref={chatMessagesRef}>
-          {/* Show the current question at the top while loading */}
-          {isLoading && question.trim() && (
-            <React.Fragment>
+          {/* Render chat history first */}
+          {chatHistory && chatHistory.length > 0 && chatHistory.map((entry, idx) => (
+            <React.Fragment key={idx}>
               <div
                 className="message user"
-                ref={loadingQuestionRef}
-                style={{ width: 'auto', marginBottom: 0, alignSelf: 'flex-end', background: '#457b9d', color: 'white', borderRadius: 12, padding: '12px 16px', fontSize: 15, fontWeight: 500, maxWidth: '100%', boxShadow: '0 1px 2px rgba(0,0,0,0.08)', wordBreak: 'break-word', display: 'inline-block' }}
-              >
-                {question}
-              </div>
-              <div className="message assistant" style={{ width: '100%' }}>
-                <div className="typing-indicator" style={{ marginTop: 16 }}>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-            </React.Fragment>
-          )}
-          {/* Render chat history below the current Q&A */}
-          {chatHistory && chatHistory.length > 0 && [...chatHistory].reverse().map((entry, idx) => (
-            <React.Fragment key={chatHistory.length - 1 - idx}>
-              <div
-                className="message user"
-                ref={!isLoading && idx === 0 ? messagesEndRef : null}
+                ref={!isLoading && idx === chatHistory.length - 1 ? messagesEndRef : null}
                 style={{ width: 'auto', marginBottom: 0, alignSelf: 'flex-end', background: '#457b9d', color: 'white', borderRadius: 12, padding: '12px 16px', fontSize: 15, fontWeight: 500, maxWidth: '100%', boxShadow: '0 1px 2px rgba(0,0,0,0.08)', wordBreak: 'break-word', display: 'inline-block' }}
               >
                 {entry.question}
@@ -113,6 +104,25 @@ const MobileChat = () => {
               </div>
             </React.Fragment>
           ))}
+          {/* Show the current question at the bottom while loading */}
+          {isLoading && question.trim() && (
+            <React.Fragment>
+              <div
+                className="message user"
+                ref={loadingQuestionRef}
+                style={{ width: 'auto', marginBottom: 0, alignSelf: 'flex-end', background: '#457b9d', color: 'white', borderRadius: 12, padding: '12px 16px', fontSize: 15, fontWeight: 500, maxWidth: '100%', boxShadow: '0 1px 2px rgba(0,0,0,0.08)', wordBreak: 'break-word', display: 'inline-block', marginTop: 0 }}
+              >
+                {question}
+              </div>
+              <div className="message assistant" style={{ width: '100%' }}>
+                <div className="typing-indicator" style={{ marginTop: 16 }}>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </React.Fragment>
+          )}
           {/* Show error for the current message if present */}
           {error && (
             <div className="message assistant" style={{ width: '100%' }}>
