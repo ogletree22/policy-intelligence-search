@@ -267,11 +267,16 @@ const SidebarFilters = ({
     removeFromWorkingFolder, 
     folders, 
     createFolder,
+    createFolderRemote,
     deleteFolder,
+    deleteFolderRemote,
     moveToFolder,
     removeFromFolder,
+    removeFromFolderRemote,
     currentFolderId,
-    setCurrentFolderId
+    setCurrentFolderId,
+    addToFolder,
+    addToFolderRemote
   } = useWorkingFolder();
   const [isWorkingFolderOpen, setIsWorkingFolderOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
@@ -714,7 +719,10 @@ const SidebarFilters = ({
                   {instanceId !== 'copilot-page' && (
                     <button 
                       className="create-folder-button"
-                      onClick={() => setIsCreateFolderModalOpen(true)}
+                      onClick={() => {
+                        console.log("Create folder button clicked in SidebarFilters");
+                        setIsCreateFolderModalOpen(true);
+                      }}
                       title="Create new folder"
                     >
                       +
@@ -805,7 +813,30 @@ const SidebarFilters = ({
                               if (docId) {
                                 // Prevent duplicate files in the same folder
                                 if (!folder.documents.some(doc => doc.id === docId)) {
-                                  moveToFolder(docId, folder.id);
+                                  // First find the document
+                                  let doc = workingFolderDocs.find(d => d.id === docId);
+                                  if (!doc) {
+                                    // Look in other folders
+                                    for (const f of folders) {
+                                      const found = f.documents.find(d => d.id === docId);
+                                      if (found) {
+                                        doc = found;
+                                        break;
+                                      }
+                                    }
+                                  }
+                                  
+                                  if (doc) {
+                                    console.log("Adding document via drag and drop to folder:", doc, "folder:", folder.id);
+                                    // Use the remote function to store in DynamoDB
+                                    addToFolderRemote(doc, folder.id).catch(error => {
+                                      console.error("Failed to add document remotely, falling back to local:", error);
+                                      moveToFolder(docId, folder.id);
+                                    });
+                                  } else {
+                                    // If we can't find the full document, just use moveToFolder
+                                    moveToFolder(docId, folder.id);
+                                  }
                                 } else {
                                   setDuplicateNotice({ folderId: folder.id, show: true });
                                   setTimeout(() => setDuplicateNotice({ folderId: null, show: false }), 2000);
@@ -851,7 +882,14 @@ const SidebarFilters = ({
                                 className="delete-folder-button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  deleteFolder(folder.id);
+                                  console.log("Deleting folder remotely:", folder.id);
+                                  deleteFolderRemote(folder.id)
+                                    .then(success => {
+                                      console.log("Folder deleted remotely:", success ? "success" : "failure");
+                                    })
+                                    .catch(error => {
+                                      console.error("Error deleting folder remotely:", error);
+                                    });
                                 }}
                                 title="Delete folder"
                               >
@@ -874,7 +912,30 @@ const SidebarFilters = ({
                                 if (docId) {
                                   // Prevent duplicate files in the same folder
                                   if (!folder.documents.some(doc => doc.id === docId)) {
-                                    moveToFolder(docId, folder.id);
+                                    // First find the document
+                                    let doc = workingFolderDocs.find(d => d.id === docId);
+                                    if (!doc) {
+                                      // Look in other folders
+                                      for (const f of folders) {
+                                        const found = f.documents.find(d => d.id === docId);
+                                        if (found) {
+                                          doc = found;
+                                          break;
+                                        }
+                                      }
+                                    }
+                                    
+                                    if (doc) {
+                                      console.log("Adding document via drag and drop to folder:", doc, "folder:", folder.id);
+                                      // Use the remote function to store in DynamoDB
+                                      addToFolderRemote(doc, folder.id).catch(error => {
+                                        console.error("Failed to add document remotely, falling back to local:", error);
+                                        moveToFolder(docId, folder.id);
+                                      });
+                                    } else {
+                                      // If we can't find the full document, just use moveToFolder
+                                      moveToFolder(docId, folder.id);
+                                    }
                                   } else {
                                     setDuplicateNotice({ folderId: folder.id, show: true });
                                     setTimeout(() => setDuplicateNotice({ folderId: null, show: false }), 2000);
@@ -922,7 +983,21 @@ const SidebarFilters = ({
                                   <span className="doc-title">{doc.title}</span>
                                   <button
                                     className="remove-doc-button"
-                                    onClick={() => removeFromFolder(doc.id, folder.id)}
+                                    onClick={() => {
+                                      console.log("🟣🟣🟣 Removing document from folder in SidebarFilters 🟣🟣🟣");
+                                      console.log("Document ID:", doc.id);
+                                      console.log("Folder ID:", folder.id);
+                                      
+                                      removeFromFolderRemote(doc.id, folder.id)
+                                        .then(success => {
+                                          console.log("🟣🟣🟣 Document removal result:", success ? "SUCCESS" : "FAILED", "🟣🟣🟣");
+                                        })
+                                        .catch(error => {
+                                          console.error("🟣🟣🟣 Error removing document from folder:", error, "🟣🟣🟣");
+                                          // Fall back to local state update if API call fails
+                                          removeFromFolder(doc.id, folder.id);
+                                        });
+                                    }}
                                     title="Remove from folder"
                                   >
                                     <FaTrash />
@@ -949,7 +1024,7 @@ const SidebarFilters = ({
               <CreateFolderModal
                 isOpen={isCreateFolderModalOpen}
                 onClose={() => setIsCreateFolderModalOpen(false)}
-                onCreateFolder={createFolder}
+                onCreateFolder={createFolderRemote}
               />
             </>
           )}

@@ -5,7 +5,16 @@ import { useSearchPage } from '../context/SearchPageContext';
 import './SearchResults.css';
 
 const SearchResults = () => {
-  const { workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder } = useWorkingFolder();
+  const { 
+    workingFolderDocs, 
+    addToWorkingFolder, 
+    removeFromWorkingFolder, 
+    createFolderRemote, 
+    addToFolder,
+    addToFolderRemote, 
+    folders,
+    loadFolders 
+  } = useWorkingFolder();
   const { results, loading, error, usingMockData } = useSearchPage();
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [documentStates, setDocumentStates] = useState({});
@@ -14,6 +23,12 @@ const SearchResults = () => {
   const [swipingStates, setSwipingStates] = useState({});
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const resultsAreaRef = useRef(null);
+
+  // Load folders when component mounts
+  useEffect(() => {
+    console.log("SearchResults component mounted - loading folders");
+    loadFolders();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -36,23 +51,118 @@ const SearchResults = () => {
     setDocumentStates(newStates);
   }, [results, workingFolderDocs]);
 
-  const handleFolderAction = useCallback((document) => {
+  // Test function to directly create a folder
+  const testCreateFolder = async () => {
+    console.log("Test creating folder directly");
+    try {
+      const newFolder = await createFolderRemote("Test Folder " + new Date().toISOString().substring(0, 19));
+      console.log("Test folder created:", newFolder);
+    } catch (error) {
+      console.error("Error creating test folder:", error);
+    }
+  };
+
+  // Test function to add a document to a folder
+  const testAddDocToFolder = async () => {
+    if (folders.length === 0 || results.length === 0) {
+      console.error("Need folders and results to test adding documents");
+      return;
+    }
+
+    const targetFolder = folders[0];
+    const testDoc = results[0];
+    
+    console.log("✅✅✅ TEST: Adding document to folder ✅✅✅");
+    console.log("Target folder:", targetFolder);
+    console.log("Test document:", testDoc);
+    
+    try {
+      const docToAdd = {
+        id: testDoc.id,
+        title: testDoc.title, 
+        url: testDoc.url,
+        description: testDoc.description,
+        jurisdiction: testDoc.jurisdiction,
+        type: testDoc.type
+      };
+      
+      console.log("Document prepared:", docToAdd);
+      const success = await addToFolderRemote(docToAdd, targetFolder.id);
+      console.log("Add document result:", success ? "SUCCESS" : "FAILED");
+    } catch (error) {
+      console.error("Error in test add document:", error);
+    }
+  };
+
+  const handleFolderAction = useCallback(async (document) => {
     const docId = document.id;
     const inFolder = workingFolderDocs.some(doc => doc.id === docId);
+    
+    console.log("✅✅✅ handleFolderAction called for document ✅✅✅", document);
+    console.log("Document in folder:", inFolder);
     
     if (inFolder) {
       removeFromWorkingFolder(docId);
     } else {
-      addToWorkingFolder({
-        id: docId,
-        title: document.title,
-        url: document.url,
-        description: document.description,
-        jurisdiction: document.jurisdiction,
-        type: document.type
-      });
+      try {
+        // Check if "My Session Folder" exists
+        let sessionFolder = folders.find(folder => folder.name === "My Session Folder");
+        console.log("✅✅✅ Current folders ✅✅✅", folders);
+        console.log("✅✅✅ Session folder found ✅✅✅", sessionFolder);
+        
+        // If not, create it
+        if (!sessionFolder) {
+          console.log("✅✅✅ Creating 'My Session Folder' ✅✅✅");
+          sessionFolder = await createFolderRemote("My Session Folder");
+          console.log("✅✅✅ createFolderRemote returned ✅✅✅", sessionFolder);
+          
+          if (!sessionFolder) {
+            console.error("✅✅✅ Failed to create session folder ✅✅✅");
+            // Fallback to working folder if folder creation fails
+            addToWorkingFolder({
+              id: docId,
+              title: document.title,
+              url: document.url,
+              description: document.description,
+              jurisdiction: document.jurisdiction,
+              type: document.type
+            });
+            return;
+          }
+        }
+        
+        // Add document to the folder
+        const docToAdd = {
+          id: docId,
+          title: document.title,
+          url: document.url,
+          description: document.description,
+          jurisdiction: document.jurisdiction,
+          type: document.type
+        };
+        
+        console.log("✅✅✅ Document to add ✅✅✅", docToAdd);
+        console.log("✅✅✅ Target folder ✅✅✅", sessionFolder.id);
+        
+        // This will now call our updated implementation
+        console.log("✅✅✅ Calling addToFolderRemote ✅✅✅");
+        const result = await addToFolderRemote(docToAdd, sessionFolder.id);
+        console.log("✅✅✅ addToFolderRemote result ✅✅✅", result);
+        
+      } catch (error) {
+        console.error("✅✅✅ Error in handleFolderAction ✅✅✅", error);
+        // On error, fall back to adding to working folder
+        addToWorkingFolder({
+          id: docId,
+          title: document.title,
+          url: document.url,
+          description: document.description,
+          jurisdiction: document.jurisdiction,
+          type: document.type
+        });
+      }
     }
-  }, [workingFolderDocs, addToWorkingFolder, removeFromWorkingFolder]);
+  }, [workingFolderDocs, removeFromWorkingFolder, folders, createFolderRemote, addToFolderRemote, addToWorkingFolder]);
 
   const handleTouchStart = (e, docId) => {
     if (!isMobile) return;
@@ -122,14 +232,8 @@ const SearchResults = () => {
         }
       } else { // Swipe right to add
         if (!isInFolder) {
-          addToWorkingFolder({
-            id: doc.id,
-            title: doc.title,
-            url: doc.url,
-            description: doc.description,
-            jurisdiction: doc.jurisdiction,
-            type: doc.type
-          });
+          // Use the same logic as handleFolderAction
+          handleFolderAction(doc);
         }
       }
     }
@@ -209,9 +313,37 @@ const SearchResults = () => {
               {!isMobile && (
                 <button 
                   className={`add-to-folder-btn ${inFolder ? 'in-folder' : ''}`}
-                  onClick={() => handleFolderAction(result)}
+                  onClick={() => {
+                    // DIRECT TEST: Skip handleFolderAction and test API directly
+                    if (folders.length > 0) {
+                      const targetFolder = folders[0]; // Use the first folder
+                      const docToAdd = {
+                        id: result.id,
+                        title: result.title,
+                        url: result.url,
+                        description: result.description,
+                        jurisdiction: result.jurisdiction,
+                        type: result.type
+                      };
+                      
+                      console.log("🔴🔴🔴 DIRECT TEST: Adding document to folder 🔴🔴🔴");
+                      console.log("Document:", docToAdd);
+                      console.log("Target folder:", targetFolder);
+                      
+                      // Call API directly
+                      addToFolderRemote(docToAdd, targetFolder.id)
+                        .then(success => {
+                          console.log("🔴🔴🔴 Document add result:", success ? "SUCCESS" : "FAILED", "🔴🔴🔴");
+                        })
+                        .catch(error => {
+                          console.error("🔴🔴🔴 Error adding document:", error, "🔴🔴🔴");
+                        });
+                    } else {
+                      console.error("🔴🔴🔴 No folders available for testing 🔴🔴🔴");
+                    }
+                  }}
                 >
-                  {inFolder ? 'Remove' : 'Add to Folder'}
+                  {inFolder ? 'Remove' : 'Add to Folder (DIRECT TEST)'}
                 </button>
               )}
             </div>
@@ -246,6 +378,51 @@ const SearchResults = () => {
   return (
     <div className="results-container">
       <div className="results-content">
+        {/* Debug button - placed before everything else */}
+        <div style={{ 
+          padding: '10px', 
+          margin: '10px 0', 
+          backgroundColor: '#e0f7fa', 
+          border: '2px solid #4fc3f7',
+          borderRadius: '4px',
+          textAlign: 'center'
+        }}>
+          <button 
+            onClick={testCreateFolder} 
+            style={{ 
+              padding: '8px 15px', 
+              backgroundColor: '#2196f3', 
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              cursor: 'pointer',
+              marginRight: '10px'
+            }}
+          >
+            Test Create Folder
+          </button>
+          <button 
+            onClick={testAddDocToFolder} 
+            style={{ 
+              padding: '8px 15px', 
+              backgroundColor: '#f44336', 
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              cursor: 'pointer'
+            }}
+          >
+            Test Add Doc to Folder
+          </button>
+          <p style={{ marginTop: '5px', fontSize: '12px', color: '#444' }}>
+            Debug buttons for testing folder operations
+          </p>
+        </div>
+        
         <p className="doc-count">
           {results.length} of {results.length} documents
           {usingMockData && <span className="mock-data-text"> (Demo Data)</span>}
