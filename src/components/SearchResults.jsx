@@ -5,6 +5,8 @@ import { useSearchPage } from '../context/SearchPageContext';
 import { useTargetFolder } from '../context/TargetFolderContext';
 import TargetFolderIndicator from './TargetFolderIndicator';
 import './SearchResults.css';
+import { FOLDER_COLORS } from './FolderIconWithIndicator';
+import { FolderIconWithIndicator } from './FolderIconWithIndicator';
 
 const SearchResults = () => {
   const { 
@@ -15,10 +17,11 @@ const SearchResults = () => {
     addToFolder,
     addToFolderRemote, 
     folders,
-    loadFolders 
+    loadFolders,
+    removeFromFolderRemote
   } = useWorkingFolder();
   const { results, loading, error, usingMockData } = useSearchPage();
-  const { targetFolderId, promptSelectFolder } = useTargetFolder();
+  const { targetFolderId, setTargetFolderId, promptSelectFolder, showFolderModal, closeFolderModal } = useTargetFolder();
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [documentStates, setDocumentStates] = useState({});
   const [touchStart, setTouchStart] = useState(null);
@@ -26,6 +29,7 @@ const SearchResults = () => {
   const [swipingStates, setSwipingStates] = useState({});
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const resultsAreaRef = useRef(null);
+  const [pendingDocument, setPendingDocument] = useState(null);
 
   // Load folders when component mounts
   useEffect(() => {
@@ -110,6 +114,7 @@ const SearchResults = () => {
       try {
         // Check if a target folder is selected
         if (!targetFolderId) {
+          setPendingDocument(document);
           promptSelectFolder();
           return;
         }
@@ -228,11 +233,24 @@ const SearchResults = () => {
     if (Math.abs(swipeDistance) > minSwipeDistance) {
       const isInFolder = workingFolderDocs.some(wDoc => wDoc.id === doc.id);
       if (swipeDistance > 0) { // Swipe left to remove
-        if (isInFolder) {
+        // Remove from the selected (target) folder if set
+        if (targetFolderId) {
+          const folder = folders.find(f => f.id === targetFolderId);
+          if (folder && folder.documents && folder.documents.some(d => d.id === doc.id)) {
+            // Remove from folder using remote API
+            removeFromFolderRemote(doc.id, targetFolderId);
+          }
+        } else if (isInFolder) {
+          // Fallback: remove from working folder
           removeFromWorkingFolder(doc.id);
         }
       } else { // Swipe right to add
         if (!isInFolder) {
+          // Check if a target folder is selected
+          if (!targetFolderId) {
+            promptSelectFolder();
+            return;
+          }
           // Use the same logic as handleFolderAction
           handleFolderAction(doc);
         }
@@ -296,6 +314,8 @@ const SearchResults = () => {
       {results.map((result, index) => {
         const docId = result.id;
         const inFolder = documentStates[docId]?.inFolder || false;
+        // Find all folders this doc is in
+        const foldersContainingDoc = folders.filter(folder => Array.isArray(folder.documents) && folder.documents.some(doc => doc.id === docId));
         
         return (
           <div 
@@ -306,7 +326,25 @@ const SearchResults = () => {
             onTouchEnd={() => handleTouchEnd(result)}
             style={getSwipeStyle(docId)}
           >
-            {isMobile && <div className="folder-indicator" />}
+            {isMobile && foldersContainingDoc.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
+                {foldersContainingDoc.map((folder, i) => {
+                  const colorIdx = folders.findIndex(f => f.id === folder.id);
+                  return (
+                    <span key={folder.id} style={{
+                      display: 'inline-block',
+                      width: 14,
+                      height: 14,
+                      borderRadius: '50%',
+                      background: FOLDER_COLORS[colorIdx % FOLDER_COLORS.length],
+                      border: '2px solid #fff',
+                      boxShadow: '0 0 0 1px #ccc',
+                      marginLeft: i === 0 ? 0 : -6,
+                    }} />
+                  );
+                })}
+              </div>
+            )}
             <div className="result-header">
               <h3 className="result-title">
                 <a href={result.url} target="_blank" rel="noopener noreferrer">{result.title}</a>
@@ -379,6 +417,40 @@ const SearchResults = () => {
 
   return (
     <div className="results-container">
+      {isMobile && <TargetFolderIndicator />}
+      <div className={`folder-picker-modal${showFolderModal ? '' : ' hidden'}`}>
+        <div className="modal-content">
+          <h2>Select Target Folder</h2>
+          <ul>
+            {folders.map((folder, idx) => (
+              <li 
+                key={folder.id} 
+                onClick={() => {
+                  setTargetFolderId(folder.id);
+                  closeFolderModal();
+                  setTouchStart(null);
+                  setTouchEnd(null);
+                  setSwipingStates({});
+                  if (pendingDocument) {
+                    handleFolderAction(pendingDocument);
+                    setPendingDocument(null);
+                  }
+                }} 
+                style={{ display: 'flex', alignItems: 'center', gap: 0 }}
+              >
+                <FolderIconWithIndicator 
+                  indicatorColor={FOLDER_COLORS[idx % FOLDER_COLORS.length]} 
+                  size={40} 
+                  count={Array.isArray(folder.documents) ? folder.documents.length : 0} 
+                  style={{ marginRight: 0 }} 
+                />
+                <span>{folder.name}</span>
+              </li>
+            ))}
+          </ul>
+          <button onClick={closeFolderModal}>Close</button>
+        </div>
+      </div>
       <div className="results-content">
         <p className="doc-count">
           {results.length} of {results.length} documents
