@@ -378,51 +378,6 @@ const SearchResults = () => {
   return (
     <div className="results-container">
       <div className="results-content">
-        {/* Debug button - placed before everything else */}
-        <div style={{ 
-          padding: '10px', 
-          margin: '10px 0', 
-          backgroundColor: '#e0f7fa', 
-          border: '2px solid #4fc3f7',
-          borderRadius: '4px',
-          textAlign: 'center'
-        }}>
-          <button 
-            onClick={testCreateFolder} 
-            style={{ 
-              padding: '8px 15px', 
-              backgroundColor: '#2196f3', 
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              cursor: 'pointer',
-              marginRight: '10px'
-            }}
-          >
-            Test Create Folder
-          </button>
-          <button 
-            onClick={testAddDocToFolder} 
-            style={{ 
-              padding: '8px 15px', 
-              backgroundColor: '#f44336', 
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              cursor: 'pointer'
-            }}
-          >
-            Test Add Doc to Folder
-          </button>
-          <p style={{ marginTop: '5px', fontSize: '12px', color: '#444' }}>
-            Debug buttons for testing folder operations
-          </p>
-        </div>
-        
         <p className="doc-count">
           {results.length} of {results.length} documents
           {usingMockData && <span className="mock-data-text"> (Demo Data)</span>}
