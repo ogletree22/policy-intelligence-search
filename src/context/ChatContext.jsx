@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 export const ChatContext = createContext();
 
 const LOCAL_STORAGE_KEY = 'copilotChatHistory';
+const THREAD_ID_KEY = 'copilotThreadId';
 
 export const ChatProvider = ({ children }) => {
   const [question, setQuestion] = useState('');
@@ -13,12 +15,23 @@ export const ChatProvider = ({ children }) => {
   const [chatHistory, setChatHistory] = useState([]);
   const [activeThreadIndex, setActiveThreadIndex] = useState(null);
   const [lastQuestion, setLastQuestion] = useState('');
+  const [threadId, setThreadId] = useState('');
 
-  // Load chat history from localStorage on mount
+  // Load chat history and threadId from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (stored) {
       setChatHistory(JSON.parse(stored));
+    }
+    
+    // Initialize or load threadId
+    const storedThreadId = localStorage.getItem(THREAD_ID_KEY);
+    if (storedThreadId) {
+      setThreadId(storedThreadId);
+    } else {
+      const newThreadId = uuidv4();
+      setThreadId(newThreadId);
+      localStorage.setItem(THREAD_ID_KEY, newThreadId);
     }
   }, []);
 
@@ -26,6 +39,13 @@ export const ChatProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(chatHistory));
   }, [chatHistory]);
+
+  // Persist threadId to localStorage
+  useEffect(() => {
+    if (threadId) {
+      localStorage.setItem(THREAD_ID_KEY, threadId);
+    }
+  }, [threadId]);
 
   const handleChatSubmit = async (newQuestion) => {
     if (!newQuestion.trim()) return;
@@ -40,6 +60,7 @@ export const ChatProvider = ({ children }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          threadId: threadId,
           question: newQuestion,
           contextPrompt: "Answer the question as completely as possible by using content retrieved from diverse sources (at least 4 distinct documents) and diverse document types rather than repeating a single document, unless otherwise instructed"
         }),
@@ -95,6 +116,10 @@ export const ChatProvider = ({ children }) => {
     setAnswer('');
     setCitations([]);
     setError(null);
+    // Generate new threadId when clearing chat
+    const newThreadId = uuidv4();
+    setThreadId(newThreadId);
+    localStorage.setItem(THREAD_ID_KEY, newThreadId);
   };
 
   return (
@@ -114,7 +139,8 @@ export const ChatProvider = ({ children }) => {
       handleChatSubmit,
       clearChat,
       lastQuestion,
-      setLastQuestion
+      setLastQuestion,
+      threadId
     }}>
       {children}
     </ChatContext.Provider>

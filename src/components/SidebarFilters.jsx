@@ -773,6 +773,7 @@ const SidebarFilters = ({
                           draggable
                           onDragStart={e => {
                             e.dataTransfer.setData('application/x-doc-id', doc.id);
+                            e.dataTransfer.setData('application/x-source-folder-id', '');
                             setDraggedDocId(doc.id);
                           }}
                           onDragEnd={() => setDraggedDocId(null)}
@@ -809,8 +810,18 @@ const SidebarFilters = ({
                             onDrop={e => {
                               e.preventDefault();
                               let docId = e.dataTransfer.getData('application/x-doc-id');
+                              let sourceFolderId = e.dataTransfer.getData('application/x-source-folder-id');
+                              
                               if (!docId && draggedDocId) docId = draggedDocId;
+                              
                               if (docId) {
+                                // Don't allow dropping in the same folder
+                                if (sourceFolderId === folder.id) {
+                                  console.log("Dropped in same folder, ignoring");
+                                  setDragOverFolderId(null);
+                                  return;
+                                }
+                                
                                 // Prevent duplicate files in the same folder
                                 if (!folder.documents.some(doc => doc.id === docId)) {
                                   // First find the document
@@ -827,15 +838,37 @@ const SidebarFilters = ({
                                   }
                                   
                                   if (doc) {
-                                    console.log("Adding document via drag and drop to folder:", doc, "folder:", folder.id);
-                                    // Use the remote function to store in DynamoDB
-                                    addToFolderRemote(doc, folder.id).catch(error => {
-                                      console.error("Failed to add document remotely, falling back to local:", error);
-                                      moveToFolder(docId, folder.id);
-                                    });
+                                    console.log("Moving document from folder:", sourceFolderId, "to folder:", folder.id);
+                                    
+                                    // First add to target folder
+                                    addToFolderRemote(doc, folder.id)
+                                      .then(addSuccess => {
+                                        if (addSuccess) {
+                                          console.log("Document added to target folder successfully");
+                                          
+                                          // If we have a source folder (not Mobile Folder), remove from there
+                                          if (sourceFolderId) {
+                                            console.log("Removing document from source folder:", sourceFolderId);
+                                            removeFromFolderRemote(docId, sourceFolderId)
+                                              .then(removeSuccess => {
+                                                console.log("Document removal from source folder:", removeSuccess ? "SUCCESS" : "FAILED");
+                                              })
+                                              .catch(error => {
+                                                console.error("Error removing document from source folder:", error);
+                                              });
+                                          } else {
+                                            // If from Mobile Folder, just remove from there
+                                            removeFromWorkingFolder(docId);
+                                          }
+                                        } else {
+                                          console.error("Failed to add document to target folder");
+                                        }
+                                      })
+                                      .catch(error => {
+                                        console.error("Error adding document to target folder:", error);
+                                      });
                                   } else {
-                                    // If we can't find the full document, just use moveToFolder
-                                    moveToFolder(docId, folder.id);
+                                    console.error("Could not find document with ID:", docId);
                                   }
                                 } else {
                                   setDuplicateNotice({ folderId: folder.id, show: true });
@@ -908,8 +941,18 @@ const SidebarFilters = ({
                               onDrop={e => {
                                 e.preventDefault();
                                 let docId = e.dataTransfer.getData('application/x-doc-id');
+                                let sourceFolderId = e.dataTransfer.getData('application/x-source-folder-id');
+                                
                                 if (!docId && draggedDocId) docId = draggedDocId;
+                                
                                 if (docId) {
+                                  // Don't allow dropping in the same folder
+                                  if (sourceFolderId === folder.id) {
+                                    console.log("Dropped in same folder, ignoring");
+                                    setDragOverFolderId(null);
+                                    return;
+                                  }
+                                  
                                   // Prevent duplicate files in the same folder
                                   if (!folder.documents.some(doc => doc.id === docId)) {
                                     // First find the document
@@ -926,15 +969,37 @@ const SidebarFilters = ({
                                     }
                                     
                                     if (doc) {
-                                      console.log("Adding document via drag and drop to folder:", doc, "folder:", folder.id);
-                                      // Use the remote function to store in DynamoDB
-                                      addToFolderRemote(doc, folder.id).catch(error => {
-                                        console.error("Failed to add document remotely, falling back to local:", error);
-                                        moveToFolder(docId, folder.id);
-                                      });
+                                      console.log("Moving document from folder:", sourceFolderId, "to folder:", folder.id);
+                                      
+                                      // First add to target folder
+                                      addToFolderRemote(doc, folder.id)
+                                        .then(addSuccess => {
+                                          if (addSuccess) {
+                                            console.log("Document added to target folder successfully");
+                                            
+                                            // If we have a source folder (not Mobile Folder), remove from there
+                                            if (sourceFolderId) {
+                                              console.log("Removing document from source folder:", sourceFolderId);
+                                              removeFromFolderRemote(docId, sourceFolderId)
+                                                .then(removeSuccess => {
+                                                  console.log("Document removal from source folder:", removeSuccess ? "SUCCESS" : "FAILED");
+                                                })
+                                                .catch(error => {
+                                                  console.error("Error removing document from source folder:", error);
+                                                });
+                                            } else {
+                                              // If from Mobile Folder, just remove from there
+                                              removeFromWorkingFolder(docId);
+                                            }
+                                          } else {
+                                            console.error("Failed to add document to target folder");
+                                          }
+                                        })
+                                        .catch(error => {
+                                          console.error("Error adding document to target folder:", error);
+                                        });
                                     } else {
-                                      // If we can't find the full document, just use moveToFolder
-                                      moveToFolder(docId, folder.id);
+                                      console.error("Could not find document with ID:", docId);
                                     }
                                   } else {
                                     setDuplicateNotice({ folderId: folder.id, show: true });
@@ -975,6 +1040,7 @@ const SidebarFilters = ({
                                   draggable
                                   onDragStart={e => {
                                     e.dataTransfer.setData('application/x-doc-id', doc.id);
+                                    e.dataTransfer.setData('application/x-source-folder-id', folder.id);
                                     setDraggedDocId(doc.id);
                                   }}
                                   onDragEnd={() => setDraggedDocId(null)}
