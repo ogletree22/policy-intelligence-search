@@ -2,6 +2,8 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { useSearchPage } from '../context/SearchPageContext';
+import { useTargetFolder } from '../context/TargetFolderContext';
+import TargetFolderIndicator from './TargetFolderIndicator';
 import './SearchResults.css';
 
 const SearchResults = () => {
@@ -16,6 +18,7 @@ const SearchResults = () => {
     loadFolders 
   } = useWorkingFolder();
   const { results, loading, error, usingMockData } = useSearchPage();
+  const { targetFolderId, promptSelectFolder } = useTargetFolder();
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [documentStates, setDocumentStates] = useState({});
   const [touchStart, setTouchStart] = useState(null);
@@ -105,30 +108,28 @@ const SearchResults = () => {
       removeFromWorkingFolder(docId);
     } else {
       try {
-        // Check if "My Session Folder" exists
-        let sessionFolder = folders.find(folder => folder.name === "My Session Folder");
+        // Check if a target folder is selected
+        if (!targetFolderId) {
+          promptSelectFolder();
+          return;
+        }
+        
+        // Check if the target folder exists
+        let sessionFolder = folders.find(folder => folder.id === targetFolderId);
         console.log("✅✅✅ Current folders ✅✅✅", folders);
         console.log("✅✅✅ Session folder found ✅✅✅", sessionFolder);
         
-        // If not, create it
+        // If the target folder is not found, log an error and return
         if (!sessionFolder) {
-          console.log("✅✅✅ Creating 'My Session Folder' ✅✅✅");
-          sessionFolder = await createFolderRemote("My Session Folder");
-          console.log("✅✅✅ createFolderRemote returned ✅✅✅", sessionFolder);
-          
-          if (!sessionFolder) {
-            console.error("✅✅✅ Failed to create session folder ✅✅✅");
-            // Fallback to working folder if folder creation fails
-            addToWorkingFolder({
-              id: docId,
-              title: document.title,
-              url: document.url,
-              description: document.description,
-              jurisdiction: document.jurisdiction,
-              type: document.type
-            });
-            return;
-          }
+          console.error("✅✅✅ Target folder not found ✅✅✅");
+          return;
+        }
+        
+        // Prevent duplicate in the target folder
+        if (sessionFolder.documents && sessionFolder.documents.some(doc => doc.id === docId)) {
+          // Optionally show a message here
+          // alert('This document is already in the target folder.');
+          return;
         }
         
         // Add document to the folder
@@ -162,7 +163,7 @@ const SearchResults = () => {
         });
       }
     }
-  }, [workingFolderDocs, removeFromWorkingFolder, folders, createFolderRemote, addToFolderRemote, addToWorkingFolder]);
+  }, [workingFolderDocs, removeFromWorkingFolder, folders, addToFolderRemote, addToWorkingFolder, targetFolderId, promptSelectFolder]);
 
   const handleTouchStart = (e, docId) => {
     if (!isMobile) return;
@@ -372,6 +373,7 @@ const SearchResults = () => {
           </div>
         );
       })}
+      <TargetFolderIndicator />
     </div>
   );
 

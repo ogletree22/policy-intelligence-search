@@ -135,7 +135,11 @@ const MobileFoldersPage = ({ isOpen, onClose }) => {
                   {expandedFolderIds.includes(folder.id) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
                       <FaEye style={{ color: '#274C77', fontSize: 18, opacity: 0.7, cursor: 'pointer' }} onClick={() => setViewingFolder(folder)} />
-                      <button onClick={() => deleteFolder(folder.id)} style={{ background: 'none', border: 'none', color: '#999', fontSize: 18, cursor: 'pointer', padding: 0 }} onMouseOver={e => e.currentTarget.style.color = '#d32f2f'} onMouseOut={e => e.currentTarget.style.color = '#999'}><FaTrash /></button>
+                      <button onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this folder?')) {
+                          deleteFolder(folder.id);
+                        }
+                      }} style={{ background: 'none', border: 'none', color: '#999', fontSize: 18, cursor: 'pointer', padding: 0 }} onMouseOver={e => e.currentTarget.style.color = '#d32f2f'} onMouseOut={e => e.currentTarget.style.color = '#999'}><FaTrash /></button>
                     </div>
                   )}
                 </div>
@@ -144,7 +148,11 @@ const MobileFoldersPage = ({ isOpen, onClose }) => {
                     {folder.documents.map(doc => (
                       <li key={doc.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #dbeafe', fontSize: 15, color: '#274C77' }}>
                         <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{doc.title}</span>
-                        <button onClick={() => removeFromFolder(doc.id, folder.id)} style={{ background: 'none', border: 'none', color: '#999', fontSize: 16, cursor: 'pointer', marginLeft: 8, padding: 0 }} onMouseOver={e => e.currentTarget.style.color = '#d32f2f'} onMouseOut={e => e.currentTarget.style.color = '#999'}><FaTrash /></button>
+                        <button onClick={() => {
+                          if (window.confirm('Are you sure you want to remove this document from the folder?')) {
+                            removeFromFolder(doc.id, folder.id);
+                          }
+                        }} style={{ background: 'none', border: 'none', color: '#999', fontSize: 16, cursor: 'pointer', marginLeft: 8, padding: 0 }} onMouseOver={e => e.currentTarget.style.color = '#d32f2f'} onMouseOut={e => e.currentTarget.style.color = '#999'}><FaTrash /></button>
                       </li>
                     ))}
                   </ul>
