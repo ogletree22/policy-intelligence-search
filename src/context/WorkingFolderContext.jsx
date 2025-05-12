@@ -246,6 +246,16 @@ export function WorkingFolderProvider({ children }) {
     console.log("Document:", document);
     console.log("FolderId:", folderId);
     
+    // Check if the document already exists in the target folder
+    const targetFolder = folders.find(folder => folder.id === folderId);
+    if (targetFolder && targetFolder.documents) {
+      const isDuplicate = targetFolder.documents.some(doc => doc.id === document.id);
+      if (isDuplicate) {
+        console.log("🔴🔴🔴 DUPLICATE DOCUMENT: Document already exists in folder 🔴🔴🔴");
+        return false; // Return early without making API call
+      }
+    }
+    
     // Use provided userId or get it from the authenticated user
     const effectiveUserId = userId || getUserId();
     
