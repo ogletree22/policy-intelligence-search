@@ -7,6 +7,7 @@ import TargetFolderIndicator from './TargetFolderIndicator';
 import './SearchResults.css';
 import { FOLDER_COLORS } from './FolderIconWithIndicator';
 import { FolderIconWithIndicator } from './FolderIconWithIndicator';
+import CreateFolderModal from './CreateFolderModal';
 
 const SearchResults = () => {
   const { 
@@ -30,6 +31,8 @@ const SearchResults = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const resultsAreaRef = useRef(null);
   const [pendingDocument, setPendingDocument] = useState(null);
+  const [showDuplicateToast, setShowDuplicateToast] = useState(false);
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
 
   // Load folders when component mounts
   useEffect(() => {
@@ -132,8 +135,8 @@ const SearchResults = () => {
         
         // Prevent duplicate in the target folder
         if (sessionFolder.documents && sessionFolder.documents.some(doc => doc.id === docId)) {
-          // Optionally show a message here
-          // alert('This document is already in the target folder.');
+          setShowDuplicateToast(true);
+          setTimeout(() => setShowDuplicateToast(false), 2000);
           return;
         }
         
@@ -246,8 +249,18 @@ const SearchResults = () => {
         }
       } else { // Swipe right to add
         if (!isInFolder) {
+          // If no folders exist, prompt to create a folder
+          if (folders.length === 0) {
+            setPendingDocument(doc);
+            setShowCreateFolderModal(true);
+            setTouchStart(null);
+            setTouchEnd(null);
+            setSwipingStates({});
+            return;
+          }
           // Check if a target folder is selected
           if (!targetFolderId) {
+            setPendingDocument(doc);
             promptSelectFolder();
             return;
           }
@@ -451,6 +464,22 @@ const SearchResults = () => {
           <button onClick={closeFolderModal}>Close</button>
         </div>
       </div>
+      <CreateFolderModal
+        isOpen={showCreateFolderModal}
+        onClose={() => {
+          setShowCreateFolderModal(false);
+          setPendingDocument(null);
+        }}
+        onCreateFolder={async (folderName) => {
+          const newFolder = await createFolderRemote(folderName);
+          setShowCreateFolderModal(false);
+          if (pendingDocument && newFolder && newFolder.id) {
+            // Add the pending document to the new folder
+            handleFolderAction({ ...pendingDocument });
+            setPendingDocument(null);
+          }
+        }}
+      />
       <div className="results-content">
         <p className="doc-count">
           {results.length} of {results.length} documents
@@ -458,6 +487,9 @@ const SearchResults = () => {
         </p>
         {renderResults()}
       </div>
+      {showDuplicateToast && (
+        <div className="duplicate-toast">This document is already in the selected folder.</div>
+      )}
     </div>
   );
 };
