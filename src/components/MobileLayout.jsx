@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { useSearchPage } from '../context/SearchPageContext';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { AuthContext } from '../context/AuthContext';
@@ -7,11 +8,17 @@ import MobileSearchBar from './MobileSearchBar';
 import SearchResults from './SearchResults';
 import MobileChat from './MobileChat';
 // import MobileWelcomeOverlay from './MobileWelcomeOverlay';
-import piLogo from '../assets/PI Logo long.svg';
+import piLogo from '../assets/PI_Logo_2024.svg';
 import MobileFolderIcon from './MobileFolderIcon';
 import WorkingFolderView from './WorkingFolderView';
 import piGlobalFolder from '../assets/PI_global_folder.svg';
+import MobileFoldersPage from './MobileFoldersPage';
 import './MobileLayout.css';
+
+const UserDropdownPortal = ({ children }) => {
+  if (typeof window === 'undefined') return null;
+  return ReactDOM.createPortal(children, document.body);
+};
 
 const MobileLayout = () => {
   const [activeTab, setActiveTab] = useState('search');
@@ -127,6 +134,13 @@ const MobileLayout = () => {
               >
                 Co-Pilot
               </button>
+              <button 
+                className={`tab-button ${activeTab === 'folders' ? 'active' : ''}`}
+                onClick={() => handleTabChange('folders')}
+                aria-label="Folders tab"
+              >
+                Folders
+              </button>
             </div>
             <div className="user-menu">
               <button 
@@ -140,13 +154,11 @@ const MobileLayout = () => {
                 <FaUser />
               </button>
               {showUserMenu && (
-                <div className="user-dropdown">
-                  <button onClick={handleSignOut}>Sign Out</button>
-                  {/* <button onClick={() => {
-                    setShowWelcome(true);
-                    setShowUserMenu(false);
-                  }}>Help</button> */}
-                </div>
+                <UserDropdownPortal>
+                  <div className="user-dropdown" style={{ position: 'absolute', top: 64, right: 18 }}>
+                    <button onClick={handleSignOut}>Sign Out</button>
+                  </div>
+                </UserDropdownPortal>
               )}
             </div>
           </div>
@@ -173,9 +185,13 @@ const MobileLayout = () => {
             )}
             <SearchResults />
           </div>
-        ) : (
+        ) : activeTab === 'chat' ? (
           <div className="chat-section">
             <MobileChat />
+          </div>
+        ) : (
+          <div className="folders-section">
+            <MobileFoldersPage isOpen={true} onClose={() => {}} />
           </div>
         )}
       </div>
@@ -210,7 +226,7 @@ const MobileLayout = () => {
       {workingFolderDocs.length > 0 && (
         <div
           className="mobile-folder-fab"
-          {...(activeTab === 'chat' ? {} : { onClick: () => setShowFolderModal(true), role: 'button' })}
+          {...(activeTab === 'chat' ? {} : { onClick: () => setShowFoldersPage(true), role: 'button' })}
           style={{
             position: 'fixed',
             bottom: 90,
@@ -241,10 +257,6 @@ const MobileLayout = () => {
             )}
           </div>
         </div>
-      )}
-
-      {showFolderModal && (
-        <WorkingFolderView isOpen={showFolderModal} onClose={() => setShowFolderModal(false)} documents={workingFolderDocs} />
       )}
 
       {/* {showWelcome && (

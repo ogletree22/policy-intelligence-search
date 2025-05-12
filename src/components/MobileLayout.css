@@ -29,7 +29,7 @@
 }
 
 .brand-logo-long {
-  height: 24px;
+  height: 36px;
   width: auto;
   object-fit: contain;
 }
@@ -272,13 +272,16 @@
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 8px;
+  margin-top: 4px;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   min-width: 120px;
+  max-width: 90vw;
+  width: max-content;
   overflow: hidden;
-  z-index: 102;
+  z-index: 9999;
+  pointer-events: auto;
 }
 
 .user-dropdown button {

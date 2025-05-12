@@ -82,96 +82,110 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
   return (
     <div className="working-folder-overlay">
       <div className="working-folder-modal">
-        <div className="working-folder-header" style={{ marginBottom: 0 }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {isMobileFolder ? (
-              <MobileFolderIcon size={32} count={documents.length} style={{}} />
-            ) : (
-              (() => {
-                const idx = folders.findIndex(f => f.id === folder?.id);
-                const indicatorColor = FOLDER_COLORS[idx >= 0 ? idx % FOLDER_COLORS.length : 1];
-                return (
-                  <FolderIconWithIndicator
-                    indicatorColor={indicatorColor}
-                    size={48}
-                    count={folder && folder.documents ? folder.documents.length : 0}
-                    style={{ marginLeft: 8 }}
-                  />
-                );
-              })()
-            )}
-            <span className={`editable-folder-name-area${editing ? ' editing' : ''}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 0, position: 'relative', marginLeft: 0, paddingLeft: 0 }}>
-              {isMobileFolder ? (
-                <span style={{ color: '#274C77', fontWeight: 600, fontSize: 20 }}>Mobile Folder</span>
-              ) : editing ? (
-                <>
-                  <input
-                    type="text"
-                    value={newName}
-                    onChange={e => setNewName(e.target.value)}
-                    style={{ fontSize: 20, fontWeight: 600, padding: '2px 8px', borderRadius: 6, border: '1.5px solid #bcd0e5', minWidth: 120, color: '#274C77', background: '#f7fafc', outline: 'none', marginRight: 4 }}
-                    autoFocus
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') handleRename();
-                      if (e.key === 'Escape') setEditing(false);
-                    }}
-                    disabled={isRenaming}
-                  />
-                  <button 
-                    onClick={handleRename} 
-                    title="Save" 
-                    className="rename-action-btn save-btn"
-                    disabled={isRenaming}
-                  >
-                    {isRenaming ? (
-                      <span className="spinner-sm"></span>
-                    ) : (
-                      <FaCheck />
-                    )}
-                  </button>
-                  <button 
-                    onClick={() => setEditing(false)} 
-                    title="Cancel" 
-                    className="rename-action-btn cancel-btn"
-                    disabled={isRenaming}
-                  >
-                    <FaTimesSmall />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <span style={{ color: '#274C77', fontWeight: 600, fontSize: 20 }}>{folder?.name || title || 'Working Folder Contents'}</span>
-                  <button
-                    onClick={() => { setNewName(folder?.name || ''); setEditing(true); }}
-                    title="Rename folder"
-                    className="rename-pencil-btn"
-                    style={{ marginLeft: 4 }}
-                  >
-                    <FaEdit />
-                  </button>
-                </>
-              )}
-            </span>
-          </h3>
-          <div className="header-actions">
-            {!isMobileFolder && (
-              <button 
-                className="copilot-button" 
-                onClick={() => {
-                  navigate('/copilot');
-                  onClose();
-                }}
-                title="Open in PI-Copilot"
-              >
-                <img src={betaIcon} alt="Beta" className="copilot-icon" />
-                <span className="copilot-text">PI Co-Pilot</span>
+        <div className="working-folder-header" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', padding: '16px 20px' }}>
+          {isMobileFolder ? (
+            <>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <button
+                  className="copilot-button"
+                  style={{ fontSize: 22, fontWeight: 700, color: '#274C77', background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
+                  onClick={() => navigate('/copilot')}
+                  title="Open in PI-Copilot"
+                >
+                  <img src={betaIcon} alt="Beta" className="copilot-icon" style={{ width: 38, height: 38, objectFit: 'contain' }} />
+                  <span className="copilot-text" style={{ color: '#274C77', fontSize: 22, fontWeight: 700, lineHeight: 1.1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                    PI<br />Co-Pilot
+                  </span>
+                </button>
+              </div>
+              <button className="close-button" onClick={onClose} style={{ marginLeft: 12 }}>
+                <FaTimes />
               </button>
-            )}
-            <button className="close-button" onClick={onClose}>
-              <FaTimes />
-            </button>
-          </div>
+            </>
+          ) : (
+            <>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                {(() => {
+                  const idx = folders.findIndex(f => f.id === folder?.id);
+                  const indicatorColor = FOLDER_COLORS[idx >= 0 ? idx % FOLDER_COLORS.length : 1];
+                  return (
+                    <FolderIconWithIndicator
+                      indicatorColor={indicatorColor}
+                      size={54}
+                      count={folder && folder.documents ? folder.documents.length : 0}
+                    />
+                  );
+                })()}
+                <span className={`editable-folder-name-area${editing ? ' editing' : ''}`}
+                  style={{ display: 'flex', alignItems: 'center', gap: 0, position: 'relative', marginLeft: 0, paddingLeft: 0 }}>
+                  {editing ? (
+                    <>
+                      <input
+                        type="text"
+                        value={newName}
+                        onChange={e => setNewName(e.target.value)}
+                        style={{ fontSize: 20, fontWeight: 600, padding: '2px 8px', borderRadius: 6, border: '1.5px solid #bcd0e5', minWidth: 120, color: '#274C77', background: '#f7fafc', outline: 'none', marginRight: 4 }}
+                        autoFocus
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') handleRename();
+                          if (e.key === 'Escape') setEditing(false);
+                        }}
+                        disabled={isRenaming}
+                      />
+                      <button
+                        onClick={handleRename}
+                        title="Save"
+                        className="rename-action-btn save-btn"
+                        disabled={isRenaming}
+                      >
+                        {isRenaming ? (
+                          <span className="spinner-sm"></span>
+                        ) : (
+                          <FaCheck />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setEditing(false)}
+                        title="Cancel"
+                        className="rename-action-btn cancel-btn"
+                        disabled={isRenaming}
+                      >
+                        <FaTimesSmall />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ color: '#274C77', fontWeight: 600, fontSize: 20 }}>{folder?.name || title || 'Working Folder Contents'}</span>
+                      <button
+                        onClick={() => { setNewName(folder?.name || ''); setEditing(true); }}
+                        title="Rename folder"
+                        className="rename-pencil-btn"
+                        style={{ marginLeft: 4 }}
+                      >
+                        <FaEdit />
+                      </button>
+                    </>
+                  )}
+                </span>
+              </h3>
+              <div className="header-actions">
+                <button
+                  className="copilot-button"
+                  onClick={() => {
+                    navigate('/copilot');
+                    onClose();
+                  }}
+                  title="Open in PI-Copilot"
+                >
+                  <img src={betaIcon} alt="Beta" className="copilot-icon" />
+                  <span className="copilot-text">PI Co-Pilot</span>
+                </button>
+                <button className="close-button" onClick={onClose}>
+                  <FaTimes />
+                </button>
+              </div>
+            </>
+          )}
         </div>
         <div className="working-folder-content">
           {documents.length === 0 ? (
