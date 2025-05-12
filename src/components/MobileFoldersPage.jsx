@@ -6,13 +6,14 @@ import './MobileLayout.css';
 import WorkingFolderView from './WorkingFolderView';
 
 const MobileFoldersPage = ({ isOpen, onClose }) => {
-  const { folders, createFolder, deleteFolder, renameFolder, removeFromFolder } = useWorkingFolder();
+  const { folders, createFolder, deleteFolder, deleteFolderRemote, renameFolder, removeFromFolder } = useWorkingFolder();
   const [expandedFolderIds, setExpandedFolderIds] = useState([]);
   const [showCreateInput, setShowCreateInput] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [renamingFolderId, setRenamingFolderId] = useState(null);
   const [renameValue, setRenameValue] = useState('');
   const [viewingFolder, setViewingFolder] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(null);
 
   if (!isOpen) return null;
 
@@ -29,6 +30,33 @@ const MobileFoldersPage = ({ isOpen, onClose }) => {
       renameFolder(folderId, renameValue.trim());
       setRenamingFolderId(null);
       setRenameValue('');
+    }
+  };
+
+  const handleDeleteFolder = async (folderId) => {
+    if (window.confirm('Are you sure you want to delete this folder?')) {
+      setIsDeleting(folderId);
+      
+      try {
+        console.log("Deleting folder from backend:", folderId);
+        // First call the backend API to delete from DynamoDB
+        const success = await deleteFolderRemote(folderId);
+        
+        if (success) {
+          console.log("Folder deleted successfully from DynamoDB");
+          // deleteFolder is already called inside deleteFolderRemote to update local state
+        } else {
+          console.warn("Backend deletion failed, falling back to local-only deletion");
+          // If the backend call failed, still update local state
+          deleteFolder(folderId);
+        }
+      } catch (error) {
+        console.error("Error deleting folder:", error);
+        // Fall back to local state update in case of error
+        deleteFolder(folderId);
+      } finally {
+        setIsDeleting(null);
+      }
     }
   };
 
@@ -135,11 +163,29 @@ const MobileFoldersPage = ({ isOpen, onClose }) => {
                   {expandedFolderIds.includes(folder.id) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
                       <FaEye style={{ color: '#274C77', fontSize: 18, opacity: 0.7, cursor: 'pointer' }} onClick={() => setViewingFolder(folder)} />
-                      <button onClick={() => {
-                        if (window.confirm('Are you sure you want to delete this folder?')) {
-                          deleteFolder(folder.id);
-                        }
-                      }} style={{ background: 'none', border: 'none', color: '#999', fontSize: 18, cursor: 'pointer', padding: 0 }} onMouseOver={e => e.currentTarget.style.color = '#d32f2f'} onMouseOut={e => e.currentTarget.style.color = '#999'}><FaTrash /></button>
+                      <button 
+                        onClick={() => handleDeleteFolder(folder.id)} 
+                        style={{ 
+                          background: 'none', 
+                          border: 'none', 
+                          color: isDeleting === folder.id ? '#ccc' : '#999', 
+                          fontSize: 18, 
+                          cursor: isDeleting === folder.id ? 'default' : 'pointer', 
+                          padding: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }} 
+                        onMouseOver={e => e.currentTarget.style.color = isDeleting === folder.id ? '#ccc' : '#d32f2f'} 
+                        onMouseOut={e => e.currentTarget.style.color = isDeleting === folder.id ? '#ccc' : '#999'}
+                        disabled={isDeleting === folder.id}
+                      >
+                        {isDeleting === folder.id ? (
+                          <span className="spinner-sm" style={{ width: 16, height: 16, border: '2px solid #ccc', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>
+                        ) : (
+                          <FaTrash />
+                        )}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -172,6 +218,12 @@ const MobileFoldersPage = ({ isOpen, onClose }) => {
           folder={folders.find(f => f.id === viewingFolder?.id) || viewingFolder}
         />
       </div>
+      <style jsx global>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
