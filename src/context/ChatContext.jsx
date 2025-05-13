@@ -5,6 +5,7 @@ export const ChatContext = createContext();
 
 const LOCAL_STORAGE_KEY = 'copilotChatHistory';
 const THREAD_ID_KEY = 'copilotThreadId';
+const SHOW_HISTORY_KEY = 'copilotShowHistory';
 
 export const ChatProvider = ({ children }) => {
   const [question, setQuestion] = useState('');
@@ -16,6 +17,10 @@ export const ChatProvider = ({ children }) => {
   const [activeThreadIndex, setActiveThreadIndex] = useState(null);
   const [lastQuestion, setLastQuestion] = useState('');
   const [threadId, setThreadId] = useState('');
+  const [showHistory, setShowHistory] = useState(() => {
+    const stored = localStorage.getItem(SHOW_HISTORY_KEY);
+    return stored === null ? false : stored === 'true';
+  });
 
   // Load chat history and threadId from localStorage on mount
   useEffect(() => {
@@ -46,6 +51,10 @@ export const ChatProvider = ({ children }) => {
       localStorage.setItem(THREAD_ID_KEY, threadId);
     }
   }, [threadId]);
+
+  useEffect(() => {
+    localStorage.setItem(SHOW_HISTORY_KEY, showHistory);
+  }, [showHistory]);
 
   const handleChatSubmit = async (newQuestion) => {
     if (!newQuestion.trim()) return;
@@ -140,7 +149,9 @@ export const ChatProvider = ({ children }) => {
       clearChat,
       lastQuestion,
       setLastQuestion,
-      threadId
+      threadId,
+      showHistory,
+      setShowHistory
     }}>
       {children}
     </ChatContext.Provider>

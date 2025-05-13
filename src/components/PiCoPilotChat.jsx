@@ -8,8 +8,10 @@ import { FaUser } from 'react-icons/fa';
 import PIglobalFolder from '../assets/PI_global_folder.svg';
 import { useWorkingFolder } from '../context/WorkingFolderContext';
 import { FOLDER_COLORS, FolderIconWithIndicator } from './FolderIconWithIndicator';
+import historyIcon from '../assets/history_icon.svg';
+import sourcesIcon from '../assets/sources_icon.svg';
 
-const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
+const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton, showSourcesPanel, setShowSourcesPanel, showSourcesToggleButton }) => {
   const {
     question,
     setQuestion,
@@ -26,6 +28,8 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
   const [showFolderDropdown, setShowFolderDropdown] = React.useState(false);
   const [selectedFolder, setSelectedFolder] = React.useState(null);
   const folderIconRef = React.useRef();
+  const [hovered, setHovered] = React.useState(false);
+  const [dropdownHoveredIdx, setDropdownHoveredIdx] = React.useState(null);
 
   const safeColors = Array.isArray(FOLDER_COLORS) && FOLDER_COLORS.length > 0 ? FOLDER_COLORS : ['#ccc'];
 
@@ -64,20 +68,12 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
           </sub>
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
-          {showToggleButton && (
-            <button
-              className="history-btn"
-              style={{ marginLeft: 12, whiteSpace: 'nowrap' }}
-              onClick={() => setShowHistory(true)}
-              aria-label="Show message history"
-            >
-              History
-            </button>
-          )}
           <div ref={folderIconRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             {selectedFolder ? (
               <div
                 onClick={() => setShowFolderDropdown((v) => !v)}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -85,15 +81,12 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
                   padding: '2px 10px 2px 10px',
                   borderRadius: 6,
                   transition: 'background 0.15s',
-                  ...(showFolderDropdown ? { background: '#e0f0ff' } : {}),
+                  background: hovered || showFolderDropdown ? '#e0f0ff' : 'transparent',
                 }}
                 tabIndex={0}
                 aria-label="Select folder"
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setShowFolderDropdown((v) => !v); }}
               >
-                <span style={{ fontStyle: 'italic', fontSize: '0.6em', color: '#6096ba', marginRight: 8, verticalAlign: 'super', alignSelf: 'flex-start' }}>
-                  Chatting with:
-                </span>
                 <FolderIconWithIndicator
                   indicatorColor={safeColors[folders.findIndex(f => f.id === selectedFolder.id) % safeColors.length]}
                   size={18}
@@ -109,6 +102,8 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
               <>
                 <div
                   onClick={() => setShowFolderDropdown((v) => !v)}
+                  onMouseEnter={() => setHovered(true)}
+                  onMouseLeave={() => setHovered(false)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -116,15 +111,12 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
                     padding: '2px 10px 2px 10px',
                     borderRadius: 6,
                     transition: 'background 0.15s',
-                    ...(showFolderDropdown ? { background: '#e0f0ff' } : {}),
+                    background: hovered || showFolderDropdown ? '#e0f0ff' : 'transparent',
                   }}
                   tabIndex={0}
                   aria-label="Select folder"
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setShowFolderDropdown((v) => !v); }}
                 >
-                  <span style={{ fontStyle: 'italic', fontSize: '0.6em', color: '#6096ba', marginRight: 8, verticalAlign: 'super', alignSelf: 'flex-start' }}>
-                    Chatting with:
-                  </span>
                   <img
                     src={PIglobalFolder}
                     alt="Global Folder"
@@ -158,7 +150,7 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
                     padding: '6px 10px',
                     borderRadius: 8,
                     cursor: 'pointer',
-                    background: !selectedFolder ? '#e0f0ff' : 'transparent',
+                    background: dropdownHoveredIdx === -1 ? '#f2faff' : (!selectedFolder ? '#e0f0ff' : 'transparent'),
                     transition: 'background 0.2s',
                     marginBottom: 2,
                   }}
@@ -166,6 +158,8 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
                     setSelectedFolder(null);
                     setShowFolderDropdown(false);
                   }}
+                  onMouseEnter={() => setDropdownHoveredIdx(-1)}
+                  onMouseLeave={() => setDropdownHoveredIdx(null)}
                 >
                   <img
                     src={PIglobalFolder}
@@ -196,14 +190,12 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
                         gap: 12,
                         padding: '6px 10px 6px 28px',
                         borderRadius: 8,
-                        cursor: 'pointer',
+                        cursor: 'not-allowed',
                         background: selectedFolder && selectedFolder.id === folder.id ? '#e0f0ff' : 'transparent',
                         transition: 'background 0.2s',
                         marginBottom: 2,
-                      }}
-                      onClick={() => {
-                        setSelectedFolder(folder);
-                        setShowFolderDropdown(false);
+                        opacity: 0.55,
+                        pointerEvents: 'none',
                       }}
                     >
                       <FolderIconWithIndicator
@@ -215,6 +207,9 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
                       <span style={{ fontWeight: 600, color: '#274C77', fontSize: 15, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{folder.name}</span>
                     </div>
                   ))}
+                <div style={{ padding: '10px 8px 4px 8px', color: '#888', fontSize: 13, fontStyle: 'italic', textAlign: 'center', borderTop: '1px solid #f0f0f0', marginTop: 6 }}>
+                  Coming soon: Chat with Folders
+                </div>
               </div>
             )}
           </div>
@@ -255,9 +250,28 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton }) => {
           </>
         )}
       </div>
-      <div className="search-input-container" style={{ position: 'relative', zIndex: 20 }}>
+      <div className="search-input-container" style={{ position: 'relative', zIndex: 20, display: 'flex', alignItems: 'center' }}>
+        {showToggleButton && (
+          <button
+            className="history-btn"
+            style={{ marginRight: 12, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            onClick={() => setShowHistory(true)}
+            aria-label="Show message history"
+          >
+            <img src={historyIcon} alt="Show history" style={{ width: 28, height: 28, display: 'block' }} />
+          </button>
+        )}
+        {showSourcesToggleButton && (
+          <button
+            className="sources-btn"
+            style={{ marginRight: 12, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            onClick={() => setShowSourcesPanel(true)}
+            aria-label="Show sources panel"
+          >
+            <img src={sourcesIcon} alt="Show sources" style={{ width: 28, height: 28, display: 'block' }} />
+          </button>
+        )}
         <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', position: 'relative' }}>
-          <img src={searchIcon} alt="Search" className="search-input-icon" />
           <input
             type="text"
             className="dynamic-search-input"

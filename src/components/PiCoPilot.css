@@ -95,6 +95,15 @@ h3 {
   font-weight: 500;
 }
 
+.history-btn {
+  font-weight: 500;
+}
+
+.sources-hide-btn {
+  color: #f8f9fa90;
+  font-weight: 600;
+}
+
 /* Main Chat Area */
 .chat-container {
   flex: 1;
@@ -370,4 +379,20 @@ h3 {
   min-width: 60px !important;
   max-width: 60px !important;
   transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.search-input-container {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.dynamic-search-input {
+  width: 100%;
+  flex: 1 1 0%;
+  min-width: 0;
+  margin-left: 0;
+  padding-left: 16px;
 } 
