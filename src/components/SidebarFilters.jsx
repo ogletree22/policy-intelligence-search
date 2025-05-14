@@ -867,18 +867,16 @@ const SidebarFilters = ({
                               {folder.name}
                             </span>
                             <span className="folder-actions">
-                              {instanceId !== 'copilot-page' && (
-                                <button
-                                  className="view-folder-button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setViewingFolder(folder);
-                                  }}
-                                  title="View folder contents"
-                                >
-                                  <FaEye />
-                                </button>
-                              )}
+                              <button
+                                className="view-folder-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setViewingFolder(folder);
+                                }}
+                                title="View folder contents"
+                              >
+                                <FaEye />
+                              </button>
                               <button
                                 className="delete-folder-button"
                                 onClick={(e) => {
@@ -1058,24 +1056,29 @@ const SidebarFilters = ({
               <CreateFolderModal
                 isOpen={isCreateFolderModalOpen}
                 onClose={() => setIsCreateFolderModalOpen(false)}
-                onCreateFolder={createFolderRemote}
+                onCreateFolder={async (folderName) => {
+                  console.log(`Creating folder: ${folderName}`);
+                  try {
+                    const newFolder = await createFolderRemote(folderName);
+                    console.log("Created folder remotely:", newFolder);
+                    setIsCreateFolderModalOpen(false);
+                  } catch (error) {
+                    console.error("Error creating folder remotely:", error);
+                    setIsCreateFolderModalOpen(false);
+                  }
+                }}
               />
             </>
           )}
           {/* Folder view modal */}
-          {viewingFolder && (
-            (() => {
-              const latestFolder = folders.find(f => f.id === viewingFolder.id);
-              return (
-                <WorkingFolderView
-                  isOpen={!!viewingFolder}
-                  onClose={() => setViewingFolder(null)}
-                  documents={latestFolder ? latestFolder.documents : []}
-                  title={latestFolder ? latestFolder.name : viewingFolder.name}
-                  folder={latestFolder || viewingFolder}
-                />
-              );
-            })()
+          {viewingFolder && ReactDOM.createPortal(
+            <WorkingFolderView
+              isOpen={!!viewingFolder}
+              onClose={() => setViewingFolder(null)}
+              documents={viewingFolder.documents || []}
+              folder={viewingFolder}
+            />,
+            document.body
           )}
         </>
       )}
