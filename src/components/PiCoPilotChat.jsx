@@ -30,6 +30,7 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton, showSour
   const folderIconRef = React.useRef();
   const [hovered, setHovered] = React.useState(false);
   const [dropdownHoveredIdx, setDropdownHoveredIdx] = React.useState(null);
+  const [pendingQuestion, setPendingQuestion] = React.useState(null);
 
   const safeColors = Array.isArray(FOLDER_COLORS) && FOLDER_COLORS.length > 0 ? FOLDER_COLORS : ['#ccc'];
 
@@ -47,8 +48,16 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton, showSour
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!question.trim()) return;
+    setPendingQuestion(question);
     handleChatSubmit(question);
+    setQuestion('');
   };
+
+  React.useEffect(() => {
+    if (!isLoading && pendingQuestion) {
+      setPendingQuestion(null);
+    }
+  }, [isLoading]);
 
   // Determine which thread to display
   const thread =
@@ -222,20 +231,63 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton, showSour
           </div>
         )}
 
-        {isLoading && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '120px' }}>
-            <LoadingSpinner />
-          </div>
+        {/* Show pending user question and loading spinner at the top, styled consistently */}
+        {pendingQuestion && (
+          <>
+            <div className="message user" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+              <div className="message-content" style={{
+                whiteSpace: 'pre-wrap',
+                marginRight: 12,
+                background: '#457b9d',
+                color: 'white',
+                borderRadius: 12,
+                padding: '12px 16px',
+                fontSize: 15,
+                fontWeight: 500,
+                maxWidth: '70%',
+                minWidth: 40,
+                width: 'auto',
+                display: 'inline-block',
+                wordBreak: 'break-word',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                transition: 'width 0.2s',
+              }}>
+                {pendingQuestion}
+              </div>
+              <span className="user-icon" style={{ marginLeft: 0 }}>
+                <FaUser />
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60px', margin: '12px 0' }}>
+              <LoadingSpinner />
+            </div>
+          </>
         )}
 
-        {!isLoading && thread && (
+        {/* Only show the thread if not loading and not pending */}
+        {!isLoading && !pendingQuestion && thread && (
           <>
-            {/* User message */}
+            {/* User message - match loading style */}
             <div className="message user" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-              <div className="message-content" style={{ whiteSpace: 'pre-wrap', marginRight: '12px' }}>
+              <div className="message-content" style={{
+                whiteSpace: 'pre-wrap',
+                marginRight: 12,
+                background: '#457b9d',
+                color: 'white',
+                borderRadius: 12,
+                padding: '12px 16px',
+                fontSize: 15,
+                fontWeight: 500,
+                maxWidth: '70%',
+                minWidth: 40,
+                width: 'auto',
+                display: 'inline-block',
+                wordBreak: 'break-word',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                transition: 'width 0.2s',
+              }}>
                 {thread.question}
               </div>
-              {/* User avatar (FaUser icon) */}
               <span className="user-icon" style={{ marginLeft: 0 }}>
                 <FaUser />
               </span>
@@ -272,16 +324,20 @@ const PiCoPilotChat = ({ showHistory, setShowHistory, showToggleButton, showSour
           </button>
         )}
         <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', position: 'relative' }}>
-          <input
-            type="text"
-            className="dynamic-search-input"
+          <textarea
+            className="dynamic-search-input responsive-chat-input"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Ask a question..."
             disabled={isLoading}
-            style={{ width: '100%' }}
+            rows={1}
+            style={{ resize: 'none', minWidth: 60, maxWidth: '100%', width: `${Math.min(600, Math.max(60, question.length * 10))}px`, overflow: 'hidden', transition: 'width 0.2s', paddingTop: 12, paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}
+            onInput={e => {
+              e.target.style.height = 'auto';
+              e.target.style.height = e.target.scrollHeight + 'px';
+            }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 handleSubmit(e);
               }

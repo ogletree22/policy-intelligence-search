@@ -46,7 +46,14 @@ const PiCoPilot = () => {
     }
   ];
 
-  const [showSourcesPanel, setShowSourcesPanel] = useState(true);
+  const [showSourcesPanel, setShowSourcesPanel] = useState(() => {
+    const stored = localStorage.getItem('showSourcesPanel');
+    return stored === null ? true : stored === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('showSourcesPanel', showSourcesPanel);
+  }, [showSourcesPanel]);
 
   const handleFilterChange = (filters) => {
     // Handle filter changes if needed
