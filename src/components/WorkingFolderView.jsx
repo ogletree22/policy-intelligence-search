@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { FaTimes, FaTrash, FaFolder, FaEdit, FaCheck, FaTimes as FaTimesSmall } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -9,17 +9,34 @@ import MobileFolderIcon from './MobileFolderIcon';
 import { FolderIconWithIndicator, FOLDER_COLORS } from './FolderIconWithIndicator';
 import './WorkingFolderView.css';
 
-const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
+const WorkingFolderView = ({ isOpen, onClose, documents: initialDocuments, title, folder }) => {
   const navigate = useNavigate();
   const { removeFromWorkingFolder, renameFolder, removeFromFolder, removeFromFolderRemote, renameFolderRemote, folders } = useWorkingFolder();
-  const [editing, setEditing] = React.useState(false);
-  const [newName, setNewName] = React.useState(folder?.name || '');
-  const [isRemoving, setIsRemoving] = React.useState({});
-  const [isRenaming, setIsRenaming] = React.useState(false);
+  const [editing, setEditing] = useState(false);
+  const [newName, setNewName] = useState(folder?.name || '');
+  const [isRemoving, setIsRemoving] = useState({});
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [currentDocuments, setCurrentDocuments] = useState(initialDocuments || []);
 
-  React.useEffect(() => {
+  // Keep local state in sync with props
+  useEffect(() => {
+    setCurrentDocuments(initialDocuments || []);
+  }, [initialDocuments]);
+
+  // Keep name in sync when folder changes
+  useEffect(() => {
     setNewName(folder?.name || '');
   }, [folder]);
+  
+  // If the folder is from context and its documents change, update our state
+  useEffect(() => {
+    if (folder && folder.id) {
+      const updatedFolder = folders.find(f => f.id === folder.id);
+      if (updatedFolder && updatedFolder.documents) {
+        setCurrentDocuments(updatedFolder.documents);
+      }
+    }
+  }, [folder, folders]);
 
   if (!isOpen) return null;
 
@@ -34,6 +51,8 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
         if (isMobileFolder) {
           // Handle mobile folder (local only)
           removeFromWorkingFolder(docId);
+          // Update local state immediately
+          setCurrentDocuments(prev => prev.filter(doc => doc.id !== docId));
         } else if (folder?.id) {
           // For regular folders, use the remote API
           console.log("🟣🟣🟣 Removing document from folder 🟣🟣🟣");
@@ -43,8 +62,8 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
           const success = await removeFromFolderRemote(docId, folder.id);
           console.log("🟣🟣🟣 Document removal result:", success ? "SUCCESS" : "FAILED", "🟣🟣🟣");
           
-          // Note: removeFromFolderRemote already calls removeFromFolder internally
-          // so we don't need to call it again here
+          // Update local state immediately regardless of API success
+          setCurrentDocuments(prev => prev.filter(doc => doc.id !== docId));
         }
       } catch (error) {
         console.error("Error removing document from folder:", error);
@@ -94,7 +113,7 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
                   <FolderIconWithIndicator
                     indicatorColor={indicatorColor}
                     size={54}
-                    count={folder && folder.documents ? folder.documents.length : 0}
+                    count={currentDocuments ? currentDocuments.length : 0}
                   />
                 );
               })()}
@@ -160,11 +179,11 @@ const WorkingFolderView = ({ isOpen, onClose, documents, title, folder }) => {
           </button>
         </div>
         <div className="working-folder-content">
-          {documents.length === 0 ? (
+          {currentDocuments.length === 0 ? (
             <p className="empty-message">No documents in {isMobileFolder ? 'Mobile Folder' : 'working folder'}</p>
           ) : (
             <ul className="document-list">
-              {documents.map((doc) => (
+              {currentDocuments.map((doc) => (
                 <li key={doc.id} className="document-item">
                   <div className="document-info">
                     {doc.url ? (
